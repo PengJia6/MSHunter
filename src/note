@@ -1,0 +1,1 @@
+bam2dis -i /media/pengjia/ZS6Y_Feng_1/NA12878/1000G/bam/NA12878.final.1000GDeep.bam -i /media/pengjia/ZS6Y_Feng_1/NA12878/1000G/bam/NA12878.mapped.ILLUMINA.bwa.CEU.high_coverage_pcr_free.20130906.bam -m /mnt/project/ProjectMSI/MSCalling/note/py/MSHunter/data/GRCh38.d1.vd1.fa.microsatellites.csv -o ../data/test
