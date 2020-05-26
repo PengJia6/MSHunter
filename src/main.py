@@ -77,4 +77,6 @@ def main():
 
 if __name__ == "__main__":
     if main() > 1:
-        os.system("rm -r " + ARGS["workspace"])
+        print("")
+        print("HHH")
+        # os.system("rm -r " + ARGS["workspace"])
