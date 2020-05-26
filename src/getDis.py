@@ -105,7 +105,7 @@ def argumentProcress():
     else:
         if ErrorStat: return False
         os.mkdir(ARGS["workspace"])
-        os.mkdir(ARGS["workspace"] + "detailInfo/")
+        # os.mkdir(ARGS["workspace"] + "detailInfo/")
         print("[INFO] The workspace is : " + ARGS["workspace"])
     return True
 
