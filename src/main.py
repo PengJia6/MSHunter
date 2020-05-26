@@ -6,13 +6,17 @@
 # Email : pengjia@stu.xjtu.edu.cn
 # Description : ''
 # =============================================================================
+
 import argparse
+import os
+import sys
+
+curpath = os.path.abspath(os.path.dirname(sys.argv[0]))
+sys.path.append(os.path.dirname(curpath))
 from src.bam2dis import *
 from src.call import *
 from src.errEval import *
 from src.global_dict import *
-import sys
-print(sys.argv)
 
 
 def args_process():
@@ -20,6 +24,7 @@ def args_process():
     argument procress
     """
     commands = ["bam2dis", "errEval", "call"]
+    commandsParser={}
     parser = argparse.ArgumentParser(description='mstools: Microsatellite genotyping toolbox.'
                                      # + ".show help of subcommand with '"
                                      # + get_value("tools_name") + " <subcommand> -h'"
@@ -40,30 +45,55 @@ def args_process():
                                 help="path of the microsatellite list files [required]")
     parser_bam2dis.add_argument('-t', '--threads', type=int, nargs=1, default=[4],
                                 help="mumber of additional threads to use [default:2]")
-    parser_bam2dis.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1, default=[20],
-                                help="minimum mapping quality of read [default:20]")
+    parser_bam2dis.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1, default=[1],
+                                help="minimum mapping quality of read [default:1]")
     parser_bam2dis.add_argument('-s', '--minimum_support_reads', type=int, nargs=1, default=[5],
                                 help="minimum support reads of an available microsatellite [default:20]")
     parser_bam2dis.add_argument('-b', '--batch', type=int, nargs=1, default=[200],
-                                help="batch size for one thread [default:2000]")
-
+                                help="batch size for one thread [default:1000]")
+    commandsParser["bam2dis"]=parser_bam2dis
     ###################################################################################################################
     # add arguments for  "errEval" module
-
+    parser_errEval = subparsers.add_parser('errEval', help='Evaluate the sequencing bias in microsatellite regions.')
+    parser_errEval.description = 'Evaluate the sequencing bias in microsatellite regions.'
+    parser_errEval.add_argument('-i', '--input', required=True, type=str,
+                                help="The path of input dis.vcf file [required]")
+    parser_errEval.add_argument('-o', '--output', required=True, type=str,
+                                help="The path of output file prefix [required]")
+    parser_errEval.add_argument('-t', '--threads', type=int, nargs=1, default=[4],
+                                help="mumber of additional threads to use [default:2]")
+    parser_errEval.add_argument('-s', '--minimum_support_reads', type=int, nargs=1, default=[5],
+                                help="minimum support reads of an available microsatellite [default:20]")
+    parser_errEval.add_argument('-b', '--batch', type=int, nargs=1, default=[1000],
+                                help="batch size for one thread [default:1000]")
+    parser_errEval.add_argument('-l', '--max_repeat_times', type=int, nargs=1, default=[200],
+                                help="maximum repeat times analysis [default:200]")
+    parser_errEval.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, default=[200],
+                                help="only analyze homopolymer regions [default:200]")
+    commandsParser["errEval"] = parser_errEval
     ###################################################################################################################
     # add arguments for call module
-    if os.sys.argv[1] in ["-h", "--help"]:
+    # print(os.sys.argv)
+    # print(parser.parse_args())
+    # print(parser_errEval)
+    if os.sys.argv[1] in ["-h", "--help","-?"]:
         parser.print_help()
         return False
     if os.sys.argv[1] in ["-V", "-v", "--version"]:
+        # parser.print_help()
         parser.parse_args()
         return False
-    if len(os.sys.argv) == 1 or os.sys.argv[1] not in commands:
-        print("[Error] Command Error!")
+    if os.sys.argv[1] not in commands:
+        print("[Error] Command Error! ", os.sys.argv[1], "is not the available command")
         print("[Tips] Please input correct command such as " + ", ".join(commands) + "!")
         parser.print_help()
-        parser.parse_args()
+        # parser.parse_args()
         return False
+
+    if len(os.sys.argv)==2 and (os.sys.argv[1] in commands):
+        commandsParser[os.sys.argv[1]].print_help()
+        return False
+
     return parser
 
 

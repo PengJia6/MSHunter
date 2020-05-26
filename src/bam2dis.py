@@ -53,7 +53,7 @@ def bam2dis_args_init(args):
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
     paras["batch"] = args.batch[0]
-    print(args.input)
+    # print(args.input)
     ErrorStat = False
     if len(paras["input"]) != len(set(paras["input"])) \
             or len(paras["output"]) != len(set(paras["output"])) \
@@ -111,7 +111,7 @@ def loadMicroSatellite(ms):
     return dfMicroSatellites
 
 
-def getRepeatTimes(alignment, motif, motifLen, prefix, suffix, min_support_reads, min_mapping_qual=0):
+def getRepeatTimes(alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
     """
     :param alignment:
     :param motif:
@@ -121,7 +121,7 @@ def getRepeatTimes(alignment, motif, motifLen, prefix, suffix, min_support_reads
     :return:
     """
 
-    if alignment.mapping_quality < min_support_reads:
+    if alignment.mapping_quality < min_mapping_qual:
         return -1
     readString = alignment.query
     prefixState = readString.find(prefix)
@@ -153,7 +153,7 @@ def processOneMs(msDetail):
     for alignment in alignmentList:
         if alignment.is_unmapped: continue
         thisRepeatTimes = getRepeatTimes(alignment, msDetail.motif, msDetail.motifLen, msDetail.prefix, msDetail.suffix,
-                                         msDetail.min_support_reads)
+                                         min_mapping_qual=msDetail.min_mapping_qual)
         if thisRepeatTimes < 0: continue
         if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
         repeatTimesDict[thisRepeatTimes] += 1
@@ -243,8 +243,8 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        if curentMSNum > 1000:
-            break
+        # if curentMSNum > 1000:
+        #     break
         if curentMSNum % (batch * thread) == 0:
             print("[Info] Processing:", curentMSNum - batch * thread + 1, "-", curentMSNum)
             result_list = multiRun(thread=thread, datalist=tmpWindow)
