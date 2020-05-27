@@ -76,6 +76,10 @@ def args_process():
     # print(os.sys.argv)
     # print(parser.parse_args())
     # print(parser_errEval)
+    if len(os.sys.argv)<2:
+        parser.print_help()
+        return False
+
     if os.sys.argv[1] in ["-h", "--help","-?"]:
         parser.print_help()
         return False

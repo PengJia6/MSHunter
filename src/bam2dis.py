@@ -257,8 +257,8 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
 
 def bam2dis(parase):
     if not bam2dis_args_init(parase):
-        print("[Error] Parameters error!")
-        return -1
+        # print("[Error] Parameters error!")
+        return 
     args = get_value("paras")
     inputs, outputs = args["input"], args["output"]
     bamnum = 0
