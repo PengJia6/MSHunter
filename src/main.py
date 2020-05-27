@@ -76,6 +76,11 @@ def args_process():
     # print(os.sys.argv)
     # print(parser.parse_args())
     # print(parser_errEval)
+    ###################################################################################################################
+    # add arguments for  "list2bed" module
+    # convert MSIsensor list file to bed format
+
+
     if len(os.sys.argv)<2:
         parser.print_help()
         return False

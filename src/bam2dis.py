@@ -55,29 +55,29 @@ def bam2dis_args_init(args):
     paras["batch"] = args.batch[0]
     # print(args.input)
     ErrorStat = False
-    if len(paras["input"]) != len(set(paras["input"])) \
-            or len(paras["output"]) != len(set(paras["output"])) \
-            or len(paras["input"]) != len(paras["output"]):
-        print(
-            "[Error] If you specified option -i/--input and -o/--output multiple times,"
-            " please make sure that the times of -i and -o should be equal and not repetitive\n"
-            " correct: \n"
-            "\t'-i case1.bam -i case2.bam -o case1.dis.vcf -o case2.dis.vcf'\n"
-            "\t'-i case1.bam -o case1.dis.vcf -i case2.bam -o case2.dis.vcf'\n"
-            " wrong: \n"
-            "\t'-i case1.bam -i case2.bam -o case2.dis.vcf -o case1.dis.vcf'\n"
-            "\t'-i case1.bam -o case1.dis.vcf -i case2.bam '\n"
-        )
-        ErrorStat = True
+    # if len(paras["input"]) != len(set(paras["input"])) \
+    #         or len(paras["output"]) != len(set(paras["output"])) \
+    #         or len(paras["input"]) != len(paras["output"]):
+    #     print(
+    #         "[Error] If you specified option -i/--input and -o/--output multiple times,"
+    #         " please make sure that the times of -i and -o should be equal and not repetitive\n"
+    #         " correct: \n"
+    #         "\t'-i case1.bam -i case2.bam -o case1.dis.vcf -o case2.dis.vcf'\n"
+    #         "\t'-i case1.bam -o case1.dis.vcf -i case2.bam -o case2.dis.vcf'\n"
+    #         " wrong: \n"
+    #         "\t'-i case1.bam -i case2.bam -o case2.dis.vcf -o case1.dis.vcf'\n"
+    #         "\t'-i case1.bam -o case1.dis.vcf -i case2.bam '\n"
+    #     )
+    #     ErrorStat = True
     bamnum = 0
-    for onebam in paras["input"]:
-        bamnum += 1
-        if os.path.isfile(onebam):
-            print("[INFO] The ", bamnum, " input is : " + onebam)
-        else:
-            print('[ERROR] The ', bamnum, 'input "' + onebam + '" is not exist, please check again')
-            ErrorStat = True
-            break
+    # for onebam in paras["input"]:
+    #     bamnum += 1
+    #     if os.path.isfile(onebam):
+    #         print("[INFO] The ", bamnum, " input is : " + onebam)
+    #     else:
+    #         print('[ERROR] The ', bamnum, 'input "' + onebam + '" is not exist, please check again')
+    #         # ErrorStat = True
+            # break
     if os.path.isfile(paras["Microsatellite"]):
         print("[INFO] The Microsatellites file  is : " + paras["Microsatellite"])
     else:
@@ -95,8 +95,8 @@ def bam2dis_args_init(args):
                 '[ERROR] The ', bamnum,
                 'output "' + onebam + '" is still exist! in case of overwrite files in this workspace, '
                                       'please check your script!')
-            ErrorStat = True
-            break
+            # ErrorStat = True
+            # break
     if ErrorStat: return False
 
     set_value("paras", paras)
@@ -144,7 +144,10 @@ def getRepeatTimes(alignment, motif, motifLen, prefix, suffix, min_mapping_qual=
 
 
 def processOneMs(msDetail):
-    bamfile = pysam.AlignmentFile(msDetail.bamfile, "rb")
+    if type(msDetail.bamfile)==type("str"):
+        bamfile = pysam.AlignmentFile(msDetail.bamfile, "rb")
+    else:
+        bamfile=msDetail.bamfile
     alignmentList = [alignment for alignment in bamfile.fetch(msDetail.chrId, msDetail.queryStart, msDetail.queryEnd)]
     depth = len(alignmentList)
     if depth < msDetail.min_support_reads:
@@ -171,6 +174,11 @@ def multiRun(thread, datalist):
     result_list = pool.map(processOneMs, datalist)
     pool.close()
     pool.join()
+    # result_list=[]
+    # for i in datalist:
+    #     resu
+
+
     return result_list
 
 
@@ -210,7 +218,10 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     dis = args["output"]
     thread = args["threads"]
     batch = args["batch"]
-    outputfile = write_init(dis, [bam])
+
+    outputfile = write_init(dis, [dis])
+
+
     # outputfile.close()
     dfMicroSatellites = loadMicroSatellite(ms)
     # bamfile = pysam.AlignmentFile(bam, "rb")
@@ -258,7 +269,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
 def bam2dis(parase):
     if not bam2dis_args_init(parase):
         # print("[Error] Parameters error!")
-        return 
+        return
     args = get_value("paras")
     inputs, outputs = args["input"], args["output"]
     bamnum = 0
