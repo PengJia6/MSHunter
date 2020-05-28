@@ -53,6 +53,8 @@ def bam2dis_args_init(args):
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
     paras["batch"] = args.batch[0]
+    paras["debug"] = args.debug[0]
+    paras["separator"] = args.separator[0]
     # print(args.input)
     ErrorStat = False
     # if len(paras["input"]) != len(set(paras["input"])) \
@@ -103,11 +105,48 @@ def bam2dis_args_init(args):
     return True
 
 
-def loadMicroSatellite(ms):
+def loadMicroSatellite(args):
     """
     :return:
     """
-    dfMicroSatellites = pd.read_csv(ms, index_col=0)
+    ms = args["Microsatellite"]
+    separator = args["separator"]
+    # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
+    if separator == "comma":
+        dfMicroSatellites = pd.read_csv(ms, index_col=0)
+        # print(dfMicroSatellites.columns)
+    elif separator == "tab":
+        dfMicroSatellites = pd.read_table(ms, header=0)
+        columns=dfMicroSatellites.columns
+        if "chromosome" in columns:
+            dfMicroSatellites["chr"]=dfMicroSatellites["chromosome"]
+            del dfMicroSatellites["chromosome"]
+        if "location" in columns:
+            dfMicroSatellites["pos"] = dfMicroSatellites["location"]
+            del dfMicroSatellites["location"]
+        if "repeat_unit_bases" in columns:
+            dfMicroSatellites["motif"] = dfMicroSatellites["repeat_unit_bases"]
+            del dfMicroSatellites["repeat_unit_bases"]
+        if "repeat_unit_length" in columns:
+            dfMicroSatellites["motifLen"] = dfMicroSatellites["repeat_unit_length"]
+            del dfMicroSatellites["repeat_unit_length"]
+        if "repeat_times" in columns:
+            dfMicroSatellites["repeatTimes"] = dfMicroSatellites["repeat_times"]
+            del dfMicroSatellites["repeat_times"]
+        if "left_flank_bases" in columns:
+            dfMicroSatellites["prefix"] = dfMicroSatellites["left_flank_bases"]
+            del dfMicroSatellites["left_flank_bases"]
+        if "right_flank_bases" in columns:
+            dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
+            del dfMicroSatellites["right_flank_bases"]
+        dfMicroSatellites.index=dfMicroSatellites["chr"]+"_"+dfMicroSatellites["pos"].astype(str)
+
+
+        # if "locat=="
+        print(dfMicroSatellites)
+    elif separator == "space":
+        dfMicroSatellites = pd.read_table(ms, header=0,sep=" ")
+
     return dfMicroSatellites
 
 
@@ -270,7 +309,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     outputfile = write_vcf_init(dis, [dis])
 
     # outputfile.close()
-    dfMicroSatellites = loadMicroSatellite(ms)
+    dfMicroSatellites = loadMicroSatellite(args)
     # bamfile = pysam.AlignmentFile(bam, "rb")
     curentMSNum = 0
     tmpWindow = []
@@ -301,7 +340,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        if curentMSNum > 100:
+        if args["debug"] and (curentMSNum > 100):
             break
         if curentMSNum % (batch * thread) == 0:
             print("[Info] Processing:", curentMSNum - batch * thread + 1, "-", curentMSNum)

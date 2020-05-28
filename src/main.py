@@ -49,8 +49,12 @@ def args_process():
                                 help="minimum mapping quality of read [default:1]")
     parser_bam2dis.add_argument('-s', '--minimum_support_reads', type=int, nargs=1, default=[5],
                                 help="minimum support reads of an available microsatellite [default:20]")
-    parser_bam2dis.add_argument('-b', '--batch', type=int, nargs=1, default=[200],
+    parser_bam2dis.add_argument('-b', '--batch', type=int, nargs=1, default=[2000],
                                 help="batch size for one thread [default:1000]")
+    parser_bam2dis.add_argument('-d', '--debug', type=bool, nargs=1,choices=[True,False] ,default=[False],
+                                help=" debug mode for developers [default:False]")
+    parser_bam2dis.add_argument("-sep",'--separator', type=str, nargs=1, choices=["comma", "space","tab"], default=["comma"],
+                                help=' separator for microsatellites file [default:"comma"]')
     commandsParser["bam2dis"]=parser_bam2dis
     ###################################################################################################################
     # add arguments for  "errEval" module
