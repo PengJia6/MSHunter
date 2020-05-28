@@ -77,7 +77,7 @@ def bam2dis_args_init(args):
     #     else:
     #         print('[ERROR] The ', bamnum, 'input "' + onebam + '" is not exist, please check again')
     #         # ErrorStat = True
-            # break
+    # break
     if os.path.isfile(paras["Microsatellite"]):
         print("[INFO] The Microsatellites file  is : " + paras["Microsatellite"])
     else:
@@ -144,10 +144,10 @@ def getRepeatTimes(alignment, motif, motifLen, prefix, suffix, min_mapping_qual=
 
 
 def processOneMs(msDetail):
-    if type(msDetail.bamfile)==type("str"):
+    if type(msDetail.bamfile) == type("str"):
         bamfile = pysam.AlignmentFile(msDetail.bamfile, "rb")
     else:
-        bamfile=msDetail.bamfile
+        bamfile = msDetail.bamfile
     alignmentList = [alignment for alignment in bamfile.fetch(msDetail.chrId, msDetail.queryStart, msDetail.queryEnd)]
     depth = len(alignmentList)
     if depth < msDetail.min_support_reads:
@@ -174,19 +174,67 @@ def multiRun(thread, datalist):
     result_list = pool.map(processOneMs, datalist)
     pool.close()
     pool.join()
-    # result_list=[]
-    # for i in datalist:
-    #     resu
-
-
     return result_list
 
 
 def write_init(outputpath, sampleNameList):
     outputfile = open(outputpath, "w")
+    outputfile.write("##fileformat=VCFv4.2\n")
     clomum = "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"] + sampleNameList)
     outputfile.write(clomum + "\n")
     return outputfile
+
+
+def write_vcf_init(outputpath, sampleNameList):
+    outputfile = pysam.VariantFile(outputpath, "wb")
+    outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
+    outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
+    outputfile.header.add_line('##INFO=<ID=Start,Number=1,Type=Integer,Description="Position">')
+    outputfile.header.add_line('##INFO=<ID=End,Number=1,Type=Integer,Description="Position">')
+    outputfile.header.add_line('##INFO=<ID=motif,Number=1,Type=String,Description="Repeat unit">')
+    outputfile.header.add_line('##INFO=<ID=repeatTimes,Number=1,Type=Integer,Description="Repeat imes">')
+    outputfile.header.add_line('##INFO=<ID=prefix,Number=1,Type=String,Description="Prefix of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=suffix,Number=1,Type=String,Description="Suffix of microsatellite">')
+    outputfile.header.add_line(
+        '##INFO=<ID=depth,Number=1,Type=Integer,Description="Number of reads associated with the position">')
+    outputfile.header.add_line(
+        '##INFO=<ID=support_reads,Number=1,Type=Integer,Description="Reads covered the microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=dis,Number=1,Type=String,Description="Distribution of repeat times">')
+    outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
+    return outputfile
+
+
+def write_vcf_close(outputfile):
+    outputfile.close()
+
+
+def write_vcf(outputfile, dataList):
+    # print(header.contigs)
+    contigs = []
+    for msDetail in dataList:
+        if msDetail != False:
+
+            chrom = msDetail.chrId
+            pos = int(msDetail.posStart)
+            ref = str(msDetail.repeatTimes) + "[" + msDetail.motif + "]"
+            if chrom not in contigs:
+                outputfile.header.add_line("##contig=<ID={chrom}>".format(chrom=chrom))
+            vcfrec = outputfile.new_record()
+            vcfrec.contig = chrom
+            vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
+            vcfrec.pos = pos
+            vcfrec.ref = ref
+            vcfrec.info["chrom"] = chrom
+            vcfrec.info["pos"] = pos
+            vcfrec.info["Start"] = pos
+            vcfrec.info["End"] = pos + msDetail.repeatTimes * len(msDetail.motif)
+            vcfrec.info["motif"] = msDetail.motif
+            vcfrec.info["repeatTimes"] = msDetail.repeatTimes
+            vcfrec.info["prefix"] = msDetail.prefix
+            vcfrec.info["depth"] = msDetail.depth
+            vcfrec.info["support_reads"] = msDetail.support_reads
+            vcfrec.info["dis"] = "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])
+            outputfile.write(vcfrec)
 
 
 def writeInfo(outputfile, dataList):
@@ -219,8 +267,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     thread = args["threads"]
     batch = args["batch"]
 
-    outputfile = write_init(dis, [dis])
-
+    outputfile = write_vcf_init(dis, [dis])
 
     # outputfile.close()
     dfMicroSatellites = loadMicroSatellite(ms)
@@ -254,16 +301,16 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        # if curentMSNum > 1000:
-        #     break
+        if curentMSNum > 100:
+            break
         if curentMSNum % (batch * thread) == 0:
             print("[Info] Processing:", curentMSNum - batch * thread + 1, "-", curentMSNum)
             result_list = multiRun(thread=thread, datalist=tmpWindow)
-            writeInfo(outputfile, result_list)
+            write_vcf(outputfile, result_list)
             tmpWindow = []
     result_list = multiRun(thread=thread, datalist=tmpWindow)
-    writeInfo(outputfile, result_list)
-    outputfile.close()
+    write_vcf(outputfile, result_list)
+    write_vcf_close(outputfile)
 
 
 def bam2dis(parase):
