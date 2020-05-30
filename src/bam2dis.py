@@ -20,7 +20,8 @@ class MSDeail:
     repeatDict = {}
     depth = 0
     depthCall = 0
-
+    p=0
+    q=0
     def __init__(self, chr_id, posStart, posEnd, queryStart, queryEnd, motif, motifLen, repeat_times, prefix, suffix,
                  bamfile, min_support_reads, min_mapping_qual):
         self.chrId = chr_id
@@ -36,6 +37,9 @@ class MSDeail:
         self.bamfile = bamfile
         self.min_support_reads = min_support_reads
         self.min_mapping_qual = min_mapping_qual
+    def getpq(self):
+        self.p=0
+        self.q=0
 
 
 # , dfMicroSatellites, caseInfo
@@ -228,8 +232,8 @@ def write_vcf_init(outputpath, sampleNameList):
     outputfile = pysam.VariantFile(outputpath, "wb")
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
     outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
-    outputfile.header.add_line('##INFO=<ID=Start,Number=1,Type=Integer,Description="Position">')
-    outputfile.header.add_line('##INFO=<ID=End,Number=1,Type=Integer,Description="Position">')
+    outputfile.header.add_line('##INFO=<ID=Start,Number=1,Type=Integer,Description="Position start">')
+    outputfile.header.add_line('##INFO=<ID=End,Number=1,Type=Integer,Description="Position End">')
     outputfile.header.add_line('##INFO=<ID=motif,Number=1,Type=String,Description="Repeat unit">')
     outputfile.header.add_line('##INFO=<ID=repeatTimes,Number=1,Type=Integer,Description="Repeat imes">')
     outputfile.header.add_line('##INFO=<ID=prefix,Number=1,Type=String,Description="Prefix of microsatellite">')

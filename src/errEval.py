@@ -116,13 +116,13 @@ def getHomoNormalDis(motifDis_tmp, maxRepeat):
             y.append(homList[homo][i])
         # print(x,y)
         # # print(homo,sumdis)
-        if homo>9:
-            plt.plot(x,y)
-            plt.scatter(x,y)
-            plt.vlines(homo,0,1)
-            plt.show()
-
-            plt.close()
+        # if homo>9:
+        #     plt.plot(x,y)
+        #     plt.scatter(x,y)
+        #     plt.vlines(homo,0,1)
+        #     plt.show()
+        #
+        #     plt.close()
 
         #     print(homList[homo])
         # print(homo,homList[homo])

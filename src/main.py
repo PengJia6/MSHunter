@@ -23,8 +23,12 @@ def args_process():
     """
     argument procress
     """
+    defaultPara = get_value("default")
+    defaultPara_bam2dis = defaultPara["bam2dis"]
+    defaultPara_errEval = defaultPara["errEval"]
+    defaultPara_call = defaultPara["call"]
     commands = ["bam2dis", "errEval", "call"]
-    commandsParser={}
+    commandsParser = {}
     parser = argparse.ArgumentParser(description='mstools: Microsatellite genotyping toolbox.'
                                      # + ".show help of subcommand with '"
                                      # + get_value("tools_name") + " <subcommand> -h'"
@@ -41,21 +45,33 @@ def args_process():
                                 help="The path of input bam file [required] （allow to specify multiple times）")
     parser_bam2dis.add_argument('-o', '--output', required=True, action='append', type=str,
                                 help="prefix of the output [required] （allow to specify multiple times）")
-    parser_bam2dis.add_argument('-m', '--microsatellite', required=True, type=str, nargs=1, default=["NA"],
+    parser_bam2dis.add_argument('-m', '--microsatellite', required=True, type=str, nargs=1,
                                 help="path of the microsatellite list files [required]")
-    parser_bam2dis.add_argument('-t', '--threads', type=int, nargs=1, default=[4],
-                                help="mumber of additional threads to use [default:2]")
-    parser_bam2dis.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1, default=[1],
-                                help="minimum mapping quality of read [default:1]")
-    parser_bam2dis.add_argument('-s', '--minimum_support_reads', type=int, nargs=1, default=[5],
-                                help="minimum support reads of an available microsatellite [default:20]")
-    parser_bam2dis.add_argument('-b', '--batch', type=int, nargs=1, default=[2000],
-                                help="batch size for one thread [default:1000]")
-    parser_bam2dis.add_argument('-d', '--debug', type=bool, nargs=1,choices=[True,False] ,default=[False],
-                                help=" debug mode for developers [default:False]")
-    parser_bam2dis.add_argument("-sep",'--separator', type=str, nargs=1, choices=["comma", "space","tab"], default=["comma"],
-                                help=' separator for microsatellites file [default:"comma"]')
-    commandsParser["bam2dis"]=parser_bam2dis
+    parser_bam2dis.add_argument('-t', '--threads', type=int, nargs=1,
+                                default=[defaultPara_bam2dis["threads"]],
+                                help="mumber of additional threads to use [default:" +
+                                     str(defaultPara_bam2dis["threads"]) + "]")
+    parser_bam2dis.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1,
+                                default=[defaultPara_bam2dis["minimum_mapping_quality"]],
+                                help="minimum mapping quality of read [default:" +
+                                     str(defaultPara_bam2dis["minimum_mapping_quality"]) + "]")
+    parser_bam2dis.add_argument('-s', '--minimum_support_reads', type=int, nargs=1,
+                                default=[defaultPara_bam2dis["minimum_support_reads"]],
+                                help="minimum support reads of an available microsatellite [default:" +
+                                     str(defaultPara_bam2dis["minimum_support_reads"]) + "]")
+    parser_bam2dis.add_argument('-b', '--batch', type=int, nargs=1,
+                                default=[defaultPara_bam2dis["batch"]],
+                                help="batch size for one thread [default:" +
+                                     str(defaultPara_bam2dis["batch"]) + "]")
+    parser_bam2dis.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
+                                default=[defaultPara_bam2dis["debug"]],
+                                help=" debug mode for developers [default:" +
+                                     str(defaultPara_bam2dis["debug"]) + "False]")
+    parser_bam2dis.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
+                                default=[defaultPara_bam2dis["separator"]],
+                                help=' separator for microsatellites file [default:"'
+                                     + str(defaultPara_bam2dis["separator"]) + 'comma"]')
+    commandsParser["bam2dis"] = parser_bam2dis
     ###################################################################################################################
     # add arguments for  "errEval" module
     parser_errEval = subparsers.add_parser('errEval', help='Evaluate the sequencing bias in microsatellite regions.')
@@ -77,6 +93,9 @@ def args_process():
     commandsParser["errEval"] = parser_errEval
     ###################################################################################################################
     # add arguments for call module
+    parser_call= subparsers.add_parser('call', help='Microsatellite genotyping')
+    parser_errEval.description = 'Microsatellite genotyping.'
+
     # print(os.sys.argv)
     # print(parser.parse_args())
     # print(parser_errEval)
@@ -84,12 +103,11 @@ def args_process():
     # add arguments for  "list2bed" module
     # convert MSIsensor list file to bed format
 
-
-    if len(os.sys.argv)<2:
+    if len(os.sys.argv) < 2:
         parser.print_help()
         return False
 
-    if os.sys.argv[1] in ["-h", "--help","-?"]:
+    if os.sys.argv[1] in ["-h", "--help", "-?"]:
         parser.print_help()
         return False
     if os.sys.argv[1] in ["-V", "-v", "--version"]:
@@ -103,7 +121,7 @@ def args_process():
         # parser.parse_args()
         return False
 
-    if len(os.sys.argv)==2 and (os.sys.argv[1] in commands):
+    if len(os.sys.argv) == 2 and (os.sys.argv[1] in commands):
         commandsParser[os.sys.argv[1]].print_help()
         return False
 
