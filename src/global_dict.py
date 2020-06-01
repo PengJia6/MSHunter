@@ -11,29 +11,34 @@
 def global_init():
     global _global_dict
     _global_dict = {}
-    _global_dict["tools_version"]="1.0"
-    _global_dict["tools_name"]="mstools"
+    _global_dict["tools_version"] = "1.0"
+    _global_dict["tools_name"] = "mstools"
     _global_dict["chrom_list"] = [str(i) for i in range(1, 23)] + \
                                  ["chr" + str(i) for i in range(1, 23)] + \
-                                 ["chrM", "chrX", "chrY", "MT", "X", "Y"]
-    _global_dict["default"]={
-        "bam2dis":{
-            "threads":4,
-            "minimum_mapping_quality":1,
-            "minimum_support_reads":5,
-            "batch":2000,
-            "debug":False,
-            "separator":"comma"
+                                 ["X", "Y", "chrX", "chrY", "chrM", "MT"]
+    _global_dict["default"] = {
+        "bam2dis": {
+            "threads": 4,
+            "minimum_mapping_quality": 1,
+            "minimum_support_reads": 5,
+            "batch": 2000,
+            "debug": False,
+            "separator": "tab",  # comma,tab,space
+            "only_homopolymers": False,
+            "allow_mismatch": True,
+            "minimum_repeat_times": "1:8;2-5:5",
+            "maximum_repeat_times": "1-5:100",
 
         },
-        "errEval":{
+        "errEval": {
 
         },
-        "call":{
+        "call": {
 
         }
 
     }
+
 
 def set_value(name, value):
     _global_dict[name] = value

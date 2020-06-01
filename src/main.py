@@ -42,9 +42,9 @@ def args_process():
     parser_bam2dis = subparsers.add_parser('bam2dis', help='Get microsatellite distribution from bam file.')
     parser_bam2dis.description = 'Get microsatellite distribution from bam file.'
     parser_bam2dis.add_argument('-i', '--input', required=True, action='append', type=str,
-                                help="The path of input bam file [required] （allow to specify multiple times）")
+                                help="The path of input bam file [required]")
     parser_bam2dis.add_argument('-o', '--output', required=True, action='append', type=str,
-                                help="prefix of the output [required] （allow to specify multiple times）")
+                                help="prefix of the output [required] ")
     parser_bam2dis.add_argument('-m', '--microsatellite', required=True, type=str, nargs=1,
                                 help="path of the microsatellite list files [required]")
     parser_bam2dis.add_argument('-t', '--threads', type=int, nargs=1,
@@ -66,11 +66,27 @@ def args_process():
     parser_bam2dis.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_bam2dis["debug"]],
                                 help=" debug mode for developers [default:" +
-                                     str(defaultPara_bam2dis["debug"]) + "False]")
+                                     str(defaultPara_bam2dis["debug"]) + "]")
     parser_bam2dis.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
                                 default=[defaultPara_bam2dis["separator"]],
-                                help=' separator for microsatellites file [default:"'
-                                     + str(defaultPara_bam2dis["separator"]) + 'comma"]')
+                                help=' separator for microsatellites file [default:'
+                                     + str(defaultPara_bam2dis["separator"]) + ']')
+    parser_bam2dis.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, choices=[True, False],
+                                default=[defaultPara_bam2dis["allow_mismatch"]],
+                                help="only analyze homopolymer regions [default:"
+                                     + str(defaultPara_bam2dis["only_homopolymers"]) + "]")
+    parser_bam2dis.add_argument('-am', '--allow_mismatch', type=int, nargs=1, choices=[True, False],
+                                default=[defaultPara_bam2dis["allow_mismatch"]],
+                                help="allow mismatch when capture microsatellite [default:"
+                                     + str(defaultPara_bam2dis["allow_mismatch"]) + "]")
+    parser_bam2dis.add_argument("-minr",'--minimum_repeat_times', default=[defaultPara_bam2dis["minimum_repeat_times"]],
+                                type=str, nargs=1,
+                                help="minimum repeat times of microsatellites [default:"
+                                     + defaultPara_bam2dis["minimum_repeat_times"] + "]")
+    parser_bam2dis.add_argument('-maxr','--maximum_repeat_times', default=[defaultPara_bam2dis["maximum_repeat_times"]], type=str, nargs=1,
+                                help="maximum repeat times of microsatellites [default:"
+                                     +defaultPara_bam2dis["maximum_repeat_times"]+"]")
+
     commandsParser["bam2dis"] = parser_bam2dis
     ###################################################################################################################
     # add arguments for  "errEval" module
@@ -93,7 +109,7 @@ def args_process():
     commandsParser["errEval"] = parser_errEval
     ###################################################################################################################
     # add arguments for call module
-    parser_call= subparsers.add_parser('call', help='Microsatellite genotyping')
+    parser_call = subparsers.add_parser('call', help='Microsatellite genotyping')
     parser_errEval.description = 'Microsatellite genotyping.'
 
     # print(os.sys.argv)
