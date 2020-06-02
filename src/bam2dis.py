@@ -105,7 +105,6 @@ class MSDeail:
         :param suffix:
         :return:
         """
-
         if alignment.mapping_quality < min_mapping_qual:
             return -1
         readString = alignment.query

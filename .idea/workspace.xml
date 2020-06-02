@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/bam2dis.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bam2dis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -42,11 +39,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/bam2dis.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="253">
-              <caret line="203" column="48" selection-start-line="203" selection-start-column="48" selection-end-line="203" selection-end-column="48" />
+            <state relative-caret-position="517">
+              <caret line="125" column="17" lean-forward="true" selection-start-line="125" selection-start-column="17" selection-end-line="125" selection-end-column="17" />
               <folding>
                 <element signature="e#300#322#0" expanded="true" />
-                <element signature="e#3281#4269#0" />
                 <element signature="e#8701#8702#0" />
               </folding>
             </state>
@@ -68,8 +64,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="455">
-              <caret line="85" column="40" selection-start-line="85" selection-start-column="40" selection-end-line="85" selection-end-column="40" />
+            <state relative-caret-position="166">
+              <caret line="151" column="7" lean-forward="true" selection-start-line="151" selection-start-column="7" selection-end-line="151" selection-end-column="7" />
               <folding>
                 <element signature="e#300#315#0" expanded="true" />
               </folding>
@@ -92,8 +88,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/errEval.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4698">
-              <caret line="166" column="55" selection-start-line="166" selection-start-column="4" selection-end-line="166" selection-end-column="55" />
+            <state relative-caret-position="166">
+              <caret line="261" column="28" selection-start-line="261" selection-start-column="11" selection-end-line="261" selection-end-column="28" />
               <folding>
                 <element signature="e#0#9#0" expanded="true" />
               </folding>
@@ -137,8 +133,8 @@
         <option value="$PROJECT_DIR$/src/errEval.py" />
         <option value="$PROJECT_DIR$/src/a1_compare_dis.py" />
         <option value="$PROJECT_DIR$/src/a1_detection_abiity.py" />
-        <option value="$PROJECT_DIR$/src/main.py" />
         <option value="$PROJECT_DIR$/src/global_dict.py" />
+        <option value="$PROJECT_DIR$/src/main.py" />
         <option value="$PROJECT_DIR$/src/bam2dis.py" />
       </list>
     </option>
@@ -200,7 +196,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.bam2dis">
+  <component name="RunManager" selected="Python.main">
     <configuration name="a1_compare_dis" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -389,7 +385,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.06447964" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.033936653" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.25605726" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -494,16 +490,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/errEval.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4698">
-          <caret line="166" column="55" selection-start-line="166" selection-start-column="4" selection-end-line="166" selection-end-column="55" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/.png">
       <provider selected="true" editor-type-id="images" />
     </entry>
@@ -513,16 +499,6 @@
           <caret line="103" column="27" selection-start-line="103" selection-start-column="27" selection-end-line="103" selection-end-column="27" />
           <folding>
             <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="455">
-          <caret line="85" column="40" selection-start-line="85" selection-start-column="40" selection-end-line="85" selection-end-column="40" />
-          <folding>
-            <element signature="e#300#315#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -544,13 +520,32 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/errEval.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="166">
+          <caret line="261" column="28" selection-start-line="261" selection-start-column="11" selection-end-line="261" selection-end-column="28" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="166">
+          <caret line="151" column="7" lean-forward="true" selection-start-line="151" selection-start-column="7" selection-end-line="151" selection-end-column="7" />
+          <folding>
+            <element signature="e#300#315#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/bam2dis.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="253">
-          <caret line="203" column="48" selection-start-line="203" selection-start-column="48" selection-end-line="203" selection-end-column="48" />
+        <state relative-caret-position="517">
+          <caret line="125" column="17" lean-forward="true" selection-start-line="125" selection-start-column="17" selection-end-line="125" selection-end-column="17" />
           <folding>
             <element signature="e#300#322#0" expanded="true" />
-            <element signature="e#3281#4269#0" />
             <element signature="e#8701#8702#0" />
           </folding>
         </state>

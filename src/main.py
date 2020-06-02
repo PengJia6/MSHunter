@@ -17,6 +17,7 @@ from src.bam2dis import *
 from src.call import *
 from src.errEval import *
 from src.global_dict import *
+print(" ".join(sys.argv))
 
 
 def args_process():
