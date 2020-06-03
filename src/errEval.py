@@ -263,7 +263,7 @@ def errEval(parase):
         print("[Error] Parameters error!")
         return -1
     args = get_value("paras")
-    # motifList = classDisbyMotif(args)
+    motifList = classDisbyMotif(args)
     motifList = ['T', 'A', 'G', 'C']
     # print(motifList)
     for motif in motifList:

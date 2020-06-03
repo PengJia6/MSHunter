@@ -64,10 +64,12 @@ class MSDeail:
             # return False
         else:
 
-            self.lowSupport = True
+            self.lowSupport = False
         self.repeatDict = repeatTimesDict
         self.depth = depth
         self.support_reads = sum(list(repeatTimesDict.values()))
+        if self.support_reads >= 1:
+            self.disStat = True
 
     def calcuShiftProbability(self):
         """
@@ -94,6 +96,7 @@ class MSDeail:
         # print()
         self.p = round(delShfit / (insShfit + delShfit + normal), 4)
         self.q = round(insShfit / (insShfit + delShfit + normal), 4)
+        # print(self.p,self.q)
         return True
 
     def getRepeatTimes(self, alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
@@ -232,13 +235,10 @@ def loadMicroSatellite(args):
             dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
             del dfMicroSatellites["right_flank_bases"]
         dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
-
-        # if "locat=="
-        # print(dfMicroSatellites)
     elif separator == "space":
         dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
 
-    chromList=get_value("chrom_list")
+    chromList = get_value("chrom_list")
     # dfMicroSatellites["label"]=True if dfMicroSatellites["chr"] in chromList else False
     dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
     repeatRange = args["ranges_of_repeat_times"]
@@ -252,8 +252,9 @@ def loadMicroSatellite(args):
                                                     (dfMicroSatellites["repeatTimes"] <= maxr)
                                                     ]])
     # print(newDf)
-    print("[Info] There are total",len(newDf),"microsatellites.")
+    print("[Info] There are total", len(newDf), "microsatellites.")
     return newDf
+
 
 def processOneMs(msDetail):
     msDetail.get_dis()
@@ -317,6 +318,7 @@ def write_vcf_init(outputpath, sampleNameList):
     outputfile.header.add_line('##INFO=<ID=proD,Number=1,Type=Float,Description="Probability of deletion">')
     outputfile.header.add_line('##INFO=<ID=proI,Number=1,Type=Float,Description="Probability of insertion">')
     outputfile.header.add_line('##INFO=<ID=lowSupport,Number=1,Type=String,Description="Low support reads">')
+    outputfile.header.add_line('##INFO=<ID=disStat,Number=1,Type=String,Description="Distribution Stat">')
     outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
     return outputfile
 
@@ -354,6 +356,7 @@ def write_vcf(outputfile, dataList):
             vcfrec.info["proD"] = msDetail.p
             vcfrec.info["proI"] = msDetail.q
             vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
+            vcfrec.info["disStat"] = str(msDetail.disStat)
             outputfile.write(vcfrec)
 
 

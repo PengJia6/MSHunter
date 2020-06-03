@@ -20,7 +20,7 @@ def global_init():
         "bam2dis": {
             "threads": 4,
             "minimum_mapping_quality": 1,
-            "minimum_support_reads": 5,
+            "minimum_support_reads": 2,
             "batch": 2000,
             "debug": False,
             "separator": "tab",  # comma,tab,space
@@ -34,11 +34,8 @@ def global_init():
 
         },
         "call": {
-
         }
-
     }
-
 
 def set_value(name, value):
     _global_dict[name] = value
