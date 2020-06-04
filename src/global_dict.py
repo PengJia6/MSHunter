@@ -31,6 +31,8 @@ def global_init():
 
         },
         "errEval": {
+            "threads": 4,
+             "batch": 2000,
 
         },
         "call": {

@@ -97,21 +97,45 @@ def args_process():
                                 help="The path of input dis.vcf file [required]")
     parser_errEval.add_argument('-o', '--output', required=True, type=str,
                                 help="The path of output file prefix [required]")
-    parser_errEval.add_argument('-t', '--threads', type=int, nargs=1, default=[4],
-                                help="mumber of additional threads to use [default:2]")
+
     parser_errEval.add_argument('-s', '--minimum_support_reads', type=int, nargs=1, default=[5],
                                 help="minimum support reads of an available microsatellite [default:20]")
-    parser_errEval.add_argument('-b', '--batch', type=int, nargs=1, default=[1000],
-                                help="batch size for one thread [default:1000]")
     parser_errEval.add_argument('-l', '--max_repeat_times', type=int, nargs=1, default=[200],
                                 help="maximum repeat times analysis [default:200]")
     parser_errEval.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, default=[200],
                                 help="only analyze homopolymer regions [default:200]")
+    parser_errEval.add_argument('-t', '--threads', type=int, nargs=1,
+                                default=[defaultPara_errEval["threads"]],
+                                help="mumber of additional threads to use [default:" +
+                                     str(defaultPara_errEval["threads"]) + "]")
+    parser_errEval.add_argument('-b', '--batch', type=int, nargs=1,
+                                default=[defaultPara_errEval["batch"]],
+                                help="batch size for one thread [default:" +
+                                     str(defaultPara_errEval["batch"]) + "]")
     commandsParser["errEval"] = parser_errEval
     ###################################################################################################################
     # add arguments for call module
     parser_call = subparsers.add_parser('call', help='Microsatellite genotyping')
     parser_errEval.description = 'Microsatellite genotyping.'
+    parser_call.add_argument('-i', '--input', required=True, type=str,
+                                help="The path of input dis.vcf file [required]")
+    parser_call.add_argument('-o', '--output', required=True, type=str,
+                                help="The path of output file prefix [required]")
+
+    parser_call.add_argument('-s', '--minimum_support_reads', type=int, nargs=1, default=[5],
+                                help="minimum support reads of an available microsatellite [default:20]")
+    parser_call.add_argument('-l', '--max_repeat_times', type=int, nargs=1, default=[200],
+                                help="maximum repeat times analysis [default:200]")
+    parser_call.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, default=[200],
+                                help="only analyze homopolymer regions [default:200]")
+    parser_call.add_argument('-t', '--threads', type=int, nargs=1,
+                                default=[defaultPara_errEval["threads"]],
+                                help="mumber of additional threads to use [default:" +
+                                     str(defaultPara_errEval["threads"]) + "]")
+    parser_call.add_argument('-b', '--batch', type=int, nargs=1,
+                                default=[defaultPara_errEval["batch"]],
+                                help="batch size for one thread [default:" +
+                                     str(defaultPara_errEval["batch"]) + "]")
 
     # print(os.sys.argv)
     # print(parser.parse_args())

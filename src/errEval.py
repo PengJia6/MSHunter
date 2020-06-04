@@ -1,8 +1,12 @@
 import os
 
 import pysam
+import yaml
 import matplotlib.pyplot as plt
 from src.global_dict import *
+from src.units import *
+
+
 
 
 def errEval_args_init(args):
@@ -49,11 +53,8 @@ def classDisbyMotif(paras):
     thread = paras["threads"]
     windowSize = paras["batch"]
     dislen = paras["max_repeat_times"]
-
     onlyHomo = paras["only_homopolymers"]
     all_dis_parameter_tmp = {}
-    # path_dis_parameter = path_dis_parameter if path_dis_parameter[-1] == "/" else path_dis_parameter + "/"
-
     if not os.path.exists(path_dis_parameter):
         os.mkdir(path_dis_parameter)
     else:
@@ -78,7 +79,7 @@ def classDisbyMotif(paras):
 
         if processLable and (support_reads > min_support_reads):
             if motif not in File_motif:
-                File_motif[motif] = pysam.VariantFile(path_dis_parameter + "tmp_motif_" + motif, 'wb',
+                File_motif[motif] = pysam.VariantFile(path_dis_parameter + "tmp_motif_" + motif + ".bcf", 'wb',
                                                       header=vcffile.header)
             File_motif[motif].write(rec)
     motifList = []
@@ -86,6 +87,22 @@ def classDisbyMotif(paras):
         File_motif[motif].close()
         motifList.append(motif)
     return motifList
+
+
+def write_vcf_init_call(outputpath, inputpath):
+    inputfile = pysam.VariantFile(inputpath, "rb")
+    outputfile = pysam.VariantFile(outputpath, "wb", header=inputfile.header)
+    outputfile.header.add_line(
+        '##INFO=<ID=FirstAlleles,Number=1,Type=String,Description="The first allele type of this point">')
+    outputfile.header.add_line(
+        '##INFO=<ID=SecondAlleles,Number=1,Type=String,Description="The second allele type of this point">')
+    outputfile.header.add_line('##INFO=<ID=CallQuality,Number=1,Type=String,Description="Genotype quality">')
+    outputfile.header.add_line('##INFO=<ID=Mutation,Number=1,Type=String,Description="Mutation">')
+    outputfile.header.add_line('##INFO=<ID=MutationType,Number=1,Type=String,Description="Mutation type">')
+    outputfile.header.add_line('##FORMAT=<ID=DP,Number=1,Type=String,Description="Allele Depth">')
+    outputfile.header.add_line('##FORMAT=<ID=AF,Number=1,Type=String,Description="Allele Frequency">')
+    # outputfile.header.add_line('##INFO=<ID=,Number=1,Type=String,Description="Mutation type">')
+    return outputfile
 
 
 def getHomoNormalDis(motifDis_tmp, maxRepeat):
@@ -105,7 +122,7 @@ def getHomoNormalDis(motifDis_tmp, maxRepeat):
         homList[homo] = {}
         for pot in tmp_dis:
             if tmp_dis[pot] > 0:
-                homList[homo][pot] = tmp_dis[pot] / readNum
+                homList[homo][pot] = round(tmp_dis[pot] / readNum, 6)
 
     for homo in range(1, maxRepeat + 1):
         if homo not in homList:
@@ -114,18 +131,6 @@ def getHomoNormalDis(motifDis_tmp, maxRepeat):
         for i in homList[homo]:
             x.append(i)
             y.append(homList[homo][i])
-        # print(x,y)
-        # # print(homo,sumdis)
-        # if homo>9:
-        #     plt.plot(x,y)
-        #     plt.scatter(x,y)
-        #     plt.vlines(homo,0,1)
-        #     plt.show()
-        #
-        #     plt.close()
-
-        #     print(homList[homo])
-        # print(homo,homList[homo])
     return homList
 
 
@@ -139,7 +144,7 @@ def getOneMotifProsess(paras, motif):
     onlyHomo = paras["only_homopolymers"]
     motifDis_tmp = {}
 
-    vcffile = pysam.VariantFile(path_dis_parameter + "tmp_motif_" + motif, "rb")
+    vcffile = pysam.VariantFile(path_dis_parameter + "tmp_motif_" + motif + ".bcf", "rb")
     maxRepeat = 0
     repeatList = []
     for rec in vcffile.fetch():
@@ -165,7 +170,7 @@ def getOneMotifProsess(paras, motif):
         motifDis_tmp[repeatTimes] = thistmp
 
     homList = getHomoNormalDis(motifDis_tmp, maxRepeat)
-    return homList
+    # return homList
 
     maxture = {}
 
@@ -176,86 +181,52 @@ def getOneMotifProsess(paras, motif):
                 firstDis = homList[first]
                 secondDis = homList[second]
                 thismaxture = {}
-                print("+++++++++++++++++++++++++++++")
-                print(first, firstDis)
-                print(second, secondDis)
+                # print("+++++++++++++++++++++++++++++")
+                # print(first, firstDis)
+                # print(second, secondDis)
                 for rp in set([i for i in firstDis] + [j for j in secondDis]):
                     if rp not in firstDis:
                         firstDis[rp] = 0
                     if rp not in secondDis:
                         secondDis[rp] = 0
                 for rp in firstDis:
-                    thismaxture[rp] = round((firstDis[rp] + secondDis[rp]) / 2)
-                maxture[first * 100 + second] = thismaxture
-    # return {"homo": homList, "maxture": maxture}
-    ########### call
+                    thismaxture[rp] = round((firstDis[rp] + secondDis[rp]) / 2, 6)
+
+                maxture[first * 1000 + second] = removeZeroDict(thismaxture)
+    with open(path_dis_parameter + "tmp_motif_" + motif + ".model", "w") as f:
+        yaml.dump({"homo": homList, "maxture": maxture}, f)
+    return {"homo": homList, "maxture": maxture}
+
+
+def call(paras, motif, outputvcf):
+    path_dis_parameter = paras["output"]
+    modelfile = open(path_dis_parameter + "tmp_motif_" + motif + ".model", "r")
+    model = yaml.load(modelfile)
+    vcffile = pysam.VariantFile(path_dis_parameter + "tmp_motif_" + motif + ".bcf", "rb")
     for rec in vcffile.fetch():
         recordInfo = rec.info
         # motif = recordInfo["motif"]
         repeatTimes = int(recordInfo["repeatTimes"])
         disList = [list(map(int, i.split(":"))) for i in recordInfo["dis"].split("|")]
         thismaxRepeat = max([i[0] for i in disList])
-        maxRepeat = maxRepeat if maxRepeat >= thismaxRepeat else thismaxRepeat
+        # maxRepeat = maxRepeat if maxRepeat >= thismaxRepeat else thismaxRepeat
         support_reads = int(recordInfo["support_reads"])
         disListnormal = {}
         for i in disList:
             disListnormal[i[0]] = i[1] / support_reads
-
-    # print(thismaxture)
-
-    #
-    # with open(path_dis_parameter + "tmp_motif_" + motif) as motifDis:
-    #     linenum = 0
-    #     for line in motifDis:
-    #         linenum += 1
-    #         lineinfo = line[:-1].split(":")
-    #         #                 repeatLen=int(lininfo[0].split(" ")[3])
-    #         [chrom, chrompos, motif, repeatLen] = lineinfo[0].split(" ")
-    #         disList = list(map(int, lineinfo[1].split(" ")))
-    #         depth = sum(disList)
-    #         if depth < 10:
-    #             continue
-    #         disList_norm = [i / depth for i in disList]
-    #         start, end = 0, 0
-    #         pos = 0
-    #         for i in disList:
-    #             pos += 1
-    #             if i > 0:
-    #                 start = np.max([pos - 10, 1])
-    #                 break
-    #         pos = len(disList)
-    #         for i in disList[::-1]:
-    #             pos -= 1
-    #             if i > 0:
-    #                 end = np.min([pos + 10, len(disList)])
-    #                 break
-    #
-    #         # if linenum > 10:
-    #         #     break
-    #         distance_Euclidean = []
-    #         label_list = []
-    #         for first in range(start, end + 1):
-    #             for second in range(start, end + 1):
-    #                 if first <= second:
-    #                     thisDis = maxture[first * 100 + second]
-    #                     distance_Euclidean.append(np.linalg.norm(np.array(disList_norm) - np.array(thisDis)))
-    #                     label_list.append(first * 100 + second)
-    #         gtid = label_list[np.argmin(distance_Euclidean)]
-    #         GT1 = (gtid // 100)
-    #         GT2 = (gtid % 100)
-    #         print(chrom, chrompos, motif, repeatLen)
-    #         print(GT1, GT2)
-    #         print(GT1, homoList_final[GT1])
-    #         print(GT2, homoList_final[GT2])
-    #
-    #         print("raw", disList)
-    #         print("nor", disList_norm)
-    #         print("DB", maxture[gtid])
-    #         print("======================================================================")
-    #
-    # return {"summary": summary, "homoList": homoList_final, "maxture": maxture}
-
-    # def get_errEval(args):
+        # print(disListnormal)
+        minAllele = min(disListnormal.keys()) - 2
+        maxAllele = max(disListnormal.keys()) + 2
+        distance = {}
+        for first in range(minAllele, maxAllele + 1):
+            for second in range(minAllele, maxAllele + 1):
+                if first <= second:
+                    modelid = first * 1000 + second
+                    if modelid in model["maxture"]:
+                        distance[modelid] = getDisdistance(model["maxture"][modelid], disListnormal)
+        distance_tuple = sorted(distance.items(), key=lambda kv: (kv[1], kv[0]))
+        rec.info["FirstAlleles"] = distance_tuple[0][0]
+        print(distance_tuple)
 
 
 def errEval(parase):
@@ -263,11 +234,18 @@ def errEval(parase):
         print("[Error] Parameters error!")
         return -1
     args = get_value("paras")
-    motifList = classDisbyMotif(args)
-    motifList = ['T', 'A', 'G', 'C']
-    # print(motifList)
+    # motifList = classDisbyMotif(args)
+    motifList = ["A", "T", "C", "G"]
+
+    outputvcf = write_vcf_init_call(args["output"][:-1] + ".bcf", args["input"])
+    model={}
     for motif in motifList:
-        maxture = getOneMotifProsess(args, motif)
+        model[motif] = getOneMotifProsess(args, motif)
+    with open(args["output"][:-1] +  ".model", "w") as f:
+        yaml.dump(model, f)
+
+        # call(args, motif, outputvcf)
+
     #
     #     print(motif)
 
