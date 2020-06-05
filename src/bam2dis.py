@@ -204,7 +204,7 @@ def loadMicroSatellite(args):
     :return:
     """
     print("[Info] Loading microsatellite file...")
-    ms = args["Microsatellite"]
+    ms = args["microsatellite"]
     separator = args["separator"]
     # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
     if separator == "comma":
@@ -237,12 +237,17 @@ def loadMicroSatellite(args):
         dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
     elif separator == "space":
         dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
-
+    if args["only_homopolymer"]:
+        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
+    if args["debug"]:
+        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
+        # if len(dfMicroSatellites) > 3000000:
+        #     dfMicroSatellites = dfMicroSatellites.sample(30000)
     chromList = get_value("chrom_list")
-    # dfMicroSatellites["label"]=True if dfMicroSatellites["chr"] in chromList else False
     dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
     repeatRange = args["ranges_of_repeat_times"]
     repeatUnitList = sorted(repeatRange.keys())
+
     newDf = pd.DataFrame()
     for ul in repeatUnitList:
         minr = repeatRange[ul]["min"]
@@ -251,8 +256,11 @@ def loadMicroSatellite(args):
                                                     (dfMicroSatellites["repeatTimes"] >= minr) &
                                                     (dfMicroSatellites["repeatTimes"] <= maxr)
                                                     ]])
-    # print(newDf)
-    print("[Info] There are total", len(newDf), "microsatellites.")
+
+    print("[INFO] There are total", len(newDf), "microsatellites.")
+    set_value("ms_number", len(newDf))
+    set_value("motifList", set(newDf["motif"]))
+    # print(set(newDf["motif"]))
     return newDf
 
 
@@ -260,28 +268,6 @@ def processOneMs(msDetail):
     msDetail.get_dis()
     msDetail.calcuShiftProbability()
     return msDetail
-
-    #
-    # bamfile = pysam.AlignmentFile(msDetail.bamfile, "rb")
-    # alignmentList = [alignment for alignment in bamfile.fetch(msDetail.chrId, msDetail.queryStart, msDetail.queryEnd)]
-    # depth = len(alignmentList)
-    # if depth < msDetail.min_support_reads:
-    #     return False
-    # repeatTimesDict = {}
-    # for alignment in alignmentList:
-    #     if alignment.is_unmapped: continue
-    #     thisRepeatTimes = getRepeatTimes(alignment, msDetail.motif, msDetail.motifLen, msDetail.prefix, msDetail.suffix,
-    #                                      min_mapping_qual=msDetail.min_mapping_qual)
-    #     if thisRepeatTimes < 0: continue
-    #     if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
-    #     repeatTimesDict[thisRepeatTimes] += 1
-    # if sum(repeatTimesDict.values()) < msDetail.min_support_reads:
-    #     return False
-    # else:
-    #     msDetail.repeatDict = repeatTimesDict
-    #     msDetail.depth = depth
-    #     msDetail.support_reads = sum(list(repeatTimesDict.values()))
-    #     return msDetail
 
 
 def multiRun(thread, datalist):
@@ -331,67 +317,65 @@ def write_vcf(outputfile, dataList):
     # print(header.contigs)
     contigs = []
     for msDetail in dataList:
-        if msDetail != False:
-
-            chrom = msDetail.chrId
-            pos = int(msDetail.posStart)
-            ref = str(msDetail.repeatTimes) + "[" + msDetail.motif + "]"
-            if chrom not in contigs:
-                outputfile.header.add_line("##contig=<ID={chrom}>".format(chrom=chrom))
-            vcfrec = outputfile.new_record()
-            vcfrec.contig = chrom
-            vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
-            vcfrec.pos = pos
-            vcfrec.ref = ref
-            vcfrec.info["chrom"] = chrom
-            vcfrec.info["pos"] = pos
-            vcfrec.info["Start"] = pos
-            vcfrec.info["End"] = pos + msDetail.repeatTimes * len(msDetail.motif)
-            vcfrec.info["motif"] = msDetail.motif
-            vcfrec.info["repeatTimes"] = msDetail.repeatTimes
-            vcfrec.info["prefix"] = msDetail.prefix
-            vcfrec.info["depth"] = msDetail.depth
-            vcfrec.info["support_reads"] = msDetail.support_reads
-            vcfrec.info["dis"] = "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])
-            vcfrec.info["proD"] = msDetail.p
-            vcfrec.info["proI"] = msDetail.q
-            vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
-            vcfrec.info["disStat"] = str(msDetail.disStat)
-            outputfile.write(vcfrec)
+        chrom = msDetail.chrId
+        pos = int(msDetail.posStart)
+        ref = str(msDetail.repeatTimes) + "[" + msDetail.motif + "]"
+        if chrom not in contigs:
+            outputfile.header.add_line("##contig=<ID={chrom}>".format(chrom=chrom))
+        vcfrec = outputfile.new_record()
+        vcfrec.contig = chrom
+        vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
+        vcfrec.pos = pos
+        vcfrec.ref = ref
+        vcfrec.info["chrom"] = chrom
+        vcfrec.info["pos"] = pos
+        vcfrec.info["Start"] = pos
+        vcfrec.info["End"] = pos + msDetail.repeatTimes * len(msDetail.motif)
+        vcfrec.info["motif"] = msDetail.motif
+        vcfrec.info["repeatTimes"] = msDetail.repeatTimes
+        vcfrec.info["prefix"] = msDetail.prefix
+        vcfrec.info["depth"] = msDetail.depth
+        vcfrec.info["support_reads"] = msDetail.support_reads
+        vcfrec.info["dis"] = "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])
+        vcfrec.info["proD"] = msDetail.p
+        vcfrec.info["proI"] = msDetail.q
+        vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
+        vcfrec.info["disStat"] = str(msDetail.disStat)
+        outputfile.write(vcfrec)
 
 
 def writeInfo(outputfile, dataList):
     for msDetail in dataList:
-        if msDetail != False:
-            chrom = msDetail.chrId
-            pos = str(msDetail.posStart)
-            idnum = "."
-            ref = "[" + str(msDetail.repeatTimes) + "]" + msDetail.motif
-            alt = "."
-            qual = "."
-            filter = "."
-            Info = ";".join(
-                ["chrom=" + chrom, "pos=" + pos, "motif=" + msDetail.motif, "repeatTimes=" + str(msDetail.repeatTimes),
-                 "prefix=" + msDetail.prefix, "suffix=" + msDetail.suffix,
-                 "depth=" + str(msDetail.depth),
-                 "support_reads=" + str(msDetail.support_reads),
-                 "dis=" + "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])]
-            )
-            format = "GT"
-            value = "./."
-            outputfile.write("\t".join([chrom, pos, idnum, ref, alt, qual, filter, Info, format, value]) + "\n")
+        chrom = msDetail.chrId
+        pos = str(msDetail.posStart)
+        idnum = "."
+        ref = "[" + str(msDetail.repeatTimes) + "]" + msDetail.motif
+        alt = "."
+        qual = "."
+        filter = "."
+        Info = ";".join(
+            ["chrom=" + chrom, "pos=" + pos, "motif=" + msDetail.motif, "repeatTimes=" + str(msDetail.repeatTimes),
+             "prefix=" + msDetail.prefix, "suffix=" + msDetail.suffix,
+             "depth=" + str(msDetail.depth),
+             "support_reads=" + str(msDetail.support_reads),
+             "dis=" + "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])]
+        )
+        format = "GT"
+        value = "./."
+        outputfile.write("\t".join([chrom, pos, idnum, ref, alt, qual, filter, Info, format, value]) + "\n")
 
 
 def getDis(args={}, upstreamLen=5, downstreamLen=5):
     chromList = get_value("chrom_list")
-    dis = args["output"]
+    dis = args["output_dis"]
     thread = args["threads"]
     batch = args["batch"]
-    outputfile = write_vcf_init(dis, [dis])
+    outputfile = write_vcf_init(dis, [get_value("case")])
     dfMicroSatellites = loadMicroSatellite(args)
     curentMSNum = 0
     tmpWindow = []
-    for id, info in dfMicroSatellites.iterrows():
+    ms_number = get_value("ms_number")
+    for ms_id, info in dfMicroSatellites.iterrows():
         chr_id = info["chr"]
         if chr_id not in chromList:
             continue
@@ -418,19 +402,21 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        if args["debug"] and (curentMSNum > 100):
+        if curentMSNum >10000 and args["debug"]:
             break
         if curentMSNum % (batch * thread) == 0:
-            print("[Info] Processing:", curentMSNum - batch * thread + 1, "-", curentMSNum)
+            print("[Info] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
+                  "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
             result_list = multiRun(thread=thread, datalist=tmpWindow)
             write_vcf(outputfile, result_list)
             tmpWindow = []
     result_list = multiRun(thread=thread, datalist=tmpWindow)
     write_vcf(outputfile, result_list)
     write_vcf_close(outputfile)
+    print("[Info] Bam2dis: Total", ms_number, "microsatelite, finish all!")
 
 
-def bam2dis(parase):
+def bam2dis(parase):  # delete in future
     if not bam2dis_args_init(parase):
         # print("[Error] Parameters error!")
         return
@@ -441,8 +427,12 @@ def bam2dis(parase):
         bamnum += 1
         args["input"] = inputbampath
         args["output"] = outputebampath
-        # print("[Info] Precessing", bamnum, "file")
         getDis(args=args)
+
+
+def bam2dis():
+    args = get_value("paras")
+    getDis(args=args)
 
 
 if __name__ == "__main__":
