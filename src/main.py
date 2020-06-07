@@ -325,7 +325,7 @@ def genotype_init(args):
     case = case.strip(".cram")
     paras["output_dis"] = paras["output"] + case + ".dis.bcf"
     paras["output_tmp"] = paras["output"] + case + "_tmp"
-    if os.path.exists(paras["output_tmp"]):
+    if not os.path.exists(paras["output_tmp"]):
         os.makedirs(paras["output_tmp"])
 
     paras["output_model"] = paras["output"] + case + ".model"
