@@ -5,7 +5,7 @@ import yaml
 import matplotlib.pyplot as plt
 from src.global_dict import *
 from src.units import *
-
+# print("fkkfkfkf")
 
 def errEval_args_init(args):
     """
@@ -155,7 +155,7 @@ def getOneMotifProsess(paras, motif):
                 maxture[first * 1000 + second] = removeZeroDict(thismaxture)
     with open(path_dis_parameter + "tmp_motif_" + motif + ".model", "w") as f:
         yaml.dump({"maxture": maxture}, f)
-    return {"homo": homList, "maxture": maxture,"maxRepeat":maxRepeat}
+    return { "maxture": maxture,"maxRepeat":maxRepeat}
 
 
 def errEval(parase):
@@ -175,13 +175,14 @@ def errEval():
     args = get_value("paras")
     classDisbyMotif(args)
     motifList = get_value("motifList")
-    # print(motifList)
     model = {}
     for motif in motifList:
+        print("[Info] Build error model for motif",motif)
         model[motif] = getOneMotifProsess(args, motif)
     with open(args["output_model"], "w") as f:
         yaml.dump(model, f)
-    print(model.keys())
+    set_value("model",model)
+    # print(model.keys())
     return model
 
 

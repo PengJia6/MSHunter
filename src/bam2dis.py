@@ -306,6 +306,10 @@ def write_vcf_init(outputpath, sampleNameList):
     outputfile.header.add_line('##INFO=<ID=lowSupport,Number=1,Type=String,Description="Low support reads">')
     outputfile.header.add_line('##INFO=<ID=disStat,Number=1,Type=String,Description="Distribution Stat">')
     outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
+    outputfile.header.add_line('##FORMAT=<ID=PS,Number=1,Type=String,Description="Genotype">')
+    outputfile.header.add_sample(get_value("case"))
+    # print("header",outputfile.header.samples)
+    # print("header",outputfile.header.formats)
     return outputfile
 
 
@@ -323,8 +327,9 @@ def write_vcf(outputfile, dataList):
         if chrom not in contigs:
             outputfile.header.add_line("##contig=<ID={chrom}>".format(chrom=chrom))
         vcfrec = outputfile.new_record()
+        # print("infoKey",vcfrec.info.keys())
         vcfrec.contig = chrom
-        vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
+        # vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
         vcfrec.pos = pos
         vcfrec.ref = ref
         vcfrec.info["chrom"] = chrom
@@ -341,6 +346,8 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["proI"] = msDetail.q
         vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
         vcfrec.info["disStat"] = str(msDetail.disStat)
+        vcfrec.samples[get_value("case")]["GT"]=()
+        vcfrec.samples[get_value("case")].phased=True
         outputfile.write(vcfrec)
 
 
@@ -402,7 +409,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        if curentMSNum >10000 and args["debug"]:
+        if curentMSNum > 10000 and args["debug"]:
             break
         if curentMSNum % (batch * thread) == 0:
             print("[Info] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,

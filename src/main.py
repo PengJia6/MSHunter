@@ -314,11 +314,11 @@ def genotype_init(args):
         # error_stat = True
     if error_stat: return False
 
-
     output_path = paras["output"]
     output_path = output_path if output_path[-1] == "/" else output_path + "/"
-    # os.makedirs(output_path)
-    paras["output"]=output_path
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+    paras["output"] = output_path
     input_path = paras["input"]
     input_path = input_path[:-1] if input_path[-1] == "/" else input_path
     case = input_path.split("/")[-1].strip(".bam")
@@ -327,18 +327,16 @@ def genotype_init(args):
     paras["output_tmp"] = paras["output"] + case + "_tmp"
     paras["output_model"] = paras["output"] + case + ".model"
     paras["output_call"] = paras["output"] + case + ".bcf"
-
-    set_value("case",case)
+    set_value("case", case)
     set_value("paras", paras)
-
     return True
 
 
 def genotype(parase):
     genotype_init(parase)
-    # bam2dis()
-    model=errEval()
-    call(model)
+    bam2dis()
+    errEval()
+    call()
 
 
 def main():
@@ -358,5 +356,7 @@ def main():
             call(parase)
         elif parase.command == "genotype":
             genotype(parase)
+
+
 if __name__ == "__main__":
     main()
