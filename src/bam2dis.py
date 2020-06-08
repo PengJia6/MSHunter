@@ -8,11 +8,8 @@
 # =============================================================================
 
 import multiprocessing
-import os
-
-import pandas as pd
 import pysam
-
+import pandas as pd
 from src.global_dict import *
 
 
@@ -129,76 +126,6 @@ class MSDeail:
         return -4
 
 
-def bam2dis_args_init(args):
-    """
-    argument procress
-    """
-    paras = {}
-    paras["input"] = args.input
-    paras["output"] = args.output
-    paras["Microsatellite"] = args.microsatellite[0]
-    paras["threads"] = args.threads[0]
-    paras["minimum_support_reads"] = args.minimum_support_reads[0]
-    paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
-    paras["batch"] = args.batch[0]
-    paras["debug"] = args.debug[0]
-    paras["separator"] = args.separator[0]
-
-    paras["ranges_of_repeat_times"] = {}
-    for i in args.minimum_repeat_times[0].split(";"):
-        # print(i)
-        unitRange, repeatRange = i.split(":")
-        if "-" in unitRange:
-            unitStart, unitEnd = tuple(map(int, unitRange.split("-")))
-        else:
-            unitStart = int(unitRange)
-            unitEnd = unitStart
-        repeatStart = int(repeatRange)
-        # print(unitStart,unitEnd,"  ",repeatStart, repeatEnd)
-        for ur in range(unitStart, unitEnd + 1):
-            if ur not in paras["ranges_of_repeat_times"]:
-                paras["ranges_of_repeat_times"][ur] = {}
-            paras["ranges_of_repeat_times"][ur]["min"] = repeatStart
-        for i in args.maximum_repeat_times[0].split(";"):
-            # print(i)
-            unitRange, repeatRange = i.split(":")
-            if "-" in unitRange:
-                unitStart, unitEnd = tuple(map(int, unitRange.split("-")))
-            else:
-                unitStart = int(unitRange)
-                unitEnd = unitStart
-            repeatStart = int(repeatRange)
-            # print(unitStart,unitEnd,"  ",repeatStart, repeatEnd)
-            for ur in range(unitStart, unitEnd + 1):
-                if ur not in paras["ranges_of_repeat_times"]:
-                    paras["ranges_of_repeat_times"][ur] = {}
-                paras["ranges_of_repeat_times"][ur]["max"] = repeatStart
-            # paras["ranges_of_repeat_times"][ur] = repeatStart
-    # print(args.input)
-    # print(paras["ranges_of_repeat_times"])
-    ErrorStat = False
-    if os.path.isfile(paras["Microsatellite"]):
-        print("[INFO] The Microsatellites file  is : " + paras["Microsatellite"])
-    else:
-        print('[ERROR] The Microsatellites file "'
-              + paras["Microsatellite"]
-              + '" is not exist, please check again')
-        ErrorStat = True
-    bamnum = 0
-    for onebam in paras["output"]:
-        bamnum += 1
-        if not os.path.isfile(onebam):
-            print("[INFO] The ", bamnum, "output is : '" + onebam + "'.")
-        else:
-            print(
-                '[ERROR] The ', bamnum,
-                'output "' + onebam + '" is still exist! in case of overwrite files in this workspace, '
-                                      'please check your script!')
-    if ErrorStat: return False
-    set_value("paras", paras)
-    return True
-
-
 def loadMicroSatellite(args):
     """
     :return:
@@ -278,14 +205,6 @@ def multiRun(thread, datalist):
     return result_list
 
 
-def write_init(outputpath, sampleNameList):
-    outputfile = open(outputpath, "w")
-    outputfile.write("##fileformat=VCFv4.2\n")
-    clomum = "\t".join(["#CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"] + sampleNameList)
-    outputfile.write(clomum + "\n")
-    return outputfile
-
-
 def write_vcf_init(outputpath, sampleNameList):
     outputfile = pysam.VariantFile(outputpath, "wb")
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
@@ -346,30 +265,9 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["proI"] = msDetail.q
         vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
         vcfrec.info["disStat"] = str(msDetail.disStat)
-        vcfrec.samples[get_value("case")]["GT"]=()
-        vcfrec.samples[get_value("case")].phased=True
+        vcfrec.samples[get_value("case")]["GT"] = ()
+        vcfrec.samples[get_value("case")].phased = True
         outputfile.write(vcfrec)
-
-
-def writeInfo(outputfile, dataList):
-    for msDetail in dataList:
-        chrom = msDetail.chrId
-        pos = str(msDetail.posStart)
-        idnum = "."
-        ref = "[" + str(msDetail.repeatTimes) + "]" + msDetail.motif
-        alt = "."
-        qual = "."
-        filter = "."
-        Info = ";".join(
-            ["chrom=" + chrom, "pos=" + pos, "motif=" + msDetail.motif, "repeatTimes=" + str(msDetail.repeatTimes),
-             "prefix=" + msDetail.prefix, "suffix=" + msDetail.suffix,
-             "depth=" + str(msDetail.depth),
-             "support_reads=" + str(msDetail.support_reads),
-             "dis=" + "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])]
-        )
-        format = "GT"
-        value = "./."
-        outputfile.write("\t".join([chrom, pos, idnum, ref, alt, qual, filter, Info, format, value]) + "\n")
 
 
 def getDis(args={}, upstreamLen=5, downstreamLen=5):
@@ -421,20 +319,6 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     write_vcf(outputfile, result_list)
     write_vcf_close(outputfile)
     print("[Info] Bam2dis: Total", ms_number, "microsatelite, finish all!")
-
-
-def bam2dis(parase):  # delete in future
-    if not bam2dis_args_init(parase):
-        # print("[Error] Parameters error!")
-        return
-    args = get_value("paras")
-    inputs, outputs = args["input"], args["output"]
-    bamnum = 0
-    for inputbampath, outputebampath in zip(inputs, outputs):
-        bamnum += 1
-        args["input"] = inputbampath
-        args["output"] = outputebampath
-        getDis(args=args)
 
 
 def bam2dis():

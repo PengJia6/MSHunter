@@ -10,13 +10,7 @@
 from src.units import *
 from src.global_dict import *
 import pysam
-# import yaml
 import multiprocessing
-from functools import partial
-import copy
-
-Lock = multiprocessing.Lock()
-Model = {}
 
 
 class MSCall:
@@ -31,7 +25,7 @@ class MSCall:
     modelStat = False
     model = {}
     distance = 0
-    distance_dict={}
+    distance_dict = {}
     firstAllels = ""
     secondAllels = ""
     qual = 0
@@ -76,12 +70,9 @@ class MSCall:
                 list2.append(0)
             else:
                 list2.append(dict2[key])
-        # print(np.linalg.norm(np.array(list1)-np.array(list2)))
-        # print(np.sqrt(np.sum(np.square(np.array(list1)-np.array(list2)))))
         return np.linalg.norm(np.array(list1) - np.array(list2))
 
     def modelpre(self):
-        # global Model
         if not self.disStat:
             return
         else:
@@ -96,19 +87,16 @@ class MSCall:
             maxRepeat = model[motif]["maxRepeat"]
             self.minAllele = max([min(disnormal.keys()) - 1, 1])
             self.maxAllele = min([max(disnormal.keys()) + 1, maxRepeat])
-
             model_id_list = []
             for first in range(self.minAllele, self.maxAllele + 1):
                 for second in range(self.minAllele, self.maxAllele + 1):
                     if first <= second:
                         model_id_list.append(first * 1000 + second)
-            # self.model_id_list = model_id_list
             thismodel = {}
             if motif not in model:
                 return
             else:
                 self.modelStat = True
-                # print(model_id_list)
                 for model_id in model_id_list:
                     thismodel[model_id] = model[motif]["maxture"][model_id]
             self.model = thismodel
@@ -148,7 +136,6 @@ class MSCall:
         self.firstAllels = first_1
         self.secondAllels = first_2
         self.qual = qual
-
         if first_1 == first_2:
             if first_1 == self.info["repeatTimes"]:
                 self.GT = (0, 0)
@@ -156,8 +143,6 @@ class MSCall:
             else:
                 self.GT = (1, 1)
                 self.alt = (str(first_1) + "[" + self.info["motif"] + "]",)
-
-                # self.allels=(first_1,first_2)
         else:
             if self.info["repeatTimes"] in [first_1, first_2]:
                 self.GT = (0, 1)
@@ -173,7 +158,6 @@ class MSCall:
                 else:
                     self.alt = (str(first_2) + "[" + self.info["motif"] + "]",
                                 str(first_1) + "[" + self.info["motif"] + "]")
-
         if first_1 <= first_2:
             self.alleles = ":".join(list(map(str, [first_1, first_2])))
         else:
@@ -192,7 +176,6 @@ def multicallMS(mscall_list, outputfile, thread=4):
     pool.close()
     pool.join()
     write_call2vcf(result_list, outputfile)
-
     return result_list
 
 
@@ -224,9 +207,7 @@ def write_call2vcf_init():
 def write_call2vcf(mscall_list, outputfile):
     for mscall in mscall_list:
         vcfrec = outputfile.new_record()
-        # print("infoKey",vcfrec.info.keys())
         vcfrec.contig = mscall.chr_id
-        # vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
         vcfrec.pos = mscall.pos
         vcfrec.ref = mscall.ref
         vcfrec.alts = mscall.alt
@@ -249,12 +230,10 @@ def write_call2vcf(mscall_list, outputfile):
         vcfrec.info["FirstTwoDistance"] = mscall.firsttwoDistance
         vcfrec.info["Distance"] = mscall.distance
         vcfrec.qual = round(mscall.qual, 6)
-        # vcfrec.filter = mscall.filter
         vcfrec.info["Alleles"] = mscall.alleles
         vcfrec.samples[get_value("case")]["GT"] = mscall.GT
         vcfrec.samples[get_value("case")].phased = False
         outputfile.write(vcfrec)
-
     return outputfile
 
 
@@ -264,29 +243,17 @@ def write_call2vcf_close(outputfile):
 
 def call():
     paras = get_value("paras")
-    path_dis_parameter = paras["output"]
     thread = paras["threads"]
-
     batch = paras["batch"]
     disvcfpath = paras["output_dis"]
-    # modelfile = open(path_dis_parameter + "tmp_motif_" + motif + ".model", "r")
-    # model = yaml.load(model)
     vcffile = pysam.VariantFile(disvcfpath, "rb")
-    # min_support_reads=paras["minimum_support_reads"]
-    # print(model.keys())
     curentMSNum = 0
     tmpWindow = []
     ms_number = get_value("ms_number")
     outputfile = write_call2vcf_init()
     sampleID = get_value("case")
     for rec in vcffile.fetch():
-        # rec_info = dict(rec.info)
-        # rec_format = dict(rec.format)
-        # rec_sample = dict(rec.samples)
-        # print(rec_info, rec_format, rec_sample)
-
         msCall = MSCall(chr_id=rec.chrom, pos=rec.pos, info=dict(rec.info), sample=sampleID)
-        # print(id(tmpWindow))
         tmpWindow.append(msCall)
         curentMSNum += 1
         if curentMSNum > 10000 and paras["debug"]:

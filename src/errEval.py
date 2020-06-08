@@ -6,49 +6,10 @@
 # Email : pengjia@stu.xjtu.edu.cn
 # Description : ''
 # =============================================================================
-import os
 import pysam
 import yaml
-import matplotlib.pyplot as plt
 from src.global_dict import *
 from src.units import *
-# print("fkkfkfkf")
-
-def errEval_args_init(args):
-    """
-    argument procress
-    """
-    paras = {}
-    paras["input"] = args.input
-    paras["output"] = args.output
-    paras["threads"] = args.threads[0]
-    paras["minimum_support_reads"] = args.minimum_support_reads[0]
-    # paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
-    paras["batch"] = args.batch[0]
-    paras["max_repeat_times"] = args.max_repeat_times[0]
-    paras["only_homopolymers"] = args.only_homopolymers[0]
-    paras["output"] = paras["output"] if paras["output"][-1] == "/" else paras["output"] + "/"
-    ErrorStat = False
-    if os.path.isfile(paras["input"]):
-        print("[INFO] The", "input is : " + paras["input"])
-    else:
-        print('[ERROR] The', 'input "' + paras["input"] + '" is not exist, please check again')
-        ErrorStat = True
-
-    if not os.path.isfile(paras["output"]):
-        print("[INFO] The ", "output is : '" + paras["output"] + "'.")
-    else:
-
-        print(
-            '[ERROR] The ',
-            'output "' + paras["output"] + '" is still exist! in case of overwrite files in this workspace, '
-                                           'please check your script!')
-        ErrorStat = True
-
-    if ErrorStat: return False
-
-    set_value("paras", paras)
-    return True
 
 
 def classDisbyMotif(paras):
@@ -74,8 +35,7 @@ def classDisbyMotif(paras):
     for motif in File_motif:
         File_motif[motif].close()
         motifList.append(motif)
-    set_value("motifList",motifList)
-    # print(File_motif)
+    set_value("motifList", motifList)
 
 
 def write_vcf_init_call(outputpath, inputpath):
@@ -146,8 +106,8 @@ def getOneMotifProsess(paras, motif):
         motifDis_tmp[repeatTimes] = thistmp
     homList = getHomoNormalDis(motifDis_tmp, maxRepeat)
     maxture = {}
-    for first in range(1, maxRepeat+1):
-        for second in range(1, maxRepeat+1):
+    for first in range(1, maxRepeat + 1):
+        for second in range(1, maxRepeat + 1):
             if first <= second:
                 firstDis = homList[first]
                 secondDis = homList[second]
@@ -162,20 +122,7 @@ def getOneMotifProsess(paras, motif):
                 maxture[first * 1000 + second] = removeZeroDict(thismaxture)
     with open(path_dis_parameter + "tmp_motif_" + motif + ".model", "w") as f:
         yaml.dump({"maxture": maxture}, f)
-    return { "maxture": maxture,"maxRepeat":maxRepeat}
-
-
-def errEval(parase):
-    if not errEval_args_init(parase):
-        print("[Error] Parameters error!")
-        return -1
-    args = get_value("paras")
-    motifList = get_value("motifList")
-    model = {}
-    for motif in motifList:
-        model[motif] = getOneMotifProsess(args, motif)
-    with open(args["output"][:-1] + ".model", "w") as f:
-        yaml.dump(model, f)
+    return {"maxture": maxture, "maxRepeat": maxRepeat}
 
 
 def errEval():
@@ -184,14 +131,14 @@ def errEval():
     motifList = get_value("motifList")
     model = {}
     for motif in motifList:
-        print("[Info] Build error model for motif",motif)
+        print("[Info] Build error model for motif", motif)
         model[motif] = getOneMotifProsess(args, motif)
     with open(args["output_model"], "w") as f:
         yaml.dump(model, f)
-    set_value("model",model)
+    set_value("model", model)
     # print(model.keys())
     return model
 
 
 if __name__ == "__main__":
-    ""
+    pass
