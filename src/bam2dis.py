@@ -176,14 +176,12 @@ def loadMicroSatellite(args):
         dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
     elif separator == "space":
         dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
-    if args["only_homopolymer"]:
-        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
-    if args["debug"]:
-        # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
-        if len(dfMicroSatellites) > 3000000:
-            dfMicroSatellites = dfMicroSatellites.sample(30000)
     chromList = get_value("chrom_list")
     dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
+    if args["only_homopolymer"]:
+        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
+
+
     repeatRange = args["ranges_of_repeat_times"]
     repeatUnitList = sorted(repeatRange.keys())
 
@@ -195,6 +193,11 @@ def loadMicroSatellite(args):
                                                     (dfMicroSatellites["repeatTimes"] >= minr) &
                                                     (dfMicroSatellites["repeatTimes"] <= maxr)
                                                     ]])
+    if args["debug"]:
+        locis_num=200000
+        # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
+        if len(newDf) > locis_num:
+            newDf = newDf.sample(locis_num)
 
     print("[INFO] There are total", len(newDf), "microsatellites.")
     set_value("ms_number", len(newDf))

@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/bam2dis.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bam2dis.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -262,6 +263,10 @@
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state x="1970" y="293" key="SettingsEditor/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591238542538" />
+    <state x="396" y="103" width="1118" height="833" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1591630385425">
+      <screen x="0" y="27" width="1920" height="988" />
+    </state>
+    <state x="396" y="103" width="1118" height="833" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591630385425" />
     <state x="1516" y="245" width="1070" height="914" key="dock-window-1" timestamp="1591431700911">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
