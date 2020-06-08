@@ -1,7 +1,7 @@
 # =============================================================================
 # Project : MShunter0.0.1
 # Py Name: ScanMicrosatellites
-# Author :
+# Author : main.py
 # Date : 20-05-25
 # Email : pengjia@stu.xjtu.edu.cn
 # Description : ''

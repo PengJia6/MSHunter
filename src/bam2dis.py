@@ -1,6 +1,6 @@
 # =============================================================================
 # Project : MShunter0.0.1
-# Py Name: ScanMicrosatellites
+# Py Name: bam2dis.py
 # Author :
 # Date : 20-05-25
 # Email : pengjia@stu.xjtu.edu.cn

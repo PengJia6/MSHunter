@@ -1,7 +1,7 @@
 # =============================================================================
 # Project : mstools-0.0.1
 # Py Name: global_dict
-# Author :
+# Author : Peng Jia
 # Date : 20-05-26
 # Email : pengjia@stu.xjtu.edu.cn
 # Description : 'For global variable'

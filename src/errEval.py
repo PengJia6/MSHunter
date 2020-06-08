@@ -1,5 +1,12 @@
+# =============================================================================
+# Project : MShunter0.0.1
+# Py Name: errEval.py
+# Author : Peng Jia
+# Date : 20-05-25
+# Email : pengjia@stu.xjtu.edu.cn
+# Description : ''
+# =============================================================================
 import os
-
 import pysam
 import yaml
 import matplotlib.pyplot as plt
