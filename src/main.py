@@ -51,7 +51,8 @@ def args_process():
                                   help="The path of the microsatellite regions [required]")
     input_and_output.add_argument('-o', '--output', required=True, type=str, nargs=1,
                                   help="The path of output file prefix [required]")
-    input_and_output.add_argument('-r', '--reference', required=False, type=str, default=[],
+    input_and_output.add_argument('-r', '--reference', required=False, type=str, nargs=1,
+                                  default=[defaultPara_gt["reference"]],
                                   help="Required if cram file input")
     input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
                                   default=[defaultPara_gt["separator"]],
@@ -142,7 +143,7 @@ def genotype_init(args):
     paras["input"] = args.input[0]
     paras["output"] = args.output[0]
     paras["microsatellite"] = args.microsatellite[0]
-    paras["reference"] = args.microsatellite[0]
+    paras["reference"] = args.reference[0]
     paras["separator"] = args.separator[0]
     paras["debug"] = args.debug[0]
     paras["only_homopolymer"] = args.only_homopolymers[0]
@@ -193,11 +194,16 @@ def genotype_init(args):
               + paras["microsatellite"] + ' is not exist, please check again')
         error_stat = True
     if paras["input"][-4:] == "cram":
-        if os.path.exists(paras["reference"]):
+        paras["input_format"]="cram"
+        if os.path.isfile(paras["reference"]):
             print("[INFO] The reference file is : '" + paras["reference"] + "'.")
         else:
+            paras["reference"] = "" if paras["reference"] == "." else paras["reference"]
             print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
             error_stat = True
+    else:
+        paras["input_format"]="bam"
+
     if not os.path.exists(paras["output"]):
         print("[INFO] The output is : " + paras["output"] + ".")
     else:

@@ -23,7 +23,7 @@ class MSDeail:
     q = 0
 
     def __init__(self, chr_id, posStart, posEnd, queryStart, queryEnd, motif, motifLen, repeat_times, prefix, suffix,
-                 bamfile, min_support_reads, min_mapping_qual):
+                 bamfile, min_support_reads, min_mapping_qual, input_format, reference):
         self.chrId = chr_id
         self.posStart = posStart
         self.motif = motif
@@ -37,16 +37,21 @@ class MSDeail:
         self.bamfile = bamfile
         self.min_support_reads = min_support_reads
         self.min_mapping_qual = min_mapping_qual
+        self.input_format = input_format
+        self.reference = reference
 
     def get_dis(self):
-        bamfile = pysam.AlignmentFile(self.bamfile, "rb")
-        alignmentList = [alignment for alignment in
-                         bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
+
+        if self.input_format == "bam":
+            bamfile = pysam.AlignmentFile(self.bamfile, "rb")
+        else:
+            bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
+
+        alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
+        bamfile.close()
         depth = len(alignmentList)
         if depth < self.min_support_reads:
             self.lowSupport = True
-            # self.support_reads=
-            # return False
         repeatTimesDict = {}
         for alignment in alignmentList:
             if alignment.is_unmapped: continue
@@ -202,6 +207,10 @@ def multiRun(thread, datalist):
     result_list = pool.map(processOneMs, datalist)
     pool.close()
     pool.join()
+    # result_list=[]
+    # for msDetail in datalist:
+    #     datalist.append(processOneMs(msDetail))
+
     return result_list
 
 
@@ -273,6 +282,8 @@ def write_vcf(outputfile, dataList):
 def getDis(args={}, upstreamLen=5, downstreamLen=5):
     chromList = get_value("chrom_list")
     dis = args["output_dis"]
+    input_format = args["input_format"]
+    reference = args["reference"]
     thread = args["threads"]
     batch = args["batch"]
     outputfile = write_vcf_init(dis, [get_value("case")])
@@ -303,7 +314,9 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               suffix=info['suffix'],
                               bamfile=args["input"],
                               min_support_reads=args["minimum_support_reads"],
-                              min_mapping_qual=args["minimum_mapping_quality"]
+                              min_mapping_qual=args["minimum_mapping_quality"],
+                              input_format=input_format,
+                              reference=reference
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
