@@ -120,7 +120,7 @@ def getOneMotifProsess(paras, motif):
                 for rp in firstDis:
                     thismaxture[rp] = round((firstDis[rp] + secondDis[rp]) / 2, 6)
                 maxture[first * 1000 + second] = removeZeroDict(thismaxture)
-    with open(path_dis_parameter + "tmp_motif_" + motif + ".model", "w") as f:
+    with open(path_dis_parameter + "/tmp_motif_" + motif + ".model", "w") as f:
         yaml.dump({"maxture": maxture}, f)
     return {"maxture": maxture, "maxRepeat": maxRepeat}
 
