@@ -146,35 +146,42 @@ def loadMicroSatellite(args):
         dfMicroSatellites = pd.read_table(ms, header=0)
         columns = dfMicroSatellites.columns
         if "chromosome" in columns:
-            dfMicroSatellites["chr"] = dfMicroSatellites["chromosome"]
-            del dfMicroSatellites["chromosome"]
+            dfMicroSatellites.rename(columns={"chromosome":"chr"}, inplace = True)
+            # dfMicroSatellites["chr"] = dfMicroSatellites["chromosome"]
+            # del dfMicroSatellites["chromosome"]
         if "location" in columns:
-            dfMicroSatellites["pos"] = dfMicroSatellites["location"]
-            del dfMicroSatellites["location"]
+            dfMicroSatellites.rename(columns={"location":"pos"}, inplace = True)
+            # dfMicroSatellites["pos"] = dfMicroSatellites["location"]
+            # del dfMicroSatellites["location"]
         if "repeat_unit_bases" in columns:
-            dfMicroSatellites["motif"] = dfMicroSatellites["repeat_unit_bases"]
-            del dfMicroSatellites["repeat_unit_bases"]
+            dfMicroSatellites.rename(columns={"repeat_unit_bases":"motif"}, inplace = True)
+            # dfMicroSatellites["motif"] = dfMicroSatellites["repeat_unit_bases"]
+            # del dfMicroSatellites["repeat_unit_bases"]
         if "repeat_unit_length" in columns:
-            dfMicroSatellites["motifLen"] = dfMicroSatellites["repeat_unit_length"]
-            del dfMicroSatellites["repeat_unit_length"]
+            dfMicroSatellites.rename(columns={"repeat_unit_length":"motifLen"}, inplace = True)
+            # dfMicroSatellites["motifLen"] = dfMicroSatellites["repeat_unit_length"]
+            # del dfMicroSatellites["repeat_unit_length"]
         if "repeat_times" in columns:
-            dfMicroSatellites["repeatTimes"] = dfMicroSatellites["repeat_times"]
-            del dfMicroSatellites["repeat_times"]
+            dfMicroSatellites.rename(columns={"repeat_times":"repeatTimes"}, inplace = True)
+            # dfMicroSatellites["repeatTimes"] = dfMicroSatellites["repeat_times"]
+            # del dfMicroSatellites["repeat_times"]
         if "left_flank_bases" in columns:
-            dfMicroSatellites["prefix"] = dfMicroSatellites["left_flank_bases"]
-            del dfMicroSatellites["left_flank_bases"]
+            dfMicroSatellites.rename(columns={"left_flank_bases":"prefix"}, inplace = True)
+            # dfMicroSatellites["prefix"] = dfMicroSatellites["left_flank_bases"]
+            # del dfMicroSatellites["left_flank_bases"]
         if "right_flank_bases" in columns:
-            dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
-            del dfMicroSatellites["right_flank_bases"]
+            dfMicroSatellites.rename(columns={"right_flank_bases":"suffix"}, inplace = True)
+            # dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
+            # del dfMicroSatellites["right_flank_bases"]
         dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
     elif separator == "space":
         dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
     if args["only_homopolymer"]:
         dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
     if args["debug"]:
-        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
-        # if len(dfMicroSatellites) > 3000000:
-        #     dfMicroSatellites = dfMicroSatellites.sample(30000)
+        # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
+        if len(dfMicroSatellites) > 3000000:
+            dfMicroSatellites = dfMicroSatellites.sample(30000)
     chromList = get_value("chrom_list")
     dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
     repeatRange = args["ranges_of_repeat_times"]
@@ -207,10 +214,6 @@ def multiRun(thread, datalist):
     result_list = pool.map(processOneMs, datalist)
     pool.close()
     pool.join()
-    # result_list=[]
-    # for msDetail in datalist:
-    #     datalist.append(processOneMs(msDetail))
-
     return result_list
 
 
