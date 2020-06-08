@@ -67,7 +67,7 @@ def args_process():
                                 help="Debug mode for developers [default:" +
                                      str(defaultPara_gt["debug"]) + "]")
     general_option.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, choices=[True, False],
-                                default=[defaultPara_gt["allow_mismatch"]],
+                                default=[defaultPara_gt["only_homopolymers"]],
                                 help="Only analyze homopolymer regions [default:"
                                      + str(defaultPara_gt["only_homopolymers"]) + "]")
     general_option.add_argument("-minr", '--minimum_repeat_times',
