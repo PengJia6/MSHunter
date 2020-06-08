@@ -130,7 +130,7 @@ def loadMicroSatellite(args):
     """
     :return:
     """
-    print("[Info] Loading microsatellite file...")
+    print("[INFO] Loading microsatellite file...")
     ms = args["microsatellite"]
     separator = args["separator"]
     # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
@@ -310,7 +310,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
         if curentMSNum > 10000 and args["debug"]:
             break
         if curentMSNum % (batch * thread) == 0:
-            print("[Info] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
+            print("[INFO] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
                   "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
             result_list = multiRun(thread=thread, datalist=tmpWindow)
             write_vcf(outputfile, result_list)
@@ -318,7 +318,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     result_list = multiRun(thread=thread, datalist=tmpWindow)
     write_vcf(outputfile, result_list)
     write_vcf_close(outputfile)
-    print("[Info] Bam2dis: Total", ms_number, "microsatelite, finish all!")
+    print("[INFO] Bam2dis: Total", ms_number, "microsatelite, finish all!")
 
 
 def bam2dis():

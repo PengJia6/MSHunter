@@ -16,7 +16,7 @@ def classDisbyMotif(paras):
     path_dis = paras["output_dis"]
     path_dis_parameter = paras["output_tmp"]
     min_support_reads = paras["minimum_support_reads"]
-    print("[Info] Scanning the distribution file of microsatellite!")
+    print("[INFO] Scanning the distribution file of microsatellite!")
     vcffile = pysam.VariantFile(path_dis)
     File_motif = {}
 
@@ -131,7 +131,7 @@ def errEval():
     motifList = get_value("motifList")
     model = {}
     for motif in motifList:
-        print("[Info] Build error model for motif", motif)
+        print("[INFO] Build error model for motif", motif)
         model[motif] = getOneMotifProsess(args, motif)
     with open(args["output_model"], "w") as f:
         yaml.dump(model, f)

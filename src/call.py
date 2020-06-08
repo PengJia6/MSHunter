@@ -259,9 +259,9 @@ def call():
         if curentMSNum > 10000 and paras["debug"]:
             break
         if curentMSNum % (batch * thread) == 0:
-            print("[Info] MS calling: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
+            print("[INFO] MS calling: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
                   "-", curentMSNum, "(" + str(round(curentMSNum / (0.1 + ms_number) * 100, 2)) + "%)")
             multicallMS(tmpWindow, outputfile=outputfile, thread=thread)
             tmpWindow = []
     multicallMS(tmpWindow, outputfile=outputfile, thread=thread)
-    print("[Info] MS calling: Total", ms_number, "microsatelite, finish all!")
+    print("[INFO] MS calling: Total", ms_number, "microsatelite, finish all!")

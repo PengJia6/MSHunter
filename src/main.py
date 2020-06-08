@@ -51,7 +51,7 @@ def args_process():
                                   help="The path of the microsatellite regions [required]")
     input_and_output.add_argument('-o', '--output', required=True, type=str, nargs=1,
                                   help="The path of output file prefix [required]")
-    input_and_output.add_argument('-r', '--reference', required=False, type=str,
+    input_and_output.add_argument('-r', '--reference', required=False, type=str, default=[],
                                   help="Required if cram file input")
     input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
                                   default=[defaultPara_gt["separator"]],
@@ -142,18 +142,17 @@ def genotype_init(args):
     paras["input"] = args.input[0]
     paras["output"] = args.output[0]
     paras["microsatellite"] = args.microsatellite[0]
+    paras["reference"] = args.microsatellite[0]
+    paras["separator"] = args.separator[0]
+    paras["debug"] = args.debug[0]
     paras["only_homopolymer"] = args.only_homopolymers[0]
-    paras["threads"] = args.threads[0]
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
+    paras["allow_mismatch"] = args.allow_mismatch[0]
+    paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
-    paras["debug"] = args.debug[0]
-    paras["separator"] = args.separator[0]
-    paras["separator"] = args.separator[0]
-
     paras["ranges_of_repeat_times"] = {}
     for i in args.minimum_repeat_times[0].split(";"):
-        # print(i)
         unitRange, repeatRange = i.split(":")
         if "-" in unitRange:
             unitStart, unitEnd = tuple(map(int, unitRange.split("-")))
@@ -185,29 +184,29 @@ def genotype_init(args):
         print("[INFO] The input file is : '" + paras["input"] + "'.")
     else:
         print('[ERROR] The input file '
-              + paras["input"]
-              + ' is not exist, please check again')
+              + paras["input"] + ' is not exist, please check again')
         error_stat = True
-
     if os.path.isfile(paras["microsatellite"]):
         print("[INFO] The microsatellites file  is : " + paras["microsatellite"])
     else:
         print('[ERROR] The microsatellites file '
-              + paras["microsatellite"]
-              + ' is not exist, please check again')
+              + paras["microsatellite"] + ' is not exist, please check again')
         error_stat = True
+    if paras["input"][-4:] == "cram":
+        if os.path.exists(paras["reference"]):
+            print("[INFO] The reference file is : '" + paras["reference"] + "'.")
+        else:
+            print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
+            error_stat = True
     if not os.path.exists(paras["output"]):
         print("[INFO] The output is : " + paras["output"] + ".")
-        if not error_stat:
-            print()
     else:
         print(
             '[ERROR] The output ' + paras["output"] +
             ' is still exist! in case of overwrite files in this workspace, '
             'please check your script!')
-        # error_stat = True
+        error_stat = True
     if error_stat: return False
-
     output_path = paras["output"]
     output_path = output_path if output_path[-1] == "/" else output_path + "/"
     if not os.path.exists(output_path):
@@ -221,7 +220,6 @@ def genotype_init(args):
     paras["output_tmp"] = paras["output"] + case + "_tmp"
     if not os.path.exists(paras["output_tmp"]):
         os.makedirs(paras["output_tmp"])
-
     paras["output_model"] = paras["output"] + case + ".model"
     paras["output_call"] = paras["output"] + case + ".bcf"
     set_value("case", case)
@@ -230,10 +228,10 @@ def genotype_init(args):
 
 
 def genotype(parase):
-    genotype_init(parase)
-    bam2dis()
-    errEval()
-    call()
+    if genotype_init(parase):
+        bam2dis()
+        errEval()
+        call()
 
 
 def main():
@@ -243,6 +241,7 @@ def main():
     """
     global_init()
     arg = args_process()
+
     if arg:
         parase = arg.parse_args()
         if parase.command == "genotype":

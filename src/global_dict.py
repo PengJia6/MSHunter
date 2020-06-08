@@ -39,6 +39,7 @@ def global_init():
         "call": {
         },
         "genotype": {
+            "reference": ".",
             "threads": 4,
             "minimum_mapping_quality": 1,
             "minimum_support_reads": 2,
@@ -54,10 +55,8 @@ def global_init():
 
     }
 
-
 def set_value(name, value):
     _global_dict[name] = value
-
 
 def get_value(name, defValue=None):
     try:
