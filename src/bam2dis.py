@@ -146,31 +146,31 @@ def loadMicroSatellite(args):
         dfMicroSatellites = pd.read_table(ms, header=0)
         columns = dfMicroSatellites.columns
         if "chromosome" in columns:
-            dfMicroSatellites.rename(columns={"chromosome":"chr"}, inplace = True)
+            dfMicroSatellites.rename(columns={"chromosome": "chr"}, inplace=True)
             # dfMicroSatellites["chr"] = dfMicroSatellites["chromosome"]
             # del dfMicroSatellites["chromosome"]
         if "location" in columns:
-            dfMicroSatellites.rename(columns={"location":"pos"}, inplace = True)
+            dfMicroSatellites.rename(columns={"location": "pos"}, inplace=True)
             # dfMicroSatellites["pos"] = dfMicroSatellites["location"]
             # del dfMicroSatellites["location"]
         if "repeat_unit_bases" in columns:
-            dfMicroSatellites.rename(columns={"repeat_unit_bases":"motif"}, inplace = True)
+            dfMicroSatellites.rename(columns={"repeat_unit_bases": "motif"}, inplace=True)
             # dfMicroSatellites["motif"] = dfMicroSatellites["repeat_unit_bases"]
             # del dfMicroSatellites["repeat_unit_bases"]
         if "repeat_unit_length" in columns:
-            dfMicroSatellites.rename(columns={"repeat_unit_length":"motifLen"}, inplace = True)
+            dfMicroSatellites.rename(columns={"repeat_unit_length": "motifLen"}, inplace=True)
             # dfMicroSatellites["motifLen"] = dfMicroSatellites["repeat_unit_length"]
             # del dfMicroSatellites["repeat_unit_length"]
         if "repeat_times" in columns:
-            dfMicroSatellites.rename(columns={"repeat_times":"repeatTimes"}, inplace = True)
+            dfMicroSatellites.rename(columns={"repeat_times": "repeatTimes"}, inplace=True)
             # dfMicroSatellites["repeatTimes"] = dfMicroSatellites["repeat_times"]
             # del dfMicroSatellites["repeat_times"]
         if "left_flank_bases" in columns:
-            dfMicroSatellites.rename(columns={"left_flank_bases":"prefix"}, inplace = True)
+            dfMicroSatellites.rename(columns={"left_flank_bases": "prefix"}, inplace=True)
             # dfMicroSatellites["prefix"] = dfMicroSatellites["left_flank_bases"]
             # del dfMicroSatellites["left_flank_bases"]
         if "right_flank_bases" in columns:
-            dfMicroSatellites.rename(columns={"right_flank_bases":"suffix"}, inplace = True)
+            dfMicroSatellites.rename(columns={"right_flank_bases": "suffix"}, inplace=True)
             # dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
             # del dfMicroSatellites["right_flank_bases"]
         dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
@@ -180,7 +180,6 @@ def loadMicroSatellite(args):
     dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
     if args["only_homopolymer"]:
         dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
-
 
     repeatRange = args["ranges_of_repeat_times"]
     repeatUnitList = sorted(repeatRange.keys())
@@ -194,10 +193,11 @@ def loadMicroSatellite(args):
                                                     (dfMicroSatellites["repeatTimes"] <= maxr)
                                                     ]])
     if args["debug"]:
-        locis_num=200000
+        locis_num = 80000
+        newDf = newDf.iloc[100:locis_num + 100, :]
         # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
-        if len(newDf) > locis_num:
-            newDf = newDf.sample(locis_num)
+        # if len(newDf) > locis_num:
+        #     newDf = newDf.sample(locis_num)
 
     print("[INFO] There are total", len(newDf), "microsatellites.")
     set_value("ms_number", len(newDf))
@@ -217,11 +217,27 @@ def multiRun(thread, datalist):
     result_list = pool.map(processOneMs, datalist)
     pool.close()
     pool.join()
+    # print("input",len(datalist))
+    # print("output",len(result_list))
     return result_list
 
 
 def write_vcf_init(outputpath, sampleNameList):
     outputfile = pysam.VariantFile(outputpath, "wb")
+    bamfile = pysam.AlignmentFile(get_value("paras")["input"], "rb")
+    contigs = bamfile.references
+    contigsLen = bamfile.lengths
+    chromList = get_value("chrom_list")
+    contigs_len_dict = {}
+    sortedContig = []
+    for contig, length in zip(contigs, contigsLen):
+        if contig in chromList:
+            sortedContig.append(contig)
+            contigs_len_dict[contig] = length
+    for contig in sortedContig:
+        outputfile.header.add_line(
+            "##contig=<ID={chrom},length={length}>".format(chrom=contig, length=contigs_len_dict[contig]))
+    set_value("contigsInfo", contigs_len_dict)
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
     outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
     outputfile.header.add_line('##INFO=<ID=Start,Number=1,Type=Integer,Description="Position start">')
@@ -253,13 +269,11 @@ def write_vcf_close(outputfile):
 
 def write_vcf(outputfile, dataList):
     # print(header.contigs)
-    contigs = []
+    # print("write", len(dataList))
     for msDetail in dataList:
         chrom = msDetail.chrId
         pos = int(msDetail.posStart)
         ref = str(msDetail.repeatTimes) + "[" + msDetail.motif + "]"
-        if chrom not in contigs:
-            outputfile.header.add_line("##contig=<ID={chrom}>".format(chrom=chrom))
         vcfrec = outputfile.new_record()
         # print("infoKey",vcfrec.info.keys())
         vcfrec.contig = chrom
@@ -286,20 +300,22 @@ def write_vcf(outputfile, dataList):
 
 
 def getDis(args={}, upstreamLen=5, downstreamLen=5):
-    chromList = get_value("chrom_list")
+
     dis = args["output_dis"]
     input_format = args["input_format"]
     reference = args["reference"]
     thread = args["threads"]
     batch = args["batch"]
     outputfile = write_vcf_init(dis, [get_value("case")])
+    contigs_info = get_value("contigsInfo")
     dfMicroSatellites = loadMicroSatellite(args)
     curentMSNum = 0
     tmpWindow = []
     ms_number = get_value("ms_number")
+    # print(len(dfMicroSatellites))
     for ms_id, info in dfMicroSatellites.iterrows():
         chr_id = info["chr"]
-        if chr_id not in chromList:
+        if chr_id not in contigs_info:
             continue
         posStart = int(info["pos"])
         repeat_times = int(info["repeatTimes"])
@@ -326,8 +342,8 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        if curentMSNum > 10000 and args["debug"]:
-            break
+        # if curentMSNum > 10000 and args["debug"]:
+        #     break
         if curentMSNum % (batch * thread) == 0:
             print("[INFO] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
                   "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
