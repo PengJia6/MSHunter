@@ -11,7 +11,6 @@ import yaml
 from src.global_dict import *
 from src.units import *
 
-
 def classDisbyMotif(paras):
     path_dis = paras["output_dis"]
     path_dis_parameter = paras["output_tmp"]

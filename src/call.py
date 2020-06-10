@@ -75,16 +75,21 @@ class MSCall:
     def modelpre(self):
         if not self.disStat:
             return
+
         else:
             model = get_value("model")
-            # lock.release()
+            motif = self.info["motif"]
+            if motif not in model:
+                # self.modelStat = False
+                return
+            self.modelStat = True
+            maxRepeat = model[motif]["maxRepeat"]
             disnormal = {}
             self.dis = [list(map(int, i.split(":"))) for i in self.info["dis"].split("|")]
             for i in self.dis:
                 disnormal[i[0]] = i[1] / self.info["support_reads"]
             self.dis_norm = disnormal
-            motif = self.info["motif"]
-            maxRepeat = model[motif]["maxRepeat"]
+
             self.minAllele = max([min(disnormal.keys()) - 1, 1])
             self.maxAllele = min([max(disnormal.keys()) + 1, maxRepeat])
             model_id_list = []
@@ -93,12 +98,8 @@ class MSCall:
                     if first <= second:
                         model_id_list.append(first * 1000 + second)
             thismodel = {}
-            if motif not in model:
-                return
-            else:
-                self.modelStat = True
-                for model_id in model_id_list:
-                    thismodel[model_id] = model[motif]["maxture"][model_id]
+            for model_id in model_id_list:
+                thismodel[model_id] = model[motif]["maxture"][model_id]
             self.model = thismodel
 
     def mscall(self):
@@ -108,7 +109,7 @@ class MSCall:
             self.precision = "NoReadSpan"
             self.filter = "NoReadSpan"
             return
-        if len(self.model) < 2:
+        if (len(self.model) < 2 ) or (not self.modelStat):
             self.qual = qual
             self.precision = "NoAvailableModel"
             self.filter = "NoAvailableModel"
@@ -256,8 +257,8 @@ def call():
         msCall = MSCall(chr_id=rec.chrom, pos=rec.pos, info=dict(rec.info), sample=sampleID)
         tmpWindow.append(msCall)
         curentMSNum += 1
-        if curentMSNum > 10000 and paras["debug"]:
-            break
+        # if curentMSNum > 10000 and paras["debug"]:
+        #     break
         if curentMSNum % (batch * thread) == 0:
             print("[INFO] MS calling: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
                   "-", curentMSNum, "(" + str(round(curentMSNum / (0.1 + ms_number) * 100, 2)) + "%)")
