@@ -1,6 +1,8 @@
 # MShunter
 ## plese see the help of each command
 
+If you have any question about this software, please contact with Peng Jia (pengjia@stu.xjtu.edu.cn)
+
 
 ## To do
 * remove the useless codes and build a new analysis project (√)
