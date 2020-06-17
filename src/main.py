@@ -51,8 +51,7 @@ def args_process():
                                   help="The path of the microsatellite regions [required]")
     input_and_output.add_argument('-o', '--output', required=True, type=str, nargs=1,
                                   help="The path of output file prefix [required]")
-    input_and_output.add_argument('-r', '--reference', required=False, type=str, nargs=1,
-                                  default=[defaultPara_gt["reference"]],
+    input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
                                   help="Required if cram file input")
     input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
                                   default=[defaultPara_gt["separator"]],
@@ -193,16 +192,26 @@ def genotype_init(args):
         print('[ERROR] The microsatellites file '
               + paras["microsatellite"] + ' is not exist, please check again')
         error_stat = True
+    if os.path.isfile(paras["reference"]):
+        print("[INFO] The reference file is : '" + paras["reference"] + "'.")
+    else:
+        paras["reference"] = "" if paras["reference"] == "." else paras["reference"]
+        print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
+        error_stat = True
     if paras["input"][-4:] == "cram":
         paras["input_format"]="cram"
-        if os.path.isfile(paras["reference"]):
-            print("[INFO] The reference file is : '" + paras["reference"] + "'.")
-        else:
-            paras["reference"] = "" if paras["reference"] == "." else paras["reference"]
-            print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
-            error_stat = True
+        cramfile=pysam.AlignmentFile(paras["input"],mode="rb",reference_filename=paras["reference"])
+        if not cramfile.has_index():
+            print("[INFO] Build index for the input cram ...")
+            pysam.index(paras["input"])
+        cramfile.close()
     else:
         paras["input_format"]="bam"
+        bamfile=pysam.AlignmentFile(paras["input"],mode="rb")
+        if not bamfile.has_index():
+            print("[INFO] Build index for the input bam ...")
+            pysam.index(paras["input"])
+        bamfile.close()
 
     if not os.path.exists(paras["output"]):
         print("[INFO] The output is : " + paras["output"] + ".")

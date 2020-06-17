@@ -219,6 +219,7 @@ def write_call2vcf(mscall_list, outputfile):
         vcfrec.info["motif"] = mscall.info["motif"]
         vcfrec.info["repeatTimes"] = mscall.info["repeatTimes"]
         vcfrec.info["prefix"] = mscall.info["prefix"]
+        vcfrec.info["suffix"] = mscall.info["suffix"]
         vcfrec.info["depth"] = mscall.info["depth"]
         vcfrec.info["support_reads"] = mscall.info["support_reads"]
         vcfrec.info["dis"] = mscall.info["dis"]
