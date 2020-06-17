@@ -287,6 +287,7 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["motif"] = msDetail.motif
         vcfrec.info["repeatTimes"] = msDetail.repeatTimes
         vcfrec.info["prefix"] = msDetail.prefix
+        vcfrec.info["suffix"] = msDetail.suffix
         vcfrec.info["depth"] = msDetail.depth
         vcfrec.info["support_reads"] = msDetail.support_reads
         vcfrec.info["dis"] = "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])
