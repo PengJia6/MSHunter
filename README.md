@@ -8,7 +8,7 @@ If you have any question about this software, please contact with Peng Jia (peng
 * remove the useless codes and build a new analysis project (√)
 * support cram and run 1000G data (√)
 * support bam/cram index check (√)
-* improve repeat calling in bam2dis.py 
+* improve repeat calling in bam2dis.py (for ccs read)
 * support complex event detection
 * support output sorting and indexing
 * add test files 
