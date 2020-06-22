@@ -22,16 +22,15 @@ class MSDeail:
     p = 0
     q = 0
 
-    def __init__(self, chr_id, posStart, posEnd, queryStart, queryEnd, motif, motifLen, repeat_times, prefix, suffix,
-                 bamfile, min_support_reads, min_mapping_qual, input_format, reference):
+    def __init__(self, chr_id, posStart, posEnd, queryStart, queryEnd, motif, motifLen, repeat_times,
+                 bamfile, min_support_reads, min_mapping_qual, input_format, reference, prefix, suffix,
+                 prefix_str, suffix_str, fapath):
         self.chrId = chr_id
         self.posStart = posStart
         self.motif = motif
         self.motifLen = motifLen
         self.repeatTimes = repeat_times
         self.posEnd = posEnd
-        self.prefix = prefix
-        self.suffix = suffix
         self.queryStart = queryStart
         self.queryEnd = queryEnd
         self.bamfile = bamfile
@@ -39,14 +38,17 @@ class MSDeail:
         self.min_mapping_qual = min_mapping_qual
         self.input_format = input_format
         self.reference = reference
+        self.prefix = prefix
+        self.suffix = suffix
+        self.prefix_str = prefix_str
+        self.suffix_str = suffix_str
+        self.fapath = fapath
 
     def get_dis(self):
-
         if self.input_format == "bam":
             bamfile = pysam.AlignmentFile(self.bamfile, "rb")
         else:
             bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
-
         alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
         bamfile.close()
         depth = len(alignmentList)
@@ -54,18 +56,36 @@ class MSDeail:
             self.lowSupport = True
         repeatTimesDict = {}
         for alignment in alignmentList:
-            if alignment.is_unmapped: continue
+            if alignment.is_unmapped or alignment.is_duplicate: continue
+            # ref                     -----=======-----
+            # read                       ---------->              spaning
+            # read                       <-----------
+
+            # ref                     -----=======-----
+            # read                ---->  <---|                    remove
+            # read                            |--->  <----        remove
+
+            # ref                     -----=======-----
+            # read                 ---->   <---/                  probably remove
+            # read                            \--->  <----        probably remove
+
+            # ref                     -----=======-----
+            # read                 ---->         <---             read pair info
+            # read                      ---->       <----         read pair info
+            # read                       ---->   <----            read pair info
+
+            if alignment.query_alignment_start>self.posStart and alignment.cigartuples[0][0]==0:continue
+            if alignment.query_alignment_end<self.posEnd and alignment.cigartuples[0][0]==0:continue
             # add other condition for read selection
             thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
                                                   min_mapping_qual=self.min_mapping_qual)
+            self.getRepeatTimes2(alignment)
             if thisRepeatTimes < 0: continue
             if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
             repeatTimesDict[thisRepeatTimes] += 1
         if sum(repeatTimesDict.values()) < self.min_support_reads:
             self.lowSupport = True
-            # return False
         else:
-
             self.lowSupport = False
         self.repeatDict = repeatTimesDict
         self.depth = depth
@@ -100,6 +120,78 @@ class MSDeail:
         self.q = round(insShfit / (insShfit + delShfit + normal), 4)
         # print(self.p,self.q)
         return True
+
+    def getRepeatTimes2(self, alignment):
+        align_start = alignment.reference_start
+        align_end = alignment.reference_end
+        query_start = alignment.query_alignment_start
+        query_end = alignment.query_alignment_end
+        query_length = alignment.query_length
+        align_length = alignment.query_alignment_length
+        # print(self.posStart)
+        ref_block = []
+        read_block = []
+        read_pos = 0
+        ref_pos = align_start
+        # print(alignment.cigarstring,alignment.cigartuples,)
+        for cigartupe in alignment.cigartuples:
+            if cigartupe[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
+                ref_block.append((ref_pos, ref_pos + cigartupe[1]))
+                read_block.append((read_pos, read_pos + cigartupe[1], 0))
+
+                # fafile=pysam.FastaFile(self.fapath)
+                # print(fafile.fetch(self.chrId,ref_pos,ref_pos+cigartupe[1]))
+                # print(alignment.query[read_pos: read_pos + cigartupe[1]])
+                # print(ref_pos,read_pos)
+                # print()
+                # fafile.close()
+                read_pos += cigartupe[1]
+                ref_pos += cigartupe[1]
+            elif cigartupe[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip
+                ref_block.append((ref_pos, ref_pos + 0))
+                read_block.append((read_pos, read_pos + cigartupe[1], 1))
+                read_pos += cigartupe[1]
+            elif cigartupe[0] in [2, 3]:  # 2:D; 3:N: skip region of reference
+                ref_block.append((ref_pos, ref_pos + cigartupe[1], 2))
+                read_block.append((read_pos, read_pos))
+                ref_pos += cigartupe[1]
+        read_start, read_end = 0, alignment.query_length
+        for ref_b, read_b in zip(ref_block, read_block):
+            if self.posStart >= ref_b[0] and self.posStart < ref_b[1]:
+                read_start = read_b[0] + (self.posStart - ref_b[0]) + 1
+            if self.posEnd >= ref_b[0] and self.posEnd < ref_b[1]:
+                read_end = read_b[0] + (self.posEnd - ref_b[0]) - 1
+        print(read_start, read_end,cigartupe)
+        fafile=pysam.FastaFile(self.fapath)
+        # print(fafile.fetch(self.chrId,self.posStart,self.posStart+self.repeatTimes*self.motifLen))
+        print(alignment.query[read_start - 6:read_start])
+        print(alignment.query)
+
+        print(self.prefix)
+        # print()
+        # print(alignment.query[read_end:read_end + 6])
+        # print(self.suffix)
+        print()
+        print()
+        fafile.close()
+        # elif cigartupe[0] in [5]:
+        #     continue
+        # else:
+        #
+        # if align_end-align_start!=align_length:
+        #
+        #     print(len(alignment.get_reference_positions()),len(alignment.get_reference_positions(full_length=True)))
+        #     print(alignment.pos,alignment.reference_start, alignment.reference_end,align_end-align_start,align_length)
+        #     print(query_start, query_end, query_length,query_end-query_start)
+        #     print("")
+
+        # if query_length!=query_end-query_start:
+        #     print(alignment.cigarstring,alignment.cigartuples)
+        #     print(alignment.pos,alignment.reference_start, alignment.reference_end,align_end-align_start,align_length)
+        #     print(query_start, query_end, query_length,query_end-query_start)
+        #     print("")
+
+        # print(alignment.to_dict())
 
     def getRepeatTimes(self, alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
         """
@@ -301,7 +393,6 @@ def write_vcf(outputfile, dataList):
 
 
 def getDis(args={}, upstreamLen=5, downstreamLen=5):
-
     dis = args["output_dis"]
     input_format = args["input_format"]
     reference = args["reference"]
@@ -313,6 +404,9 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     curentMSNum = 0
     tmpWindow = []
     ms_number = get_value("ms_number")
+    fafile = pysam.FastaFile(args["reference"])
+    prefix_len = args["prefix_len"]
+    suffix_len = args["suffix_len"]
     # print(len(dfMicroSatellites))
     for ms_id, info in dfMicroSatellites.iterrows():
         chr_id = info["chr"]
@@ -325,6 +419,10 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
         posEnd = posStart + motifLen * repeat_times
         queryStart = posStart - upstreamLen
         queryEnd = posEnd + downstreamLen
+        prefix_str = fafile.fetch(chr_id, posStart - prefix_len, posStart)
+        suffix_str = fafile.fetch(chr_id, posEnd, posEnd + suffix_len)
+        # print(prefix_str,info["prefix"],motif)
+        # print(suffix_str,info["suffix"],motif)
         thisMSDeail = MSDeail(chr_id=chr_id,
                               posStart=posStart,
                               posEnd=posEnd,
@@ -333,13 +431,16 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               repeat_times=int(info["repeatTimes"]),
                               queryStart=queryStart,
                               queryEnd=queryEnd,
-                              prefix=info['prefix'],
-                              suffix=info['suffix'],
                               bamfile=args["input"],
                               min_support_reads=args["minimum_support_reads"],
                               min_mapping_qual=args["minimum_mapping_quality"],
                               input_format=input_format,
-                              reference=reference
+                              reference=reference,
+                              prefix=info['prefix'],
+                              suffix=info['suffix'],
+                              prefix_str=prefix_str,
+                              suffix_str=suffix_str,
+                              fapath=args["reference"],
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
@@ -352,6 +453,7 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
             write_vcf(outputfile, result_list)
             tmpWindow = []
     result_list = multiRun(thread=thread, datalist=tmpWindow)
+    fafile.close()
     write_vcf(outputfile, result_list)
     write_vcf_close(outputfile)
     print("[INFO] Bam2dis: Total", ms_number, "microsatelite, finish all!")

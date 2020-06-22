@@ -242,7 +242,6 @@ def write_call2vcf(mscall_list, outputfile):
 def write_call2vcf_close(outputfile):
     outputfile.close()
 
-
 def call():
     paras = get_value("paras")
     thread = paras["threads"]

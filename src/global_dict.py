@@ -50,16 +50,23 @@ def global_init():
             "allow_mismatch": True,
             "minimum_repeat_times": "1:8;2-5:5",
             "maximum_repeat_times": "1-5:100",
+            "prefix_len": 500,
+            "suffix_len": 500,
+            "kmer_size": 5,
+            "tech": "ccs",
+            "hap": True,
         },
 
     }
 
+
 def set_value(name, value):
     _global_dict[name] = value
+
 
 def get_value(name, defValue=None):
     try:
         return _global_dict[name]
     except KeyError:
-        print("[ERROR] No variable",name,"in global_dict")
+        print("[ERROR] No variable", name, "in global_dict")
         return defValue

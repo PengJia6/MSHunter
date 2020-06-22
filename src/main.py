@@ -53,10 +53,33 @@ def args_process():
                                   help="The path of output file prefix [required]")
     input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
                                   help="Required if cram file input")
+    input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
+                                  default=[defaultPara_gt["tech"]],
+                                  help='Sequencing technology [default:'
+                                       + str(defaultPara_gt["tech"]) + ']')
+    input_and_output.add_argument('-hap', '--haplotype_bam', type=bool, nargs=1, choices=[True, False],
+                                  default=[defaultPara_gt["hap"]],
+                                  help=" Input bam file with haplotype tags [default:"
+                                       + str(defaultPara_gt["hap"]) + "]")
     input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
                                   default=[defaultPara_gt["separator"]],
                                   help='Separator for microsatellites file [default:'
                                        + str(defaultPara_gt["separator"]) + ']')
+    ##################################################################################
+    # group read realignment
+    general_realign = parser_gt.add_argument_group(title="Read realignment")
+    general_realign.add_argument('-pl', '--prefix_len', type=int, nargs=1,
+                                 default=[defaultPara_gt["prefix_len"]],
+                                 help="Debug mode for developers [default:" +
+                                      str(defaultPara_gt["prefix_len"]) + "]")
+    general_realign.add_argument('-sl', '--suffix_len', type=int, nargs=1,
+                                 default=[defaultPara_gt["suffix_len"]],
+                                 help="Debug mode for developers [default:" +
+                                      str(defaultPara_gt["suffix_len"]) + "]")
+    general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
+                                 default=[defaultPara_gt["kmer_size"]],
+                                 help="Debug mode for developers [default:" +
+                                      str(defaultPara_gt["kmer_size"]) + "]")
 
     ##################################################################################
     # group general option
@@ -89,7 +112,7 @@ def args_process():
                                 default=[defaultPara_gt["minimum_support_reads"]],
                                 help="minimum support reads of an available microsatellite [default:" +
                                      str(defaultPara_gt["minimum_support_reads"]) + "]")
-    bam2dis_option.add_argument('-am', '--allow_mismatch', type=int, nargs=1, choices=[True, False],
+    bam2dis_option.add_argument('-am', '--allow_mismatch', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_gt["allow_mismatch"]],
                                 help="allow mismatch when capture microsatellite [default:"
                                      + str(defaultPara_gt["allow_mismatch"]) + "]")
@@ -130,7 +153,6 @@ def args_process():
     if len(os.sys.argv) == 2 and (os.sys.argv[1] in commands):
         commandsParser[os.sys.argv[1]].print_help()
         return False
-
     return parser
 
 
@@ -144,6 +166,10 @@ def genotype_init(args):
     paras["microsatellite"] = args.microsatellite[0]
     paras["reference"] = args.reference[0]
     paras["separator"] = args.separator[0]
+    paras["tech"] = args.technology[0]
+    paras["hap"] = args.haplotype_bam[0]
+    paras["prefix_len"] = args.prefix_len[0]
+    paras["suffix_len"] = args.suffix_len[0]
     paras["debug"] = args.debug[0]
     paras["only_homopolymer"] = args.only_homopolymers[0]
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
@@ -199,15 +225,15 @@ def genotype_init(args):
         print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
         error_stat = True
     if paras["input"][-4:] == "cram":
-        paras["input_format"]="cram"
-        cramfile=pysam.AlignmentFile(paras["input"],mode="rb",reference_filename=paras["reference"])
+        paras["input_format"] = "cram"
+        cramfile = pysam.AlignmentFile(paras["input"], mode="rb", reference_filename=paras["reference"])
         if not cramfile.has_index():
             print("[INFO] Build index for the input cram ...")
             pysam.index(paras["input"])
         cramfile.close()
     else:
-        paras["input_format"]="bam"
-        bamfile=pysam.AlignmentFile(paras["input"],mode="rb")
+        paras["input_format"] = "bam"
+        bamfile = pysam.AlignmentFile(paras["input"], mode="rb")
         if not bamfile.has_index():
             print("[INFO] Build index for the input bam ...")
             pysam.index(paras["input"])
@@ -220,7 +246,8 @@ def genotype_init(args):
             '[ERROR] The output ' + paras["output"] +
             ' is still exist! in case of overwrite files in this workspace, '
             'please check your script!')
-        error_stat = True
+        if not paras["debug"]:
+            error_stat = True
     if error_stat: return False
     output_path = paras["output"]
     output_path = output_path if output_path[-1] == "/" else output_path + "/"
