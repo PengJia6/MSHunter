@@ -258,12 +258,12 @@ def genotype_init(args):
     input_path = input_path[:-1] if input_path[-1] == "/" else input_path
     case = input_path.split("/")[-1].strip(".bam")
     case = case.strip(".cram")
-    paras["output_dis"] = paras["output"] + case + ".dis.bcf"
+    paras["output_dis"] = paras["output"] + case + ".dis.vcf.gz"
     paras["output_tmp"] = paras["output"] + case + "_tmp"
     if not os.path.exists(paras["output_tmp"]):
         os.makedirs(paras["output_tmp"])
     paras["output_model"] = paras["output"] + case + ".model"
-    paras["output_call"] = paras["output"] + case + ".bcf"
+    paras["output_call"] = paras["output"] + case + ".vcf.gz"
     set_value("case", case)
     set_value("paras", paras)
     return True

@@ -10,6 +10,7 @@
 import multiprocessing
 import pysam
 import pandas as pd
+import gzip
 from src.global_dict import *
 
 
@@ -433,7 +434,7 @@ def multiRun(thread, datalist):
 
 
 def write_vcf_init(outputpath, sampleNameList):
-    outputfile = pysam.VariantFile(outputpath, "wb")
+    outputfile = pysam.VariantFile(outputpath, "w")
     bamfile = pysam.AlignmentFile(get_value("paras")["input"], "rb")
     contigs = bamfile.references
     contigsLen = bamfile.lengths
@@ -479,6 +480,7 @@ def write_vcf_init(outputpath, sampleNameList):
 
 def write_vcf_close(outputfile):
     outputfile.close()
+    pysam.tabix_index(get_value("paras")["output_dis"], force=True, preset="vcf")
 
 
 def write_vcf(outputfile, dataList):
@@ -497,6 +499,7 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["chrom"] = chrom
         vcfrec.info["pos"] = pos
         vcfrec.info["Start"] = pos
+        vcfrec.stop = pos + msDetail.repeatTimes * len(msDetail.motif)
         vcfrec.info["End"] = pos + msDetail.repeatTimes * len(msDetail.motif)
         vcfrec.info["motif"] = msDetail.motif
         vcfrec.info["repeatTimes"] = msDetail.repeatTimes

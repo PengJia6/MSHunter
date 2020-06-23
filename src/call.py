@@ -75,7 +75,6 @@ class MSCall:
     def modelpre(self):
         if not self.disStat:
             return
-
         else:
             model = get_value("model")
             motif = self.info["motif"]
@@ -83,11 +82,13 @@ class MSCall:
                 # self.modelStat = False
                 return
             self.modelStat = True
+            self.support_reads, self.support_reads_hap1, self.support_reads_hap2 = list(
+                map(int, self.info["support_reads"].split("|")))
             maxRepeat = model[motif]["maxRepeat"]
             disnormal = {}
-            self.dis = [list(map(int, i.split(":"))) for i in self.info["dis"].split("|")]
+            self.dis = [list(map(int, i.split("-"))) for i in self.info["dis"].split("|")[0].split(":")]
             for i in self.dis:
-                disnormal[i[0]] = i[1] / self.info["support_reads"]
+                disnormal[i[0]] = i[1] / self.support_reads
             self.dis_norm = disnormal
 
             self.minAllele = max([min(disnormal.keys()) - 1, 1])
@@ -109,7 +110,7 @@ class MSCall:
             self.precision = "NoReadSpan"
             self.filter = "NoReadSpan"
             return
-        if (len(self.model) < 2 ) or (not self.modelStat):
+        if (len(self.model) < 2) or (not self.modelStat):
             self.qual = qual
             self.precision = "NoAvailableModel"
             self.filter = "NoAvailableModel"
@@ -124,7 +125,7 @@ class MSCall:
         firsttwoDistanceRatio = (distance_tuple[1][1] - distance_tuple[0][1]) / (distance_tuple[0][1] + 0.000001)
         self.firsttwoDistance = distance_tuple[1][1] - distance_tuple[0][1]
         self.distance = distance_tuple[0][1]
-        qual = firsttwoDistanceRatio * self.info["support_reads"]
+        qual = firsttwoDistanceRatio * self.support_reads
         if self.info["lowSupport"] == "True":
             self.precision = "LowCov"
             self.filter = "LowCov"
@@ -172,10 +173,15 @@ def call_one_ms(msCall):
 
 
 def multicallMS(mscall_list, outputfile, thread=4):
-    pool = multiprocessing.Pool(thread)
-    result_list = pool.map(call_one_ms, mscall_list)
-    pool.close()
-    pool.join()
+    # pool = multiprocessing.Pool(thread)
+    # result_list = pool.map(call_one_ms, mscall_list)
+    # pool.close()
+    # pool.join()
+    result_list=[]
+    for i in mscall_list:
+        result_list.append(call_one_ms(i))
+
+
     write_call2vcf(result_list, outputfile)
     return result_list
 
@@ -184,8 +190,8 @@ def write_call2vcf_init():
     paras = get_value("paras")
     inputpath = paras["output_dis"]
     outputpath = paras["output_call"]
-    inputfile = pysam.VariantFile(inputpath, "rb")
-    outputfile = pysam.VariantFile(outputpath, "wb", header=inputfile.header)
+    inputfile = pysam.VariantFile(inputpath, )
+    outputfile = pysam.VariantFile(outputpath, "w", header=inputfile.header)
     outputfile.header.add_line(
         '##INFO=<ID=FirstAlleles,Number=1,Type=String,Description="The first allele type of this point">')
     outputfile.header.add_line(
@@ -241,6 +247,8 @@ def write_call2vcf(mscall_list, outputfile):
 
 def write_call2vcf_close(outputfile):
     outputfile.close()
+    pysam.tabix_index(get_value("paras")["output_call"], force=True, preset="vcf")
+
 
 def call():
     paras = get_value("paras")

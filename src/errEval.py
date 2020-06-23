@@ -24,15 +24,18 @@ def classDisbyMotif(paras):
         recordNum += 1
         recordInfo = rec.info
         motif = recordInfo["motif"]
-        support_reads = int(recordInfo["support_reads"])
+        support_reads = int(recordInfo["support_reads"].split("|")[0])
         if support_reads > min_support_reads:
             if motif not in File_motif:
-                File_motif[motif] = pysam.VariantFile(path_dis_parameter + "/tmp_motif_" + motif + ".bcf", 'wb',
+                File_motif[motif] = pysam.VariantFile(path_dis_parameter + "/tmp_motif_" + motif + ".vcf.gz", 'w',
                                                       header=vcffile.header)
             File_motif[motif].write(rec)
+
     motifList = []
     for motif in File_motif:
         File_motif[motif].close()
+        pysam.tabix_index(path_dis_parameter + "/tmp_motif_" + motif + ".vcf.gz", force=True, preset="vcf")
+
         motifList.append(motif)
     set_value("motifList", motifList)
 
@@ -82,17 +85,17 @@ def getHomoNormalDis(motifDis_tmp, maxRepeat):
 def getOneMotifProsess(paras, motif):
     path_dis_parameter = paras["output_tmp"]
     motifDis_tmp = {}
-    vcffile = pysam.VariantFile(path_dis_parameter + "/tmp_motif_" + motif + ".bcf", "rb")
+    vcffile = pysam.VariantFile(path_dis_parameter + "/tmp_motif_" + motif + ".vcf.gz", "r")
     # path_dis_parameter + "tmp_motif_" + motif + ".bcf
     maxRepeat = 0
     repeatList = []
     for rec in vcffile.fetch():
         recordInfo = rec.info
         repeatTimes = int(recordInfo["repeatTimes"])
-        disList = [list(map(int, i.split(":"))) for i in recordInfo["dis"].split("|")]
+        disList = [list(map(int, i.split("-"))) for i in recordInfo["dis"].split("|")[0].split(":")]
         thismaxRepeat = max([i[0] for i in disList])
         maxRepeat = maxRepeat if maxRepeat >= thismaxRepeat else thismaxRepeat
-        support_reads = int(recordInfo["support_reads"])
+        support_reads = int(recordInfo["support_reads"].split("|")[0])
         disListnormal = {}
         for i in disList:
             disListnormal[i[0]] = i[1] / support_reads

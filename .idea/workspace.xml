@@ -4,6 +4,9 @@
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/bam2dis.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bam2dis.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/call.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/call.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/errEval.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/errEval.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -30,8 +33,11 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../MS_Analysis" />
+    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
@@ -51,6 +57,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/bam2dis.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -72,6 +79,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/call.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -93,6 +101,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/errEval.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
@@ -114,6 +123,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/getDis.py" />
       <option name="PARAMETERS" value="-m ../data/GRCh38.d1.vd1.fa.microsatellites.csv -i /media/pengjia/ZS6Y_Feng_1/NA12878/GIAB/PacBio/HG001_GRCh38.haplotag.RTG.trio.bam -o ../data/test" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -135,6 +145,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
       <option name="PARAMETERS" value="errEval" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -156,6 +167,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/sw/smith_waterman.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -177,6 +189,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/vcftest.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -190,10 +203,10 @@
       <item itemvalue="Python.getDis" />
       <item itemvalue="Python.main" />
       <item itemvalue="Python.bam2dis" />
-      <item itemvalue="Python.errEval" />
       <item itemvalue="Python.call" />
-      <item itemvalue="Python.vcftest" />
+      <item itemvalue="Python.errEval" />
       <item itemvalue="Python.smith_waterman" />
+      <item itemvalue="Python.vcftest" />
     </list>
     <recent_temporary>
       <list>
@@ -215,33 +228,42 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1590373907756</updated>
+      <workItem from="1592899944986" duration="63000" />
+      <workItem from="1592900046658" duration="36000" />
+      <workItem from="1592909979345" duration="451000" />
+      <workItem from="1592910536807" duration="458000" />
+      <workItem from="1592911251839" duration="31000" />
+      <workItem from="1592917788478" duration="4954000" />
     </task>
     <servers />
   </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="2" />
+  </component>
   <component name="WindowStateProjectService">
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl" timestamp="1591617196841">
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl" timestamp="1592910988068">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591617196841" />
-    <state width="1897" height="309" key="GridCell.Tab.0.bottom" timestamp="1592829822562">
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592910988068" />
+    <state width="1897" height="68" key="GridCell.Tab.0.bottom" timestamp="1592898526398">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="309" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592829822562" />
+    <state width="1897" height="68" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526398" />
     <state width="1057" height="178" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
-    <state width="1897" height="309" key="GridCell.Tab.0.center" timestamp="1592829822562">
+    <state width="1897" height="68" key="GridCell.Tab.0.center" timestamp="1592898526397">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="309" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592829822562" />
+    <state width="1897" height="68" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526397" />
     <state width="1057" height="178" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
-    <state width="1897" height="309" key="GridCell.Tab.0.left" timestamp="1592829822561">
+    <state width="1897" height="68" key="GridCell.Tab.0.left" timestamp="1592898526397">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="309" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592829822561" />
+    <state width="1897" height="68" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526397" />
     <state width="1057" height="178" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
-    <state width="1897" height="309" key="GridCell.Tab.0.right" timestamp="1592829822562">
+    <state width="1897" height="68" key="GridCell.Tab.0.right" timestamp="1592898526398">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="309" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592829822562" />
+    <state width="1897" height="68" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526398" />
     <state width="1057" height="178" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
     <state width="1897" height="200" key="GridCell.Tab.1.bottom" timestamp="1591615600502">
       <screen x="0" y="27" width="1920" height="988" />
@@ -259,10 +281,10 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state width="1897" height="200" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591615600502" />
-    <state x="1970" y="293" key="SettingsEditor" timestamp="1591238542538">
-      <screen x="1920" y="0" width="1080" height="1920" />
+    <state x="464" y="231" key="SettingsEditor" timestamp="1592910993895">
+      <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="1970" y="293" key="SettingsEditor/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591238542538" />
+    <state x="464" y="231" key="SettingsEditor/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592910993895" />
     <state x="396" y="103" width="1118" height="833" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1591630385425">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
@@ -275,5 +297,19 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="623" y="241" width="672" height="678" key="search.everywhere.popup/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592448683370" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/src/bam2dis.py</url>
+          <line>9</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/MSHunter$bam2dis.coverage" NAME="bam2dis Coverage Results" MODIFIED="1592911001242" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>
