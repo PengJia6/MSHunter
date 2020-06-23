@@ -8,9 +8,10 @@ If you have any question about this software, please contact with Peng Jia (peng
 * remove the useless codes and build a new analysis project (√)
 * support cram and run 1000G data (√)
 * support bam/cram index check (√)
+* support output sorting and indexing (√)
+
+* support processing phased bam files (PS and HP tags)
 * improve repeat calling in bam2dis.py (for ccs read)
 * support complex event detection
-* support output sorting and indexing
 * add test files 
-* support processing phased bam files (PS and HP tags)
 * support PacBio clr and ONT reads (fix the extract repeat times module)
