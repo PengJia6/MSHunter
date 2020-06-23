@@ -14,17 +14,23 @@ from src.global_dict import *
 
 
 class MSDeail:
-    repeatDict = {}
+    repeat_dis = {"all": {}, "hap1": {}, "hap2": {}, "unphased": {}}
     depth = 0
+    depth_hap1 = 0
+    depth_hap2 = 0
     depthCall = 0
     disStat = False
     lowSupport = True
-    p = 0
-    q = 0
+    support_reads = 0
+    support_reads_hap1 = 0
+    support_reads_hap2 = 0
+    p = {"all": 0, "hap1": 0, "hap2": 0, "unphased": 0}
+    q = {"all": 0, "hap1": 0, "hap2": 0, "unphased": 0}
+    thishap = False  # this microsatellite is phased
 
     def __init__(self, chr_id, posStart, posEnd, queryStart, queryEnd, motif, motifLen, repeat_times,
                  bamfile, min_support_reads, min_mapping_qual, input_format, reference, prefix, suffix,
-                 prefix_str, suffix_str, fapath):
+                 prefix_str, suffix_str, fapath, hap, tech):
         self.chrId = chr_id
         self.posStart = posStart
         self.motif = motif
@@ -43,8 +49,10 @@ class MSDeail:
         self.prefix_str = prefix_str
         self.suffix_str = suffix_str
         self.fapath = fapath
+        self.hap = hap
+        self.tech = tech
 
-    def get_dis(self):
+    def get_reads_alignment(self):
         if self.input_format == "bam":
             bamfile = pysam.AlignmentFile(self.bamfile, "rb")
         else:
@@ -54,42 +62,109 @@ class MSDeail:
         depth = len(alignmentList)
         if depth < self.min_support_reads:
             self.lowSupport = True
-        repeatTimesDict = {}
-        for alignment in alignmentList:
-            if alignment.is_unmapped or alignment.is_duplicate: continue
-            # ref                     -----=======-----
-            # read                       ---------->              spaning
-            # read                       <-----------
+        reads_com = []
+        reads_hap1 = []
+        reads_hap2 = []
+        if self.hap:
+            for alignment in alignmentList:
+                # remove unmaped reads and duplicated reads
+                if alignment.is_unmapped or alignment.is_duplicate:
+                    continue
+                # remove reads outside the boundary
+                if alignment.query_alignment_start > self.posStart and alignment.cigartuples[0][0] == 0:
+                    continue
+                if alignment.query_alignment_end < self.posEnd and alignment.cigartuples[0][0] == 0:
+                    continue
 
-            # ref                     -----=======-----
-            # read                ---->  <---|                    remove
-            # read                            |--->  <----        remove
+                if not alignment.has_tag("HP"):
+                    reads_com.append(alignment)
+                else:
+                    if alignment.get_tag("HP") == 1:
+                        reads_hap1.append(alignment)
+                    else:
+                        reads_hap2.append(alignment)
+            if len(reads_hap1) > 3 and len(reads_hap2) > 3:
+                self.thishap = True
+            else:
+                reads_com = reads_com + reads_hap1 + reads_hap2
+            self.depth_hap1 = len(reads_hap1)
+            self.depth_hap2 = len(reads_hap2)
+            self.depth = len(reads_com) + self.depth_hap1 + self.depth_hap2
+        else:
+            for alignment in alignmentList:
+                if alignment.is_unmapped or alignment.is_duplicate:
+                    continue  # remove unmaped reads and duplicated reads
+                if alignment.query_alignment_start > self.posStart and alignment.cigartuples[0][0] == 0:
+                    continue  # remove reads outside the boundary
+                if alignment.query_alignment_end < self.posEnd and alignment.cigartuples[0][0] == 0:
+                    continue  # remove reads outside the boundary
+                reads_com.append(alignment)
 
-            # ref                     -----=======-----
-            # read                 ---->   <---/                  probably remove
-            # read                            \--->  <----        probably remove
+            self.depth = len(reads_com)
 
-            # ref                     -----=======-----
-            # read                 ---->         <---             read pair info
-            # read                      ---->       <----         read pair info
-            # read                       ---->   <----            read pair info
+        return {"unphased": reads_com, "hap1": reads_hap1, "hap2": reads_hap2}
 
-            if alignment.query_alignment_start>self.posStart and alignment.cigartuples[0][0]==0:continue
-            if alignment.query_alignment_end<self.posEnd and alignment.cigartuples[0][0]==0:continue
-            # add other condition for read selection
-            thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
-                                                  min_mapping_qual=self.min_mapping_qual)
-            self.getRepeatTimes2(alignment)
-            if thisRepeatTimes < 0: continue
-            if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
-            repeatTimesDict[thisRepeatTimes] += 1
-        if sum(repeatTimesDict.values()) < self.min_support_reads:
+    def get_dis(self):
+        reads = self.get_reads_alignment()
+        repeat_times_dict = {"unphased": {}, "hap1": {}, "hap2": {}}
+
+        if not self.thishap:
+            repeatTimesDict = {}
+            for alignment in reads["unphased"]:
+                # add other condition for r ead selection
+                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                                                      min_mapping_qual=self.min_mapping_qual)
+                # self.getRepeatTimes2(alignment)
+                if thisRepeatTimes < 0: continue
+                if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
+                repeatTimesDict[thisRepeatTimes] += 1
+            repeat_times_dict["unphased"] = repeatTimesDict
+        else:
+            repeatTimesDict = {}
+            for alignment in reads["hap1"]:
+                # add other condition for read selection
+                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                                                      min_mapping_qual=self.min_mapping_qual)
+                # self.getRepeatTimes2(alignment)
+                if thisRepeatTimes < 0: continue
+                if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
+                repeatTimesDict[thisRepeatTimes] += 1
+            repeat_times_dict["hap1"] = repeatTimesDict
+            self.repeatDict = repeatTimesDict
+            repeatTimesDict = {}
+            for alignment in reads["hap2"]:
+                # add other condition for read selection
+                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                                                      min_mapping_qual=self.min_mapping_qual)
+                # self.getRepeatTimes2(alignment)
+                if thisRepeatTimes < 0: continue
+                if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
+                repeatTimesDict[thisRepeatTimes] += 1
+            repeat_times_dict["unphased"] = repeatTimesDict
+            self.repeatDict = repeatTimesDict
+            repeatTimesDict = {}
+            for alignment in reads["hap2"]:
+                # add other condition for read selection
+                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                                                      min_mapping_qual=self.min_mapping_qual)
+                self.getRepeatTimes2(alignment)
+                if thisRepeatTimes < 0: continue
+                if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
+                repeatTimesDict[thisRepeatTimes] += 1
+            repeat_times_dict["unphased"] = repeatTimesDict
+            self.repeatDict = repeatTimesDict
+        repeat_times_dict["all"] = self.dis_sum(
+            [repeat_times_dict["unphased"],
+             repeat_times_dict["hap1"],
+             repeat_times_dict["hap2"]])
+        self.repeat_dis = repeat_times_dict
+        if sum(repeat_times_dict["all"].values()) < self.min_support_reads:
             self.lowSupport = True
         else:
             self.lowSupport = False
-        self.repeatDict = repeatTimesDict
-        self.depth = depth
-        self.support_reads = sum(list(repeatTimesDict.values()))
+        self.support_reads = sum(list(repeat_times_dict["all"].values()))
+        self.support_reads_hap1 = sum(list(repeat_times_dict["hap1"].values()))
+        self.support_reads_hap2 = sum(list(repeat_times_dict["hap2"].values()))
         if self.support_reads >= 1:
             self.disStat = True
 
@@ -101,27 +176,55 @@ class MSDeail:
         """
         # disDict=
         if not self.disStat:
-            self.p = None
-            self.q = None
+            # self.p = None
+            # self.q = None
             return False
         refRepeatTimes = self.repeatTimes
         insShfit = 0
         delShfit = 0
         normal = 0
-        for rpt in self.repeatDict:
-            if rpt - refRepeatTimes > 0:
-                insShfit = insShfit + (rpt - refRepeatTimes) * self.repeatDict[rpt]
-                normal = normal + rpt * self.repeatDict[rpt] - (rpt - refRepeatTimes) * self.repeatDict[rpt]
+        p_dict = {}
+        q_dict = {}
+        for reads_type in self.repeat_dis:
+            one_repeat_dict = self.repeat_dis[reads_type]
+            for rpt in one_repeat_dict:
+                if rpt - refRepeatTimes > 0:
+                    insShfit = insShfit + (rpt - refRepeatTimes) * one_repeat_dict[rpt]
+                    normal = normal + rpt * one_repeat_dict[rpt] - (rpt - refRepeatTimes) * one_repeat_dict[rpt]
+                else:
+                    delShfit = delShfit + (refRepeatTimes - rpt) * one_repeat_dict[rpt]
+                    normal = normal + rpt * one_repeat_dict[rpt] - (refRepeatTimes - rpt) * one_repeat_dict[rpt]
+            # print()
+            if insShfit + delShfit + normal > 0:
+                p_dict[reads_type] = round(delShfit / (insShfit + delShfit + normal), 4)
+                q_dict[reads_type] = round(insShfit / (insShfit + delShfit + normal), 4)
             else:
-                delShfit = delShfit + (refRepeatTimes - rpt) * self.repeatDict[rpt]
-                normal = normal + rpt * self.repeatDict[rpt] - (refRepeatTimes - rpt) * self.repeatDict[rpt]
-        # print()
-        self.p = round(delShfit / (insShfit + delShfit + normal), 4)
-        self.q = round(insShfit / (insShfit + delShfit + normal), 4)
+                p_dict[reads_type] = 0
+                q_dict[reads_type] = 0
+        self.p = p_dict
+        self.q = q_dict
         # print(self.p,self.q)
         return True
 
+    # ref                     -----=======-----
+    # read                       ---------->              spaning
+    # read                       <-----------
+
+    # ref                     -----=======-----
+    # read                ---->  <---|                    remove
+    # read                            |--->  <----        remove
+
+    # ref                     -----=======-----
+    # read                 ---->   <---/                  probably remove
+    # read                            \--->  <----        probably remove
+
+    # ref                     -----=======-----
+    # read                 ---->         <---             read pair info
+    # read                      ---->       <----         read pair info
+    # read                       ---->   <----            read pair info
+
     def getRepeatTimes2(self, alignment):
+
         align_start = alignment.reference_start
         align_end = alignment.reference_end
         query_start = alignment.query_alignment_start
@@ -136,45 +239,46 @@ class MSDeail:
         # print(alignment.cigarstring,alignment.cigartuples,)
         for cigartupe in alignment.cigartuples:
             if cigartupe[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
-                ref_block.append((ref_pos, ref_pos + cigartupe[1]))
+                ref_block.append((ref_pos, ref_pos + cigartupe[1], 0))
                 read_block.append((read_pos, read_pos + cigartupe[1], 0))
-
-                # fafile=pysam.FastaFile(self.fapath)
-                # print(fafile.fetch(self.chrId,ref_pos,ref_pos+cigartupe[1]))
-                # print(alignment.query[read_pos: read_pos + cigartupe[1]])
-                # print(ref_pos,read_pos)
-                # print()
-                # fafile.close()
                 read_pos += cigartupe[1]
                 ref_pos += cigartupe[1]
-            elif cigartupe[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip
-                ref_block.append((ref_pos, ref_pos + 0))
+            elif cigartupe[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
+                ref_block.append((ref_pos, ref_pos + 0, 1))
                 read_block.append((read_pos, read_pos + cigartupe[1], 1))
                 read_pos += cigartupe[1]
-            elif cigartupe[0] in [2, 3]:  # 2:D; 3:N: skip region of reference
+            elif cigartupe[0] in [2, ]:  # 2:D; 3:N: skip region of reference
                 ref_block.append((ref_pos, ref_pos + cigartupe[1], 2))
-                read_block.append((read_pos, read_pos))
+                read_block.append((read_pos, read_pos, 2))
                 ref_pos += cigartupe[1]
-        read_start, read_end = 0, alignment.query_length
-        for ref_b, read_b in zip(ref_block, read_block):
-            if self.posStart >= ref_b[0] and self.posStart < ref_b[1]:
-                read_start = read_b[0] + (self.posStart - ref_b[0]) + 1
-            if self.posEnd >= ref_b[0] and self.posEnd < ref_b[1]:
-                read_end = read_b[0] + (self.posEnd - ref_b[0]) - 1
-        print(read_start, read_end,cigartupe)
-        fafile=pysam.FastaFile(self.fapath)
-        # print(fafile.fetch(self.chrId,self.posStart,self.posStart+self.repeatTimes*self.motifLen))
-        print(alignment.query[read_start - 6:read_start])
-        print(alignment.query)
+            else:
+                print(alignment.cigarstring)
+        if ref_pos != align_end:
+            print(alignment)
 
-        print(self.prefix)
+        if read_pos != (query_length):
+            print(read_pos, query_length, query_end)
+        # print(alignment)
+        # read_start, read_end = 0, alignment.query_length
+        # for ref_b, read_b in zip(ref_block, read_block):
+        #     if self.posStart >= ref_b[0] and self.posStart < ref_b[1]:
+        #         read_start = read_b[0] + (self.posStart - ref_b[0]) + 1
+        #     if self.posEnd >= ref_b[0] and self.posEnd < ref_b[1]:
+        #         read_end = read_b[0] + (self.posEnd - ref_b[0]) - 1
+        # print(read_start, read_end, cigartupe)
+        # fafile = pysam.FastaFile(self.fapath)
+        # # print(fafile.fetch(self.chrId,self.posStart,self.posStart+self.repeatTimes*self.motifLen))
+        # print(alignment.query[read_start - 6:read_start])
+        # print(alignment.query)
+        #
+        # print(self.prefix)
         # print()
         # print(alignment.query[read_end:read_end + 6])
-        # print(self.suffix)
-        print()
-        print()
-        fafile.close()
-        # elif cigartupe[0] in [5]:
+        # # print(self.suffix)
+        # print()
+        # print()
+        # fafile.close()
+        # # elif cigartupe[0] in [5]:
         #     continue
         # else:
         #
@@ -192,6 +296,20 @@ class MSDeail:
         #     print("")
 
         # print(alignment.to_dict())
+
+    def dis_sum(self, dict_list):
+        keylist = []
+        for item in dict_list:
+            for key in item:
+                if key not in keylist:
+                    keylist.append(key)
+        res_dict = {}
+        for key in keylist:
+            res_dict[key] = 0
+        for item in dict_list:
+            for key in item:
+                res_dict[key] += item[key]
+        return res_dict
 
     def getRepeatTimes(self, alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
         """
@@ -338,14 +456,18 @@ def write_vcf_init(outputpath, sampleNameList):
     outputfile.header.add_line('##INFO=<ID=repeatTimes,Number=1,Type=Integer,Description="Repeat imes">')
     outputfile.header.add_line('##INFO=<ID=prefix,Number=1,Type=String,Description="Prefix of microsatellite">')
     outputfile.header.add_line('##INFO=<ID=suffix,Number=1,Type=String,Description="Suffix of microsatellite">')
-    outputfile.header.add_line(
-        '##INFO=<ID=depth,Number=1,Type=Integer,Description="Number of reads associated with the position">')
-    outputfile.header.add_line(
-        '##INFO=<ID=support_reads,Number=1,Type=Integer,Description="Reads covered the microsatellite">')
-    outputfile.header.add_line('##INFO=<ID=dis,Number=1,Type=String,Description="Distribution of repeat times">')
-    outputfile.header.add_line('##INFO=<ID=proD,Number=1,Type=Float,Description="Probability of deletion">')
-    outputfile.header.add_line('##INFO=<ID=proI,Number=1,Type=Float,Description="Probability of insertion">')
+    outputfile.header.add_line('##INFO=<ID=depth,Number=1,Type=String,Description='
+                               '"Number of reads associated with the position, all|hap1|hap2">')
+    outputfile.header.add_line('##INFO=<ID=support_reads,Number=1,Type=String,Description='
+                               '"Reads covered the microsatellite, all|hap1|hap2">')
+    outputfile.header.add_line('##INFO=<ID=dis,Number=1,Type=String,Description='
+                               '"Distribution of repeat times, all|hap1|hap2|unphased">')
+    outputfile.header.add_line('##INFO=<ID=proD,Number=1,Type=String,Description='
+                               '"Probability of deletion,all|hap1|hap2|unphased">')
+    outputfile.header.add_line('##INFO=<ID=proI,Number=1,Type=String,Description='
+                               '"Probability of insertion, all|hap1|hap2|unphased">')
     outputfile.header.add_line('##INFO=<ID=lowSupport,Number=1,Type=String,Description="Low support reads">')
+    outputfile.header.add_line('##INFO=<ID=Phased,Number=1,Type=String,Description="This site is phased">')
     outputfile.header.add_line('##INFO=<ID=disStat,Number=1,Type=String,Description="Distribution Stat">')
     outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
     outputfile.header.add_line('##FORMAT=<ID=PS,Number=1,Type=String,Description="Genotype">')
@@ -380,11 +502,23 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["repeatTimes"] = msDetail.repeatTimes
         vcfrec.info["prefix"] = msDetail.prefix
         vcfrec.info["suffix"] = msDetail.suffix
-        vcfrec.info["depth"] = msDetail.depth
-        vcfrec.info["support_reads"] = msDetail.support_reads
-        vcfrec.info["dis"] = "|".join([str(key) + ":" + str(value) for key, value in msDetail.repeatDict.items()])
-        vcfrec.info["proD"] = msDetail.p
-        vcfrec.info["proI"] = msDetail.q
+        vcfrec.info["depth"] = "|".join(list(map(str, [msDetail.depth, msDetail.depth_hap1, msDetail.depth_hap2])))
+        vcfrec.info["support_reads"] = "|".join(list(map(str, [msDetail.support_reads,
+                                                               msDetail.depth_hap1, msDetail.depth_hap2])))
+        vcfrec.info["dis"] = "|".join([
+            ":".join([str(key) + "-" + str(value) for key, value in msDetail.repeat_dis["all"].items()]),
+            ":".join([str(key) + "-" + str(value) for key, value in msDetail.repeat_dis["hap1"].items()]),
+            ":".join([str(key) + "-" + str(value) for key, value in msDetail.repeat_dis["hap2"].items()]),
+            ":".join([str(key) + "-" + str(value) for key, value in msDetail.repeat_dis["unphased"].items()])
+
+        ])
+
+        vcfrec.info["proD"] = "|".join(list(map(str, [
+            msDetail.p["all"], msDetail.p["hap1"], msDetail.p["hap2"], msDetail.p["unphased"]
+        ])))
+        vcfrec.info["proI"] = "|".join(list(map(str, [
+            msDetail.q["all"], msDetail.q["hap1"], msDetail.q["hap2"], msDetail.q["unphased"]
+        ])))
         vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
         vcfrec.info["disStat"] = str(msDetail.disStat)
         vcfrec.samples[get_value("case")]["GT"] = ()
@@ -404,6 +538,8 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     curentMSNum = 0
     tmpWindow = []
     ms_number = get_value("ms_number")
+    tech = args["tech"]
+    hap = args["hap"]
     fafile = pysam.FastaFile(args["reference"])
     prefix_len = args["prefix_len"]
     suffix_len = args["suffix_len"]
@@ -441,6 +577,8 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                               prefix_str=prefix_str,
                               suffix_str=suffix_str,
                               fapath=args["reference"],
+                              hap=hap,
+                              tech=tech,
                               )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
