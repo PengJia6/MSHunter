@@ -101,6 +101,10 @@ def args_process():
                                 default=[defaultPara_gt["maximum_repeat_times"]], type=str, nargs=1,
                                 help="Maximum repeat times of microsatellites [default:"
                                      + defaultPara_gt["maximum_repeat_times"] + "]")
+    general_option.add_argument('-minh', '--minimum_phasing_reads',
+                                default=[defaultPara_gt["minimum_phasing_reads"]], type=str, nargs=1,
+                                help="Minimum reads for each haplotype reporting [default:"
+                                     + str(defaultPara_gt["minimum_phasing_reads"]) + "]")
     ##################################################################################
     # group for bam2dis
     bam2dis_option = parser_gt.add_argument_group(title="Option for bam2dis")
@@ -177,7 +181,9 @@ def genotype_init(args):
     paras["allow_mismatch"] = args.allow_mismatch[0]
     paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
+    paras["minimum_phasing_reads"]=args.minimum_phasing_reads[0]
     paras["ranges_of_repeat_times"] = {}
+
     for i in args.minimum_repeat_times[0].split(";"):
         unitRange, repeatRange = i.split(":")
         if "-" in unitRange:

@@ -5,7 +5,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/bam2dis.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bam2dis.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/call.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/call.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/errEval.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/errEval.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -44,7 +44,7 @@
       <recent name="$PROJECT_DIR$/src" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.bam2dis">
+  <component name="RunManager" selected="Python.main">
     <configuration name="bam2dis" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -210,9 +210,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.call" />
         <item itemvalue="Python.bam2dis" />
         <item itemvalue="Python.smith_waterman" />
-        <item itemvalue="Python.call" />
         <item itemvalue="Python.vcftest" />
         <item itemvalue="Python.errEval" />
       </list>
@@ -233,7 +233,8 @@
       <workItem from="1592909979345" duration="451000" />
       <workItem from="1592910536807" duration="458000" />
       <workItem from="1592911251839" duration="31000" />
-      <workItem from="1592917788478" duration="4954000" />
+      <workItem from="1592917788478" duration="11690000" />
+      <workItem from="1592964453975" duration="10628000" />
     </task>
     <servers />
   </component>
@@ -241,29 +242,29 @@
     <option name="version" value="2" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl" timestamp="1592910988068">
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl" timestamp="1592990710995">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592910988068" />
-    <state width="1897" height="68" key="GridCell.Tab.0.bottom" timestamp="1592898526398">
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592990710995" />
+    <state width="1874" height="104" key="GridCell.Tab.0.bottom" timestamp="1592989873525">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="68" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526398" />
+    <state width="1874" height="104" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592989873525" />
     <state width="1057" height="178" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
-    <state width="1897" height="68" key="GridCell.Tab.0.center" timestamp="1592898526397">
+    <state width="1874" height="104" key="GridCell.Tab.0.center" timestamp="1592989873525">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="68" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526397" />
+    <state width="1874" height="104" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592989873525" />
     <state width="1057" height="178" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
-    <state width="1897" height="68" key="GridCell.Tab.0.left" timestamp="1592898526397">
+    <state width="1874" height="104" key="GridCell.Tab.0.left" timestamp="1592989873525">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="68" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526397" />
+    <state width="1874" height="104" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592989873525" />
     <state width="1057" height="178" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
-    <state width="1897" height="68" key="GridCell.Tab.0.right" timestamp="1592898526398">
+    <state width="1874" height="104" key="GridCell.Tab.0.right" timestamp="1592989873525">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1897" height="68" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592898526398" />
+    <state width="1874" height="104" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592989873525" />
     <state width="1057" height="178" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1592398122529" />
     <state width="1897" height="200" key="GridCell.Tab.1.bottom" timestamp="1591615600502">
       <screen x="0" y="27" width="1920" height="988" />
@@ -311,5 +312,7 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/MSHunter$bam2dis.coverage" NAME="bam2dis Coverage Results" MODIFIED="1592911001242" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1592987143266" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$call.coverage" NAME="call Coverage Results" MODIFIED="1592961007777" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>

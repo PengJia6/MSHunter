@@ -84,7 +84,8 @@ class MSDeail:
                         reads_hap1.append(alignment)
                     else:
                         reads_hap2.append(alignment)
-            if len(reads_hap1) > 3 and len(reads_hap2) > 3:
+            minimum_phasing_reads = get_value("default")["genotype"]["minimum_phasing_reads"]
+            if len(reads_hap1) >= minimum_phasing_reads and len(reads_hap2) >= minimum_phasing_reads:
                 self.thishap = True
             else:
                 reads_com = reads_com + reads_hap1 + reads_hap2
@@ -132,6 +133,7 @@ class MSDeail:
                 repeatTimesDict[thisRepeatTimes] += 1
             repeat_times_dict["hap1"] = repeatTimesDict
             self.repeatDict = repeatTimesDict
+
             repeatTimesDict = {}
             for alignment in reads["hap2"]:
                 # add other condition for read selection
@@ -141,10 +143,11 @@ class MSDeail:
                 if thisRepeatTimes < 0: continue
                 if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
                 repeatTimesDict[thisRepeatTimes] += 1
-            repeat_times_dict["unphased"] = repeatTimesDict
+            repeat_times_dict["hap2"] = repeatTimesDict
             self.repeatDict = repeatTimesDict
+
             repeatTimesDict = {}
-            for alignment in reads["hap2"]:
+            for alignment in reads["unphased"]:
                 # add other condition for read selection
                 thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
                                                       min_mapping_qual=self.min_mapping_qual)
@@ -154,6 +157,7 @@ class MSDeail:
                 repeatTimesDict[thisRepeatTimes] += 1
             repeat_times_dict["unphased"] = repeatTimesDict
             self.repeatDict = repeatTimesDict
+
         repeat_times_dict["all"] = self.dis_sum(
             [repeat_times_dict["unphased"],
              repeat_times_dict["hap1"],
@@ -166,6 +170,12 @@ class MSDeail:
         self.support_reads = sum(list(repeat_times_dict["all"].values()))
         self.support_reads_hap1 = sum(list(repeat_times_dict["hap1"].values()))
         self.support_reads_hap2 = sum(list(repeat_times_dict["hap2"].values()))
+        minimum_phasing_reads = get_value("default")["genotype"]["minimum_phasing_reads"]
+        if self.support_reads_hap1 >= minimum_phasing_reads and self.support_reads_hap2 >= minimum_phasing_reads:
+            self.thishap = True
+        else:
+            self.thishap = False
+
         if self.support_reads >= 1:
             self.disStat = True
 
@@ -469,9 +479,10 @@ def write_vcf_init(outputpath, sampleNameList):
                                '"Probability of insertion, all|hap1|hap2|unphased">')
     outputfile.header.add_line('##INFO=<ID=lowSupport,Number=1,Type=String,Description="Low support reads">')
     outputfile.header.add_line('##INFO=<ID=Phased,Number=1,Type=String,Description="This site is phased">')
+    outputfile.header.add_line('##INFO=<ID=Tech,Number=1,Type=String,Description="Sequencing Technology">')
     outputfile.header.add_line('##INFO=<ID=disStat,Number=1,Type=String,Description="Distribution Stat">')
     outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
-    outputfile.header.add_line('##FORMAT=<ID=PS,Number=1,Type=String,Description="Genotype">')
+    # outputfile.header.add_line('##FORMAT=<ID=PS,Number=1,Type=String,Description="Genotype">')
     outputfile.header.add_sample(get_value("case"))
     # print("header",outputfile.header.samples)
     # print("header",outputfile.header.formats)
@@ -507,7 +518,8 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["suffix"] = msDetail.suffix
         vcfrec.info["depth"] = "|".join(list(map(str, [msDetail.depth, msDetail.depth_hap1, msDetail.depth_hap2])))
         vcfrec.info["support_reads"] = "|".join(list(map(str, [msDetail.support_reads,
-                                                               msDetail.depth_hap1, msDetail.depth_hap2])))
+                                                               msDetail.support_reads_hap1,
+                                                               msDetail.support_reads_hap2])))
         vcfrec.info["dis"] = "|".join([
             ":".join([str(key) + "-" + str(value) for key, value in msDetail.repeat_dis["all"].items()]),
             ":".join([str(key) + "-" + str(value) for key, value in msDetail.repeat_dis["hap1"].items()]),
@@ -524,6 +536,8 @@ def write_vcf(outputfile, dataList):
         ])))
         vcfrec.info["lowSupport"] = str(msDetail.lowSupport)
         vcfrec.info["disStat"] = str(msDetail.disStat)
+        vcfrec.info["Phased"] = str(msDetail.thishap)
+        vcfrec.info["Tech"] = str(msDetail.tech)
         vcfrec.samples[get_value("case")]["GT"] = ()
         vcfrec.samples[get_value("case")].phased = True
         outputfile.write(vcfrec)

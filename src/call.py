@@ -31,18 +31,33 @@ class MSCall:
     qual = 0
     filter = ""
     precision = "NoReadSpan"  # LowCov, Fuzzy, High
-    GT = (0, 0)
+    format_GT = (0, 0)
+    format_AL = ":".join(["0", "0"])
+    format_DP = ":".join(["0", "0", "0"])
+    format_QL = ":".join(["0", "0", "0"])
     alleles = "0:0"
     alt = (".",)
-    firsttwoDistance = 0
+    first_two_distance = 0
+    first_two_distance_hap1 = 0
+    first_two_distance_hap2 = 0
+    qual_hap1 = 0
+    qual_hap2 = 0
+    dis_hap1_normal = {}
+    dis_hap2_normal = {}
+    distance_hap1 = 0
+    distance_hap2 = 0
 
     def __init__(self, chr_id, pos, info, sample):
+        self.support_reads_hap1 = 0
+        self.support_reads_hap2 = 0
+        self.support_reads = 0
         self.info = info
         self.chr_id = chr_id
         self.pos = pos
         self.sample = sample
         self.disStat = False if info["disStat"] == "False" else True
         self.ref = str(info["repeatTimes"]) + "[" + info["motif"] + "]"
+        self.phased = True if self.info["Phased"] == "True" else False
 
     def getDisdistance2(self, dict1, dict2):
         dictkey = list(dict1.keys()) + list(dict2.keys())
@@ -82,39 +97,117 @@ class MSCall:
                 # self.modelStat = False
                 return
             self.modelStat = True
-            self.support_reads, self.support_reads_hap1, self.support_reads_hap2 = list(
+            (self.support_reads, self.support_reads_hap1, self.support_reads_hap2) = list(
                 map(int, self.info["support_reads"].split("|")))
             maxRepeat = model[motif]["maxRepeat"]
-            disnormal = {}
-            self.dis = [list(map(int, i.split("-"))) for i in self.info["dis"].split("|")[0].split(":")]
-            for i in self.dis:
-                disnormal[i[0]] = i[1] / self.support_reads
-            self.dis_norm = disnormal
 
-            self.minAllele = max([min(disnormal.keys()) - 1, 1])
-            self.maxAllele = min([max(disnormal.keys()) + 1, maxRepeat])
-            model_id_list = []
-            for first in range(self.minAllele, self.maxAllele + 1):
-                for second in range(self.minAllele, self.maxAllele + 1):
-                    if first <= second:
-                        model_id_list.append(first * 1000 + second)
-            thismodel = {}
-            for model_id in model_id_list:
-                thismodel[model_id] = model[motif]["maxture"][model_id]
-            self.model = thismodel
+            if self.phased:
+                dis_normal = {}
+                this_dis = [list(map(int, i.split("-"))) for i in self.info["dis"].split("|")[1].split(":")]
+                for i in this_dis:
+                    dis_normal[i[0]] = i[1] / self.support_reads_hap1
+                self.dis_hap1_normal = dis_normal
+                # print(self.info)
+                dis_normal = {}
+                this_dis = [list(map(int, i.split("-"))) for i in self.info["dis"].split("|")[2].split(":")]
+                for i in this_dis:
+                    dis_normal[i[0]] = i[1] / self.support_reads_hap2
+                self.dis_hap2_normal = dis_normal
 
-    def mscall(self):
-        qual = 0
-        if not self.disStat:
-            self.qual = qual
-            self.precision = "NoReadSpan"
-            self.filter = "NoReadSpan"
-            return
-        if (len(self.model) < 2) or (not self.modelStat):
-            self.qual = qual
-            self.precision = "NoAvailableModel"
-            self.filter = "NoAvailableModel"
-            return
+                self.minAllele = max([min(self.dis_hap1_normal.keys()) - 1, min(self.dis_hap2_normal.keys()) - 1, 1])
+                self.maxAllele = min(
+                    [max(self.dis_hap2_normal.keys()) + 1, max(self.dis_hap2_normal.keys()) + 1, maxRepeat])
+                model_id_list = []
+                for first in range(self.minAllele, self.maxAllele + 1):
+                    model_id_list.append(first * 1000 + first)
+                thismodel = {}
+                for model_id in model_id_list:
+                    thismodel[model_id] = model[motif]["maxture"][model_id]
+                self.model = thismodel
+            else:
+                dis_normal = {}
+                this_dis = [list(map(int, i.split("-"))) for i in self.info["dis"].split("|")[0].split(":")]
+                for i in this_dis:
+                    dis_normal[i[0]] = i[1] / self.support_reads
+                self.dis_norm = dis_normal
+                self.minAllele = max([min(dis_normal.keys()) - 1, 1])
+                self.maxAllele = min([max(dis_normal.keys()) + 1, maxRepeat])
+                model_id_list = []
+                for first in range(self.minAllele, self.maxAllele + 1):
+                    for second in range(self.minAllele, self.maxAllele + 1):
+                        if first <= second:
+                            model_id_list.append(first * 1000 + second)
+                thismodel = {}
+                for model_id in model_id_list:
+                    thismodel[model_id] = model[motif]["maxture"][model_id]
+                self.model = thismodel
+
+    def get_allele_from_hap(self):
+
+        distance_dict = {}
+        for model_id in self.model:
+            distance_dict[model_id] = getDisdistance(self.dis_hap1_normal, self.model[model_id])
+        distance_tuple = sorted(distance_dict.items(), key=lambda kv: (kv[1], kv[0]))
+        first_1 = distance_tuple[0][0] // 1000
+        first_two_distance_ratio_hap1 = (distance_tuple[1][1] - distance_tuple[0][1]) / (
+                distance_tuple[0][1] + 0.000001)
+        self.first_two_distance_hap1 = distance_tuple[1][1] - distance_tuple[0][1]
+        self.distance_hap1 = distance_tuple[0][1]
+        self.qual_hap1 = first_two_distance_ratio_hap1 * self.support_reads_hap1
+
+        distance_dict = {}
+        for model_id in self.model:
+            distance_dict[model_id] = getDisdistance(self.dis_hap2_normal, self.model[model_id])
+        self.model = {}
+        distance_tuple = sorted(distance_dict.items(), key=lambda kv: (kv[1], kv[0]))
+        first_2 = distance_tuple[0][0] // 1000
+        first_two_distance_ratio_hap2 = (distance_tuple[1][1] - distance_tuple[0][1]) / (
+                distance_tuple[0][1] + 0.000001)
+        self.first_two_distance_hap2 = distance_tuple[1][1] - distance_tuple[0][1]
+        self.distance_hap2 = distance_tuple[0][1]
+        self.qual_hap2 = first_two_distance_ratio_hap2 * self.support_reads_hap1
+
+        if self.info["lowSupport"] == "True":
+            self.precision = "LowCov"
+            self.filter = "LowCov"
+        elif first_two_distance_ratio_hap1 < 0.3:
+            self.precision = "Fuzzy"
+            self.filter = "Fuzzy"
+        else:
+            self.precision = "High"
+            self.filter = "PASS"
+        self.firstAllels = first_1
+        self.secondAllels = first_2
+        self.qual = (self.qual_hap1 + self.qual_hap2) * 0.5
+
+        if first_1 == first_2:
+            if first_1 == self.info["repeatTimes"]:
+                self.format_GT = (0, 0)
+                # self.alt = (".")
+            else:
+                self.format_GT = (1, 1)
+                self.alt = (str(first_1) + "[" + self.info["motif"] + "]",)
+        else:
+            if self.info["repeatTimes"] in [first_1, first_2]:
+                self.format_GT = (0, 1)
+                if first_1 == self.info["repeatTimes"]:
+                    self.alt = (str(first_2) + "[" + self.info["motif"] + "]",)
+                else:
+                    self.alt = (str(first_1) + "[" + self.info["motif"] + "]",)
+            else:
+                self.format_GT = (1, 2)
+                if first_1 < first_2:
+                    self.alt = (str(first_1) + "[" + self.info["motif"] + "]",
+                                str(first_2) + "[" + self.info["motif"] + "]")
+                else:
+                    self.alt = (str(first_2) + "[" + self.info["motif"] + "]",
+                                str(first_1) + "[" + self.info["motif"] + "]")
+        self.format_AL = ":".join(list(map(str, [first_1, first_2])))
+        self.format_DP = ":".join(
+            list(map(str, [self.support_reads, self.support_reads_hap1, self.support_reads_hap2])))
+        self.format_QL = ":".join(list(map(str, [self.qual, self.qual_hap1, self.qual_hap2])))
+
+    def get_alleles_from_diploid(self):
         distance_dict = {}
         for model_id in self.model:
             distance_dict[model_id] = getDisdistance(self.dis_norm, self.model[model_id])
@@ -123,7 +216,7 @@ class MSCall:
         first_1 = distance_tuple[0][0] // 1000
         first_2 = distance_tuple[0][0] % 1000
         firsttwoDistanceRatio = (distance_tuple[1][1] - distance_tuple[0][1]) / (distance_tuple[0][1] + 0.000001)
-        self.firsttwoDistance = distance_tuple[1][1] - distance_tuple[0][1]
+        self.first_two_distance = distance_tuple[1][1] - distance_tuple[0][1]
         self.distance = distance_tuple[0][1]
         qual = firsttwoDistanceRatio * self.support_reads
         if self.info["lowSupport"] == "True":
@@ -140,20 +233,20 @@ class MSCall:
         self.qual = qual
         if first_1 == first_2:
             if first_1 == self.info["repeatTimes"]:
-                self.GT = (0, 0)
+                self.format_GT = (0, 0)
                 # self.alt = (".")
             else:
-                self.GT = (1, 1)
+                self.format_GT = (1, 1)
                 self.alt = (str(first_1) + "[" + self.info["motif"] + "]",)
         else:
             if self.info["repeatTimes"] in [first_1, first_2]:
-                self.GT = (0, 1)
+                self.format_GT = (0, 1)
                 if first_1 == self.info["repeatTimes"]:
                     self.alt = (str(first_2) + "[" + self.info["motif"] + "]",)
                 else:
                     self.alt = (str(first_1) + "[" + self.info["motif"] + "]",)
             else:
-                self.GT = (1, 2)
+                self.format_GT = (1, 2)
                 if first_1 < first_2:
                     self.alt = (str(first_1) + "[" + self.info["motif"] + "]",
                                 str(first_2) + "[" + self.info["motif"] + "]")
@@ -161,9 +254,31 @@ class MSCall:
                     self.alt = (str(first_2) + "[" + self.info["motif"] + "]",
                                 str(first_1) + "[" + self.info["motif"] + "]")
         if first_1 <= first_2:
-            self.alleles = ":".join(list(map(str, [first_1, first_2])))
+            self.format_AL = ":".join(list(map(str, [first_1, first_2])))
         else:
-            self.alleles = ":".join(list(map(str, [first_2, first_1])))
+            self.format_AL = ":".join(list(map(str, [first_2, first_1])))
+        # self.format_AL = ":".join(list(map(str, [first_1, first_2])))
+        self.format_DP = ":".join(
+            list(map(str, [self.support_reads, 0, 0])))
+        self.format_QL = ":".join(list(map(str, [self.qual, 0, 0])))
+
+    def mscall(self):
+        qual = 0
+        if not self.disStat:
+            self.qual = qual
+            self.precision = "NoReadSpan"
+            self.filter = "NoReadSpan"
+            return
+        if (len(self.model) < 2) or (not self.modelStat):
+            self.qual = qual
+            self.precision = "NoAvailableModel"
+            self.filter = "NoAvailableModel"
+            return
+
+        if self.phased:
+            self.get_allele_from_hap()
+        else:
+            self.get_alleles_from_diploid()
 
 
 def call_one_ms(msCall):
@@ -177,10 +292,9 @@ def multicallMS(mscall_list, outputfile, thread=4):
     # result_list = pool.map(call_one_ms, mscall_list)
     # pool.close()
     # pool.join()
-    result_list=[]
+    result_list = []
     for i in mscall_list:
         result_list.append(call_one_ms(i))
-
 
     write_call2vcf(result_list, outputfile)
     return result_list
@@ -200,13 +314,15 @@ def write_call2vcf_init():
     outputfile.header.add_line(
         '##INFO=<ID=Distance,Number=1,Type=Float,Description="Distance between two distribution.">')
     outputfile.header.add_line(
-        '##INFO=<ID=FirstTwoDistance,Number=1,Type=Float,Description="Distance between two distribution.">')
+        '##INFO=<ID=FirstTwoDistance,Number=1,Type=String,Description="Distance between two distribution.">')
     outputfile.header.add_line('##INFO=<ID=Precision,Number=1,Type=String,Description="Genotype quality level">')
     outputfile.header.add_line('##INFO=<ID=Alleles,Number=1,Type=String,Description="Alleles">')
     outputfile.header.add_line('##INFO=<ID=Mutation,Number=1,Type=String,Description="Mutation">')
     outputfile.header.add_line('##INFO=<ID=MutationType,Number=1,Type=String,Description="Mutation type">')
+    # outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
     outputfile.header.add_line('##FORMAT=<ID=DP,Number=1,Type=String,Description="Allele Depth">')
-    outputfile.header.add_line('##FORMAT=<ID=AF,Number=1,Type=String,Description="Allele Frequency">')
+    outputfile.header.add_line('##FORMAT=<ID=AL,Number=1,Type=String,Description="Allele">')
+    outputfile.header.add_line('##FORMAT=<ID=QL,Number=1,Type=String,Description="Allele Quality">')
     outputfile.header.add_line('##INFO=<ID=Type,Number=1,Type=String,Description="Mutation type">')
     return outputfile
 
@@ -235,12 +351,20 @@ def write_call2vcf(mscall_list, outputfile):
         vcfrec.info["disStat"] = str(mscall.info["disStat"])
         vcfrec.info["Precision"] = mscall.precision
         vcfrec.info["Quality"] = round(mscall.qual, 6)
-        vcfrec.info["FirstTwoDistance"] = mscall.firsttwoDistance
+        if not mscall.phased:
+            vcfrec.info["FirstTwoDistance"] = str(mscall.first_two_distance)
+        else:
+            vcfrec.info["FirstTwoDistance"] = "|".join(
+                [str(mscall.first_two_distance_hap1), str(mscall.first_two_distance_hap2)])
         vcfrec.info["Distance"] = mscall.distance
         vcfrec.qual = round(mscall.qual, 6)
         vcfrec.info["Alleles"] = mscall.alleles
-        vcfrec.samples[get_value("case")]["GT"] = mscall.GT
-        vcfrec.samples[get_value("case")].phased = False
+        # print(mscall.format_DP)
+        vcfrec.samples[get_value("case")]["GT"] = mscall.format_GT
+        vcfrec.samples[get_value("case")]["DP"] = mscall.format_DP
+        vcfrec.samples[get_value("case")]["QL"] = mscall.format_QL
+        vcfrec.samples[get_value("case")]["AL"] = mscall.format_AL
+        vcfrec.samples[get_value("case")].phased = mscall.phased
         outputfile.write(vcfrec)
     return outputfile
 
