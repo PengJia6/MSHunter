@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="cluster">
+    <serverData>
+      <paths name="cluster">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/home/pengjia/ProjectSnake/DNAseq" local="$PROJECT_DIR$/../../../../../ProjectSnake" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>
