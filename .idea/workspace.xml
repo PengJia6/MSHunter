@@ -20,11 +20,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/MSHunter.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/MSHunter.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/bam2dis.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/bam2dis.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/HG001_GRCh38.haplotag.RTG.trio.chr1.dis.vcf.gz" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/HG001_GRCh38.haplotag.RTG.trio.chr1.dis.vcf.gz" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +52,7 @@
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../../ProjectSnake/DNASeq" />
+    <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -166,7 +163,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
-      <option name="PARAMETERS" value="genotype -i /media/pengjia/ZS6Y_Feng_1/NA12878/test/HG001_GRCh38.haplotag.RTG.trio.chr1.bam  -m $PROJECT_DIR$/data/GRCh38_noSimpleRepeat_chr1.list -r $PROJECT_DIR$/../../../../../REF/GRCh38_full_analysis_set_plus_decoy_hla.fa -o test -d True -t1" />
+      <option name="PARAMETERS" value="genotype -i /media/pengjia/ZS6Y_Feng_1/NA12878/test/HG001_GRCh38.haplotag.RTG.trio.chr1.bam  -m $PROJECT_DIR$/data/GRCh38_noSimpleRepeat_chr1.list -r $PROJECT_DIR$/../../../../../REF/GRCh38_full_analysis_set_plus_decoy_hla.fa -o ../../test -d True -t1" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -255,7 +252,7 @@
       <workItem from="1592917788478" duration="11690000" />
       <workItem from="1592964453975" duration="12993000" />
       <workItem from="1593571606789" duration="5318000" />
-      <workItem from="1593593663050" duration="9488000" />
+      <workItem from="1593593663050" duration="9569000" />
     </task>
     <servers />
   </component>
@@ -284,10 +281,11 @@
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state x="2059" y="627" width="832" height="704" key="#SSH_Configurations/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593244981963" />
-    <state x="418" y="178" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1593587845975">
-      <screen x="0" y="27" width="1920" height="988" />
+    <state x="1920" y="293" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1593609570038">
+      <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state x="418" y="178" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593587845975" />
+    <state x="1920" y="293" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609570038" />
     <state x="2122" y="549" width="666" height="819" key="#main" timestamp="1593594353740">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
@@ -297,26 +295,26 @@
     </state>
     <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593244867781" />
     <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593245141880" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.bottom" timestamp="1593609437833">
+    <state width="1034" height="1066" key="GridCell.Tab.0.bottom" timestamp="1593609496427">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1874" height="104" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593587878701" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609437833" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.center" timestamp="1593609437833">
+    <state width="1034" height="1066" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609496427" />
+    <state width="1034" height="1066" key="GridCell.Tab.0.center" timestamp="1593609496427">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1874" height="104" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593587878701" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609437833" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.left" timestamp="1593609437833">
+    <state width="1034" height="1066" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609496427" />
+    <state width="1034" height="1066" key="GridCell.Tab.0.left" timestamp="1593609496427">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1874" height="104" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593587878701" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609437833" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.right" timestamp="1593609437833">
+    <state width="1034" height="1066" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609496427" />
+    <state width="1034" height="1066" key="GridCell.Tab.0.right" timestamp="1593609496427">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1874" height="104" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593587878701" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609437833" />
+    <state width="1034" height="1066" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609496427" />
     <state width="1034" height="690" key="GridCell.Tab.1.bottom" timestamp="1593589485304">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
