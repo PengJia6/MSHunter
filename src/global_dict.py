@@ -7,7 +7,6 @@
 # Description : 'For global variable'
 # =============================================================================
 
-
 def global_init():
     global _global_dict
     _global_dict = {}
@@ -34,8 +33,8 @@ def global_init():
         "errEval": {
             "threads": 4,
             "batch": 2000,
-
         },
+
         "call": {
         },
         "genotype": {

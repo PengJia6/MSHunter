@@ -181,7 +181,7 @@ def genotype_init(args):
     paras["allow_mismatch"] = args.allow_mismatch[0]
     paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
-    paras["minimum_phasing_reads"]=args.minimum_phasing_reads[0]
+    paras["minimum_phasing_reads"] = args.minimum_phasing_reads[0]
     paras["ranges_of_repeat_times"] = {}
 
     for i in args.minimum_repeat_times[0].split(";"):

@@ -114,8 +114,9 @@ class MSDeail:
             repeatTimesDict = {}
             for alignment in reads["unphased"]:
                 # add other condition for r ead selection
-                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
-                                                      min_mapping_qual=self.min_mapping_qual)
+                thisRepeatTimes = self.getRepeatTimes(alignment)
+                # thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                #                                       min_mapping_qual=self.min_mapping_qual)
                 # self.getRepeatTimes2(alignment)
                 if thisRepeatTimes < 0: continue
                 if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
@@ -124,10 +125,10 @@ class MSDeail:
         else:
             repeatTimesDict = {}
             for alignment in reads["hap1"]:
-                # add other condition for read selection
-                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
-                                                      min_mapping_qual=self.min_mapping_qual)
-                # self.getRepeatTimes2(alignment)
+                # # add other condition for read selection
+                # thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                #                                       min_mapping_qual=self.min_mapping_qual)
+                thisRepeatTimes = self.getRepeatTimes(alignment)
                 if thisRepeatTimes < 0: continue
                 if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
                 repeatTimesDict[thisRepeatTimes] += 1
@@ -137,8 +138,10 @@ class MSDeail:
             repeatTimesDict = {}
             for alignment in reads["hap2"]:
                 # add other condition for read selection
-                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
-                                                      min_mapping_qual=self.min_mapping_qual)
+                # thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                #                                       min_mapping_qual=self.min_mapping_qual)
+                thisRepeatTimes = self.getRepeatTimes(alignment)
+
                 # self.getRepeatTimes2(alignment)
                 if thisRepeatTimes < 0: continue
                 if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
@@ -149,9 +152,10 @@ class MSDeail:
             repeatTimesDict = {}
             for alignment in reads["unphased"]:
                 # add other condition for read selection
-                thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
-                                                      min_mapping_qual=self.min_mapping_qual)
-                self.getRepeatTimes2(alignment)
+                thisRepeatTimes = self.getRepeatTimes(alignment)
+                # thisRepeatTimes = self.getRepeatTimes(alignment, self.motif, self.motifLen, self.prefix, self.suffix,
+                #                                       min_mapping_qual=self.min_mapping_qual)
+
                 if thisRepeatTimes < 0: continue
                 if thisRepeatTimes not in repeatTimesDict: repeatTimesDict[thisRepeatTimes] = 0
                 repeatTimesDict[thisRepeatTimes] += 1
@@ -234,20 +238,74 @@ class MSDeail:
     # read                      ---->       <----         read pair info
     # read                       ---->   <----            read pair info
 
-    def getRepeatTimes2(self, alignment):
+    def pos_convert_ref2read(self, ref_block: list, read_block: list, pos: int, direction="start") -> tuple:
+        """
+        @param direction:  start of end
+        @param ref_block:
+        @param read_block:
+        @param start:
+        @param end:
+        @return:
+        """
+        # print("=================================")
 
+        if direction == "start":
+            block_index = 0
+            for sub_ref_block in ref_block:
+                if sub_ref_block[0] <= pos <= sub_ref_block[1]:
+                    # print(sub_ref_block,pos)
+                    break
+                block_index += 1
+            if ref_block[block_index][2] == 0:  # match
+                read_pos = read_block[block_index][0] + (pos - ref_block[block_index][0])
+                return pos, read_pos
+            elif ref_block[block_index][2] == 2:  # deletion
+                pos = ref_block[block_index - 1][1] - 1
+                read_pos = read_block[block_index - 1][1] - 1
+                return pos, read_pos
+            else:
+                pos = ref_block[block_index - 1][1] - 1
+                read_pos = read_block[block_index - 1][1] - 1
+                return pos, read_pos
+
+        if direction == "end":
+            block_index = len(ref_block) - 1
+            for sub_ref_block in ref_block[::-1]:
+                if sub_ref_block[0] <= pos <= sub_ref_block[1]:
+                    # print(sub_ref_block,pos)
+                    break
+                block_index = block_index - 1
+            # if pos==ref_block[block_index][1]:
+            #     print(block_index,len(ref_block))
+            #     print( pos,ref_block[block_index-1],ref_block[block_index],)
+            #     print("end")
+
+            if ref_block[block_index][2] == 0:
+                read_pos = read_block[block_index][0] + (pos - ref_block[block_index][0])
+                return pos, read_pos
+            elif ref_block[block_index][2] == 2:
+                pos = ref_block[block_index + 1][0] + 1
+                read_pos = ref_block[block_index + 1][0] + 1
+                return pos, read_pos
+            else:
+                # ref_block[block_index][0] == pos:
+                # print("llff")
+                pos = pos + 1
+                read_pos = ref_block[block_index - 1][0] - 1
+                return pos, read_pos
+
+    def getRepeatTimes(self, alignment):
         align_start = alignment.reference_start
-        align_end = alignment.reference_end
-        query_start = alignment.query_alignment_start
-        query_end = alignment.query_alignment_end
-        query_length = alignment.query_length
-        align_length = alignment.query_alignment_length
-        # print(self.posStart)
+        # align_end = alignment.reference_end
+        # query_start = alignment.query_alignment_start
+        # query_end = alignment.query_alignment_end
+        # query_length = alignment.query_length
+        # align_length = alignment.query_alignment_length
+        # # print(self.posStart)
         ref_block = []
         read_block = []
         read_pos = 0
         ref_pos = align_start
-        # print(alignment.cigarstring,alignment.cigartuples,)
         for cigartupe in alignment.cigartuples:
             if cigartupe[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
                 ref_block.append((ref_pos, ref_pos + cigartupe[1], 0))
@@ -263,50 +321,16 @@ class MSDeail:
                 read_block.append((read_pos, read_pos, 2))
                 ref_pos += cigartupe[1]
             else:
-                print(alignment.cigarstring)
-        if ref_pos != align_end:
-            print(alignment)
+                return -1
 
-        if read_pos != (query_length):
-            print(read_pos, query_length, query_end)
-        # print(alignment)
-        # read_start, read_end = 0, alignment.query_length
-        # for ref_b, read_b in zip(ref_block, read_block):
-        #     if self.posStart >= ref_b[0] and self.posStart < ref_b[1]:
-        #         read_start = read_b[0] + (self.posStart - ref_b[0]) + 1
-        #     if self.posEnd >= ref_b[0] and self.posEnd < ref_b[1]:
-        #         read_end = read_b[0] + (self.posEnd - ref_b[0]) - 1
-        # print(read_start, read_end, cigartupe)
-        # fafile = pysam.FastaFile(self.fapath)
-        # # print(fafile.fetch(self.chrId,self.posStart,self.posStart+self.repeatTimes*self.motifLen))
-        # print(alignment.query[read_start - 6:read_start])
-        # print(alignment.query)
-        #
-        # print(self.prefix)
-        # print()
-        # print(alignment.query[read_end:read_end + 6])
-        # # print(self.suffix)
-        # print()
-        # print()
-        # fafile.close()
-        # # elif cigartupe[0] in [5]:
-        #     continue
-        # else:
-        #
-        # if align_end-align_start!=align_length:
-        #
-        #     print(len(alignment.get_reference_positions()),len(alignment.get_reference_positions(full_length=True)))
-        #     print(alignment.pos,alignment.reference_start, alignment.reference_end,align_end-align_start,align_length)
-        #     print(query_start, query_end, query_length,query_end-query_start)
-        #     print("")
+        if self.posStart >= ref_block[-1][1] or self.posStart <= ref_block[0][0]:
+            return -1
+        if self.posEnd >= ref_block[-1][1] or self.posEnd <= ref_block[0][0]:
+            return -1
 
-        # if query_length!=query_end-query_start:
-        #     print(alignment.cigarstring,alignment.cigartuples)
-        #     print(alignment.pos,alignment.reference_start, alignment.reference_end,align_end-align_start,align_length)
-        #     print(query_start, query_end, query_length,query_end-query_start)
-        #     print("")
-
-        # print(alignment.to_dict())
+        ref_start, read_start = self.pos_convert_ref2read(ref_block, read_block, self.posStart, direction="start")
+        ref_end, read_end = self.pos_convert_ref2read(ref_block, read_block, self.posEnd, direction="end")
+        return self.repeatTimes + ((read_end - read_start) - (ref_end - ref_start))
 
     def dis_sum(self, dict_list):
         keylist = []
@@ -322,7 +346,7 @@ class MSDeail:
                 res_dict[key] += item[key]
         return res_dict
 
-    def getRepeatTimes(self, alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
+    def getRepeatTimes2(self, alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
         """
         :param alignment:
         :param motif:
@@ -331,6 +355,7 @@ class MSDeail:
         :param suffix:
         :return:
         """
+        self.getRepeatTimes2(alignment)
         if alignment.mapping_quality < min_mapping_qual:
             return -1
         readString = alignment.query
