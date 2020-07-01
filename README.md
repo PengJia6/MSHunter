@@ -9,8 +9,8 @@ If you have any question about this software, please contact with Peng Jia (peng
 * support cram and run 1000G data (√)
 * support bam/cram index check (√)
 * support output sorting and indexing (√)
+* support processing phased bam files (PS and HP tags) (√)
 
-* support processing phased bam files (PS and HP tags)
 * improve repeat calling in bam2dis.py (for ccs read)
 * support complex event detection
 * add test files 
