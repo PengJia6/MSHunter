@@ -198,7 +198,6 @@ def genotype_init(args):
                 paras["ranges_of_repeat_times"][ur] = {}
             paras["ranges_of_repeat_times"][ur]["min"] = repeatStart
         for i in args.maximum_repeat_times[0].split(";"):
-            # print(i)
             unitRange, repeatRange = i.split(":")
             if "-" in unitRange:
                 unitStart, unitEnd = tuple(map(int, unitRange.split("-")))

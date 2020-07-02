@@ -148,7 +148,6 @@ class MSDeail:
                 repeatTimesDict[thisRepeatTimes] += 1
             repeat_times_dict["hap2"] = repeatTimesDict
             self.repeatDict = repeatTimesDict
-
             repeatTimesDict = {}
             for alignment in reads["unphased"]:
                 # add other condition for read selection
@@ -294,7 +293,7 @@ class MSDeail:
                 read_pos = ref_block[block_index - 1][0] - 1
                 return pos, read_pos
 
-    def getRepeatTimes(self, alignment):
+    def getRepeatTimes2(self, alignment):
         align_start = alignment.reference_start
         # align_end = alignment.reference_end
         # query_start = alignment.query_alignment_start
@@ -346,7 +345,27 @@ class MSDeail:
                 res_dict[key] += item[key]
         return res_dict
 
-    def getRepeatTimes2(self, alignment, motif, motifLen, prefix, suffix, min_mapping_qual=0):
+    def get_snp_info(self):
+        pre_content = 5
+        suf_content = 5
+        start = self.posStart
+        end = self.posEnd
+        fafile = pysam.FastaFile(self.reference)
+        start_pos = start - pre_content
+        end_pos = end + suf_content
+        ref_seq = fafile.fetch(self.chrId, start_pos, end_pos)
+        bamfile = pysam.AlignmentFile(self.bamfile)
+        print('++++++++++++++++++')
+        outfile = pysam.AlignmentFile("-", "w", template=bamfile, index_filename=self.bamfile + ".bai")
+        for pot in bamfile.fetch(self.chrId, start_pos, end_pos):
+            outfile.write(pot)
+        for pot in outfile.pileup(self.chrId, start_pos, end_pos, truncate=True, index_filename=self.bamfile + ".bai"):
+            print(pot)
+
+        return
+
+    def getRepeatTimes(self, alignment):
+
         """
         :param alignment:
         :param motif:
@@ -355,25 +374,26 @@ class MSDeail:
         :param suffix:
         :return:
         """
-        self.getRepeatTimes2(alignment)
-        if alignment.mapping_quality < min_mapping_qual:
+
+        # self.getRepeatTimes2(alignment)
+        if alignment.mapping_quality < self.min_mapping_qual:
             return -1
         readString = alignment.query
-        prefixState = readString.find(prefix)
+        prefixState = readString.find(self.prefix)
         if prefixState < 0: return -1
-        suffixState = readString.rfind(suffix)
+        suffixState = readString.rfind(self.suffix)
         if suffixState < 0: return -3
         if prefixState + 5 >= suffixState: return -2
         while prefixState >= 0:
             count = 0
             start = prefixState + 5
-            while start == readString.find(motif, start):
+            while start == readString.find(self.motif, start):
                 count += 1
-                start = readString.find(motif, start) + motifLen
-            if (motifLen == 1 and count >= 1) or (motifLen > 1 and count >= 1):
-                if start == readString.find(suffix, start):
+                start = readString.find(self.motif, start) + self.motifLen
+            if (self.motifLen == 1 and count >= 1) or (self.motifLen > 1 and count >= 1):
+                if start == readString.find(self.suffix, start):
                     return count
-            prefixState = readString.find(prefix, prefixState + 1)
+            prefixState = readString.find(self.prefix, prefixState + 1)
         return -4
 
 
@@ -455,6 +475,8 @@ def loadMicroSatellite(args):
 def processOneMs(msDetail):
     msDetail.get_dis()
     msDetail.calcuShiftProbability()
+    # msDetail.get_snp_info()
+
     return msDetail
 
 
