@@ -439,7 +439,7 @@ def loadMicroSatellite(args):
             dfMicroSatellites.rename(columns={"right_flank_bases": "suffix"}, inplace=True)
             # dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
             # del dfMicroSatellites["right_flank_bases"]
-        dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
+        # dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
     elif separator == "space":
         dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
     chromList = get_value("chrom_list")
@@ -464,6 +464,7 @@ def loadMicroSatellite(args):
         # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
         # if len(newDf) > locis_num:
         #     newDf = newDf.sample(locis_num)
+    newDf.sort_index(inplace=True)
 
     print("[INFO] There are total", len(newDf), "microsatellites.")
     set_value("ms_number", len(newDf))
