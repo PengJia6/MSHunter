@@ -202,10 +202,10 @@ class MSCall:
                 else:
                     self.alt = (str(first_2) + "[" + self.info["motif"] + "]",
                                 str(first_1) + "[" + self.info["motif"] + "]")
-        self.format_AL = ":".join(list(map(str, [first_1, first_2])))
-        self.format_DP = ":".join(
+        self.format_AL = "/".join(list(map(str, [first_1, first_2])))
+        self.format_DP = "/".join(
             list(map(str, [self.support_reads, self.support_reads_hap1, self.support_reads_hap2])))
-        self.format_QL = ":".join(list(map(str, [self.qual, self.qual_hap1, self.qual_hap2])))
+        self.format_QL = "/".join(list(map(str, [self.qual, self.qual_hap1, self.qual_hap2])))
 
     def get_alleles_from_diploid(self):
         distance_dict = {}

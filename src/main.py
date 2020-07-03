@@ -295,6 +295,5 @@ def main():
         if parase.command == "genotype":
             genotype(parase)
 
-
 if __name__ == "__main__":
     main()
