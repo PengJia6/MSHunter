@@ -32,9 +32,9 @@ class MSCall:
     filter = ""
     precision = "NoReadSpan"  # LowCov, Fuzzy, High
     format_GT = (0, 0)
-    format_AL = ":".join(["0", "0"])
-    format_DP = ":".join(["0", "0", "0"])
-    format_QL = ":".join(["0", "0", "0"])
+    format_AL = "/".join(["0", "0"])
+    format_DP = "/".join(["0", "0", "0"])
+    format_QL = "/".join(["0", "0", "0"])
     alleles = "0:0"
     alt = (".",)
     first_two_distance = 0
@@ -254,13 +254,13 @@ class MSCall:
                     self.alt = (str(first_2) + "[" + self.info["motif"] + "]",
                                 str(first_1) + "[" + self.info["motif"] + "]")
         if first_1 <= first_2:
-            self.format_AL = ":".join(list(map(str, [first_1, first_2])))
+            self.format_AL = "/".join(list(map(str, [first_1, first_2])))
         else:
-            self.format_AL = ":".join(list(map(str, [first_2, first_1])))
+            self.format_AL = "/".join(list(map(str, [first_2, first_1])))
         # self.format_AL = ":".join(list(map(str, [first_1, first_2])))
-        self.format_DP = ":".join(
+        self.format_DP = "/".join(
             list(map(str, [self.support_reads, 0, 0])))
-        self.format_QL = ":".join(list(map(str, [self.qual, 0, 0])))
+        self.format_QL = "/".join(list(map(str, [self.qual, 0, 0])))
 
     def mscall(self):
         qual = 0
