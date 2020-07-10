@@ -20,8 +20,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/src/benchmark.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/genotype.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/call.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/call.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,7 +55,7 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../../ProjectSnake/DNASeq" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../../playground" />
     <property name="nodejs_package_manager_path" value="npm" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
@@ -86,6 +87,28 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
+    <configuration name="benchmark" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="MSHunter" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/benchmark.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="call" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -108,7 +131,7 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="errEval" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+    <configuration name="genotype" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -121,9 +144,9 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/errEval.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/genotype.py" />
       <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
       <option name="REDIRECT_INPUT" value="false" />
@@ -166,7 +189,7 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/main.py" />
-      <option name="PARAMETERS" value="genotype -i /media/pengjia/ZS6Y_Feng_1/NA12878/test/HG001_GRCh38.haplotag.RTG.trio.chr1.bam  -m $PROJECT_DIR$/data/GRCh38_noSimpleRepeat_chr1.list -r $PROJECT_DIR$/../../../../../REF/GRCh38_full_analysis_set_plus_decoy_hla.fa -o ../../test -d True -t4" />
+      <option name="PARAMETERS" value="benchmark -i $PROJECT_DIR$/../../../data/hap/NA12878-hap1.bam -m $PROJECT_DIR$/data/GRCh38_noSimpleRepeat_chr1.list -r $PROJECT_DIR$/../../../../../REF/GRCh38_full_analysis_set_plus_decoy_hla.fa -o $PROJECT_DIR$/../testhap -d True" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
       <option name="MODULE_MODE" value="false" />
@@ -196,44 +219,22 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="vcftest" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="MSHunter" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/vcftest.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <list>
       <item itemvalue="Python.getDis" />
       <item itemvalue="Python.main" />
       <item itemvalue="Python.bam2dis" />
       <item itemvalue="Python.call" />
-      <item itemvalue="Python.errEval" />
       <item itemvalue="Python.smith_waterman" />
-      <item itemvalue="Python.vcftest" />
+      <item itemvalue="Python.genotype" />
+      <item itemvalue="Python.benchmark" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.benchmark" />
+        <item itemvalue="Python.genotype" />
         <item itemvalue="Python.call" />
         <item itemvalue="Python.bam2dis" />
         <item itemvalue="Python.smith_waterman" />
-        <item itemvalue="Python.vcftest" />
-        <item itemvalue="Python.errEval" />
       </list>
     </recent_temporary>
   </component>
@@ -255,7 +256,13 @@
       <workItem from="1592917788478" duration="11690000" />
       <workItem from="1592964453975" duration="12993000" />
       <workItem from="1593571606789" duration="5318000" />
-      <workItem from="1593593663050" duration="30669000" />
+      <workItem from="1593593663050" duration="31942000" />
+      <workItem from="1593764462809" duration="10000" />
+      <workItem from="1593765309851" duration="3256000" />
+      <workItem from="1593934245682" duration="634000" />
+      <workItem from="1593939058362" duration="3866000" />
+      <workItem from="1594022922574" duration="2440000" />
+      <workItem from="1594084883817" duration="42100000" />
     </task>
     <servers />
   </component>
@@ -289,77 +296,80 @@
     </state>
     <state x="418" y="178" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593587845975" />
     <state x="1920" y="293" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593609570038" />
-    <state x="359" y="310" width="1184" height="522" key="#main" timestamp="1593736668820">
+    <state x="572" y="196" width="1184" height="522" key="#main" timestamp="1594366206465">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="359" y="310" width="1184" height="522" key="#main/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593736668820" />
-    <state x="2122" y="549" width="666" height="819" key="#main/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593594353740" />
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl" timestamp="1593245141880">
+    <state x="359" y="310" width="1184" height="522" key="#main/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594198328311" />
+    <state x="572" y="196" width="666" height="819" key="#main/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594366206465" />
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl" timestamp="1594350855551">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593244867781" />
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593245141880" />
-    <state width="1874" height="276" key="GridCell.Tab.0.bottom" timestamp="1593743273485">
-      <screen x="0" y="27" width="1920" height="988" />
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593948823564" />
+    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594350855551" />
+    <state width="1034" height="563" key="GridCell.Tab.0.bottom" timestamp="1594385566369">
+      <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state width="1874" height="276" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593743273485" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593679894670" />
-    <state width="1874" height="276" key="GridCell.Tab.0.center" timestamp="1593743273485">
-      <screen x="0" y="27" width="1920" height="988" />
+    <state width="1874" height="184" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594348775823" />
+    <state width="1034" height="563" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594385566369" />
+    <state width="1034" height="563" key="GridCell.Tab.0.center" timestamp="1594385566369">
+      <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state width="1874" height="276" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593743273485" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593679894669" />
-    <state width="1874" height="276" key="GridCell.Tab.0.left" timestamp="1593743273484">
-      <screen x="0" y="27" width="1920" height="988" />
+    <state width="1874" height="184" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594348775823" />
+    <state width="1034" height="563" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594385566369" />
+    <state width="1034" height="563" key="GridCell.Tab.0.left" timestamp="1594385566369">
+      <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state width="1874" height="276" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593743273484" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593679894669" />
-    <state width="1874" height="276" key="GridCell.Tab.0.right" timestamp="1593743273485">
-      <screen x="0" y="27" width="1920" height="988" />
+    <state width="1874" height="184" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594348775823" />
+    <state width="1034" height="563" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594385566369" />
+    <state width="1034" height="563" key="GridCell.Tab.0.right" timestamp="1594385566369">
+      <screen x="1920" y="0" width="1080" height="1920" />
     </state>
-    <state width="1874" height="276" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593743273485" />
-    <state width="1034" height="1066" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593679894669" />
-    <state width="1034" height="690" key="GridCell.Tab.1.bottom" timestamp="1593589485304">
+    <state width="1874" height="184" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594348775823" />
+    <state width="1034" height="563" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594385566369" />
+    <state width="1034" height="690" key="GridCell.Tab.1.bottom" timestamp="1594213078380">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1897" height="200" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591615600502" />
-    <state width="1034" height="690" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593589485304" />
-    <state width="1034" height="690" key="GridCell.Tab.1.center" timestamp="1593589485304">
+    <state width="1034" height="690" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594213078380" />
+    <state width="1034" height="690" key="GridCell.Tab.1.center" timestamp="1594213078380">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1897" height="200" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591615600502" />
-    <state width="1034" height="690" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593589485304" />
-    <state width="1034" height="690" key="GridCell.Tab.1.left" timestamp="1593589485304">
+    <state width="1034" height="690" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594213078380" />
+    <state width="1034" height="690" key="GridCell.Tab.1.left" timestamp="1594213078380">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1897" height="200" key="GridCell.Tab.1.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591615600502" />
-    <state width="1034" height="690" key="GridCell.Tab.1.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593589485304" />
-    <state width="1034" height="690" key="GridCell.Tab.1.right" timestamp="1593589485304">
+    <state width="1034" height="690" key="GridCell.Tab.1.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594213078380" />
+    <state width="1034" height="690" key="GridCell.Tab.1.right" timestamp="1594213078380">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state width="1897" height="200" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591615600502" />
-    <state width="1034" height="690" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593589485304" />
+    <state width="1034" height="690" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594213078380" />
     <state x="464" y="231" key="SettingsEditor" timestamp="1592910993895">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="464" y="231" key="SettingsEditor/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592910993895" />
-    <state x="396" y="103" width="1118" height="833" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1591630385425">
-      <screen x="0" y="27" width="1920" height="988" />
+    <state x="1948" y="148" width="1042" height="824" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser" timestamp="1594378201053">
+      <screen x="1920" y="0" width="1080" height="1920" />
     </state>
     <state x="396" y="103" width="1118" height="833" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1591630385425" />
-    <state x="380" y="77" width="1070" height="814" key="dock-window-1" timestamp="1593739769974">
+    <state x="1948" y="148" width="1042" height="824" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594378201053" />
+    <state x="245" y="27" width="847" height="988" maximized="true" key="dock-window-1" timestamp="1594385604674">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state x="380" y="77" width="1070" height="814" key="dock-window-1/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1593739769974" />
-    <state x="46" y="27" width="1080" height="814" key="dock-window-1/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1593680501307" />
+    <state x="2339" y="0" width="847" height="988" maximized="true" key="dock-window-1/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594255708222" />
+    <state x="245" y="27" width="847" height="988" maximized="true" key="dock-window-1/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594385604674" />
     <state x="623" y="241" width="672" height="678" key="search.everywhere.popup" timestamp="1592448683370">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="623" y="241" width="672" height="678" key="search.everywhere.popup/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1592448683370" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/MSHunter$genotype.coverage" NAME="genotype Coverage Results" MODIFIED="1594198845134" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$bam2dis.coverage" NAME="bam2dis Coverage Results" MODIFIED="1593609358421" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1593743007444" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1594385566359" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$benchmark.coverage" NAME="benchmark Coverage Results" MODIFIED="1594370881083" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$call.coverage" NAME="call Coverage Results" MODIFIED="1593743003373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
 </project>
