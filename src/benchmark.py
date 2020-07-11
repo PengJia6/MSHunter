@@ -17,6 +17,7 @@ class MSHAP:
     support_reads_hap1 = 0
     support_reads_hap2 = 0
     more_than_one_alleles = False
+    more_than_one_alleles_ms=False
     start_pre = 0
     end_suf = 0
 
@@ -43,10 +44,7 @@ class MSHAP:
         self.end_suf = posEnd + self.suffix_len
 
     def get_reads_alignment(self):
-        if self.input_format == "bam":
-            bamfile = pysam.AlignmentFile(self.bamfile, "rb")
-        else:
-            bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
+        bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
         alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
         bamfile.close()
         depth = len(alignmentList)
@@ -89,15 +87,62 @@ class MSHAP:
         self.repeat_length_dis = repeat_length_dict
         if len(repeat_length_dict) > 1:
             self.more_than_one_alleles = True
+            self.more_than_one_alleles_ms=True
             # print(repeat_length_dict)
             # print("ldflldl")
-        if len(repeat_length_dict) == 1:
+        if len(repeat_length_dict) > 0:
             self.dis_stat = True
 
+    def compile(self, pots):
+        seq = []
+        seq_error = {}
+        for pot in pots:
+            thisseq = []
+            for pp in pot:
+                thispp = pp.upper()
+                if thispp not in thisseq:
+                    thisseq = thispp
+
     def get_alignment_detail(self):
+        # print(self.dis_stat)
+        if not self.dis_stat:
+            return -1
 
+        bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
+        pots = []
+        # print(type(bamfile.pileup(self.chrId,self.start_pre,self.end_suf,truncate=True)))
+        for pot in bamfile.pileup(self.chrId,
+                                  self.start_pre,
+                                  self.end_suf,
+                                  truncate=True,
+                                  fastafile=pysam.FastaFile(self.reference)):
+            # pots.append(pot)
+            alles=list(set(map(lambda x: x.upper(),
+                                     pot.get_query_sequences(mark_matches=True,
+                                                             mark_ends=False,
+                                                             add_indels=True))))
+            if len(alles)>1:
+                self.more_than_one_alleles=True
 
-        print()
+            pots.append()
+            # print(type(pot))
+            # print(pot)
+            # print(pot.indel())
+            # if pot.is_del:
+            #     print("del",pot.get_query_sequences())
+            # if pot.is_refskip:
+            #     print("refskip", pot.get_query_sequences())
+            # print(pot.get_query_sequences())
+            pass
+        for i in pots:
+            if i not in ["A","C","G","T"]:
+                print(pots)
+                break
+        # print(len(pots),self.start_pre-self.end_suf)
+        # alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
+        bamfile.close()
+
+        # print()
 
     def pos_convert_ref2read(self, ref_block: list, read_block: list, pos: int, direction="start") -> tuple:
         """
@@ -390,6 +435,7 @@ def benchmark_init(args):
 
 def bm_processOneMs(msDetail):
     msDetail.get_dis()
+    msDetail.get_alignment_detail()
     # msDetail.calcuShiftProbability()
     # msDetail.get_snp_info()
 
@@ -460,9 +506,9 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
                             )
         tmpWindow.append(thisMSDeail)
         curentMSNum += 1
-        if curentMSNum < 16000 and args["debug"]:
-            continue
-            # break
+        # if curentMSNum < 16000 and args["debug"]:
+        #     continue
+        # break
         if curentMSNum % (batch * thread) == 0:
             print("[INFO] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
                   "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
