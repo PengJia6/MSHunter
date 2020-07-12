@@ -1,4 +1,6 @@
 import os
+import re
+import collections
 from src.bam2dis import *
 from src.call import *
 from src.errEval import *
@@ -17,7 +19,7 @@ class MSHAP:
     support_reads_hap1 = 0
     support_reads_hap2 = 0
     more_than_one_alleles = False
-    more_than_one_alleles_ms=False
+    more_than_one_alleles_ms = False
     start_pre = 0
     end_suf = 0
 
@@ -87,7 +89,7 @@ class MSHAP:
         self.repeat_length_dis = repeat_length_dict
         if len(repeat_length_dict) > 1:
             self.more_than_one_alleles = True
-            self.more_than_one_alleles_ms=True
+            self.more_than_one_alleles_ms = True
             # print(repeat_length_dict)
             # print("ldflldl")
         if len(repeat_length_dict) > 0:
@@ -109,22 +111,53 @@ class MSHAP:
             return -1
 
         bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
-        pots = []
+
         # print(type(bamfile.pileup(self.chrId,self.start_pre,self.end_suf,truncate=True)))
+
+        variants = {}
+        pos = self.start_pre
         for pot in bamfile.pileup(self.chrId,
                                   self.start_pre,
                                   self.end_suf,
                                   truncate=True,
                                   fastafile=pysam.FastaFile(self.reference)):
             # pots.append(pot)
-            alles=list(set(map(lambda x: x.upper(),
-                                     pot.get_query_sequences(mark_matches=True,
-                                                             mark_ends=False,
-                                                             add_indels=True))))
-            if len(alles)>1:
-                self.more_than_one_alleles=True
+            pos += 1
+            alles = list(set(map(lambda x: x.upper(),
+                                 pot.get_query_sequences(mark_matches=True,
+                                                         mark_ends=False,
+                                                         add_indels=True))))
+            alles = collections.Counter(alles).most_common()
+            if len(alles) > 1:
+                self.more_than_one_alleles = True
+            if alles[0][0] in [",", ".", "*"]:
+                continue
+            if alles[0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch":alles[0][0]}
+                # print("Mismatch",alles)
+                continue
+            p = re.compile("[\\+\\-][0-9]+")
+            # print(alles[0])
+            indelf = p.findall(alles[0][0])[0]
+            indel_type = "I" if alles[0][0][1] == "-" else "D"
+            # print(indel_type,indelf)
+            indel_len=int(indelf[1:])
+            indel_str=alles[0][0][-indel_len:]
+            # print(indel_len,indel_type,indel_str)
+            if alles[0][0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": alles[0][0][0], indel_type:[indel_len,indel_str]}
+            else:
+                variants[pos - 1] = {indel_type: [indel_len, indel_str]}
+        if len(variants)>0:
+            print(variants)
 
-            pots.append()
+
+
+            # print(alles)
+
+            # print(alles)
+
+            # pots.append()
             # print(type(pot))
             # print(pot)
             # print(pot.indel())
@@ -134,10 +167,10 @@ class MSHAP:
             #     print("refskip", pot.get_query_sequences())
             # print(pot.get_query_sequences())
             pass
-        for i in pots:
-            if i not in ["A","C","G","T"]:
-                print(pots)
-                break
+        # for i in pots:
+        #     if i not in ["A","C","G","T"]:
+        #         print(pots)
+        #         break
         # print(len(pots),self.start_pre-self.end_suf)
         # alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
         bamfile.close()
