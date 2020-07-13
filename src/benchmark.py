@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """==============================================================================
 # Project: MSHunter
 # Script : benchmark.py
@@ -13,8 +15,6 @@ import pysam
 import multiprocessing
 from src.global_dict import *
 from src.units import load_microsatellites
-# from src.bam2dis import *
-
 
 
 # from src.call import *
@@ -85,11 +85,10 @@ class MSHAP:
         self.end_suf = pos_end + self.suffix_len
         self.ref_repeat_length = repeat_times * motif_len
 
-    def get_reads_alignment(self):
+    def get_reads_alignment(self, bam_file):
 
-        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
-        alignment_list = [alignment for alignment in bamfile.fetch(self.chrom, self.pos_start - 1, self.pos_end + 1)]
-        bamfile.close()
+        alignment_list = [alignment for alignment in bam_file.fetch(self.chrom, self.pos_start - 1, self.pos_end + 1)]
+        # bam_file.close()
         reads_com = []
         for alignment in alignment_list:
             if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary:
@@ -101,50 +100,51 @@ class MSHAP:
 
     def get_dis2(self):
 
-        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb",
-                                      reference_filename=self.reference_path)
-        # print(bamfile.count(self.chrom, start=self.pos_start, stop=self.pos_end))
+        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb",
+                                       reference_filename=self.reference_path)
+        # print(bam_file.count(self.chrom, start=self.pos_start, stop=self.pos_end))
         # return 2
-        # print(type(bamfile.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
+        # print(type(bam_file.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
 
         variants = {}
         pos = self.start_pre
-        for pot in bamfile.pileup(self.chrom,
-                                  self.start_pre,
-                                  self.end_suf,
-                                  truncate=True,
-                                  fastafile=pysam.FastaFile(self.reference_path)):
+        for pot in bam_file.pileup(self.chrom,
+                                   self.start_pre,
+                                   self.end_suf,
+                                   truncate=True,
+                                   fastafile=pysam.FastaFile(self.reference_path)):
             # pots.append(pot)
             pos += 1
-            alles = list(set(map(lambda x: x.upper(),
-                                 pot.get_query_sequences(mark_matches=True,
-                                                         mark_ends=False,
-                                                         add_indels=True))))
-            alles = collections.Counter(alles).most_common()
-            if len(alles) > 1:
+            pot_alleles = list(set(map(lambda x: x.upper(),
+                                       pot.get_query_sequences(mark_matches=True,
+                                                               mark_ends=False,
+                                                               add_indels=True))))
+            pot_alleles = collections.Counter(pot_alleles).most_common()
+            if len(pot_alleles) > 1:
                 self.more_than_one_alleles = True
-            if alles[0][0] in [",", ".", "*"]:
+            if pot_alleles[0][0] in [",", ".", "*"]:
                 continue
-            if alles[0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": alles[0][0]}
-                # print("Mismatch",alles)
+            if pot_alleles[0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": pot_alleles[0][0]}
+                # print("Mismatch",pot_alleles)
                 continue
             p = re.compile("[\\+\\-][0-9]+")
-            # print(alles[0])
-            indelf = p.findall(alles[0][0])[0]
-            indel_type = "I" if alles[0][0][1] == "-" else "D"
+            # print(pot_alleles[0])
+            indelf = p.findall(pot_alleles[0][0])[0]
+            indel_type = "I" if pot_alleles[0][0][1] == "-" else "D"
             # print(indel_type,indelf)
             indel_len = int(indelf[1:])
-            indel_str = alles[0][0][-indel_len:]
+            indel_str = pot_alleles[0][0][-indel_len:]
             # print(indel_len,indel_type,indel_str)
-            if alles[0][0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": alles[0][0][0], indel_type: [indel_len, indel_str]}
+            if pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": pot_alleles[0][0][0], indel_type: [indel_len, indel_str]}
             else:
                 variants[pos - 1] = {indel_type: [indel_len, indel_str]}
 
     def get_dis(self):
+        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
         repeat_length_dict = {}
-        reads = self.get_reads_alignment()
+        reads = self.get_reads_alignment(bam_file)
         for alignment in reads:
             repeat_length = self.get_repeat_length(alignment)
             if repeat_length < 0: continue
@@ -164,47 +164,42 @@ class MSHAP:
         else:
             self.check = False
             self.check_stats.append("No_read_covered")
-
-        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
         if not self.check:
             self.ms_var_type.append("Fuzzy")
             return -1
-        fa = pysam.FastaFile(self.reference_path)
+
+        fa_file = pysam.FastaFile(self.reference_path)
         pos = self.pos_start
         segment_pos = 0
-        self.ref_str = fa.fetch(self.chrom, self.pos_start, self.pos_end)
+        self.ref_str = fa_file.fetch(self.chrom, self.pos_start, self.pos_end)
         alt_str = []
-        for pot in bamfile.pileup(self.chrom,
-                                  self.pos_start,
-                                  self.pos_end,
-                                  truncate=True,
-                                  fastafile=pysam.FastaFile(self.reference_path)):
-            alles = list(set(map(lambda x: x.upper(),
-                                 pot.get_query_sequences(mark_matches=True,
-                                                         mark_ends=False,
-                                                         add_indels=True))))
-            alles = collections.Counter(alles).most_common()
-            if alles[0][0][0] in [",", "."]:
+        for pot in bam_file.pileup(self.chrom,
+                                   self.pos_start,
+                                   self.pos_end,
+                                   truncate=True,
+                                   fastafile=fa_file):
+            pot_alleles = list(set(map(lambda x: x.upper(),
+                                       pot.get_query_sequences(mark_matches=True,
+                                                               mark_ends=False,
+                                                               add_indels=True))))
+            pot_alleles = collections.Counter(pot_alleles).most_common()
+            if pot_alleles[0][0][0] in [",", "."]:
                 alt_str.append(self.ref_str[segment_pos])
-            elif alles[0][0][0] in ["A", "G", "C", "T"]:
-                alt_str.append(alles[0][0][0])
-                self.ms_mismatch.append([pos, alles[0][0][0], fa.fetch(self.chrom, pos, pos + 1)])
-            if len(alles[0][0]) > 1 and alles[0][0][1] == "+":
+            elif pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
+                alt_str.append(pot_alleles[0][0][0])
+                self.ms_mismatch.append([pos, pot_alleles[0][0][0], fa.fetch(self.chrom, pos, pos + 1)])
+            if len(pot_alleles[0][0]) > 1 and pot_alleles[0][0][1] == "+":
                 p = re.compile("[\\+\\-][0-9]+")
-                # print(alles[0])
-                indelf = p.findall(alles[0][0])[0]
+                indel_f = p.findall(pot_alleles[0][0])[0]
                 # print(indel_type,indelf)
-                indel_len = int(indelf[1:])
-                indel_str = alles[0][0][-indel_len:]
+                indel_len = int(indel_f[1:])
+                indel_str = pot_alleles[0][0][-indel_len:]
                 alt_str.append(indel_str)
-                # print("indser",alles)
+                # print("indser",pot_alleles)
             pos += 1
             segment_pos += 1
-        bamfile.close()
+        bam_file.close()
         self.alt_str = "".join(alt_str)
-        print(self.ref_str)
-        print(self.alt_str)
-
         if self.ref_repeat_length != self.query_repeat_length:
             indel_type = "DEL" if self.ref_repeat_length > self.query_repeat_length else "INS"
             if len(self.ms_mismatch) > 0:
@@ -218,6 +213,7 @@ class MSHAP:
                 self.ms_var_type.append("SNP")
             else:
                 self.ms_var_type.append("None")
+        print(self.ref_str,self.alt_str)
 
     def compile(self, pots):
         seq = []
@@ -234,50 +230,50 @@ class MSHAP:
         if not self.dis_stat:
             return -1
 
-        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
+        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
 
-        # print(type(bamfile.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
+        # print(type(bam_file.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
 
         variants = {}
         pos = self.start_pre
-        for pot in bamfile.pileup(self.chrom,
-                                  self.start_pre,
-                                  self.end_suf,
-                                  truncate=True,
-                                  fastafile=pysam.FastaFile(self.reference_path)):
+        for pot in bam_file.pileup(self.chrom,
+                                   self.start_pre,
+                                   self.end_suf,
+                                   truncate=True,
+                                   fastafile=pysam.FastaFile(self.reference_path)):
             # pots.append(pot)
             pos += 1
-            alles = list(set(map(lambda x: x.upper(),
-                                 pot.get_query_sequences(mark_matches=True,
-                                                         mark_ends=False,
-                                                         add_indels=True))))
-            alles = collections.Counter(alles).most_common()
-            if len(alles) > 1:
+            pot_alleles = list(set(map(lambda x: x.upper(),
+                                       pot.get_query_sequences(mark_matches=True,
+                                                               mark_ends=False,
+                                                               add_indels=True))))
+            pot_alleles = collections.Counter(pot_alleles).most_common()
+            if len(pot_alleles) > 1:
                 self.more_than_one_alleles = True
-            if alles[0][0] in [",", ".", "*"]:
+            if pot_alleles[0][0] in [",", ".", "*"]:
                 continue
-            if alles[0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": alles[0][0]}
-                # print("Mismatch",alles)
+            if pot_alleles[0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": pot_alleles[0][0]}
+                # print("Mismatch",pot_alleles)
                 continue
             p = re.compile("[\\+\\-][0-9]+")
-            # print(alles[0])
-            indelf = p.findall(alles[0][0])[0]
-            indel_type = "I" if alles[0][0][1] == "-" else "D"
+            # print(pot_alleles[0])
+            indelf = p.findall(pot_alleles[0][0])[0]
+            indel_type = "I" if pot_alleles[0][0][1] == "-" else "D"
             # print(indel_type,indelf)
             indel_len = int(indelf[1:])
-            indel_str = alles[0][0][-indel_len:]
+            indel_str = pot_alleles[0][0][-indel_len:]
             # print(indel_len,indel_type,indel_str)
-            if alles[0][0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": alles[0][0][0], indel_type: [indel_len, indel_str]}
+            if pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": pot_alleles[0][0][0], indel_type: [indel_len, indel_str]}
             else:
                 variants[pos - 1] = {indel_type: [indel_len, indel_str]}
         if len(variants) > 0:
             print(variants)
 
-            # print(alles)
+            # print(pot_alleles)
 
-            # print(alles)
+            # print(pot_alleles)
 
             # pots.append()
             # print(type(pot))
@@ -294,7 +290,7 @@ class MSHAP:
         #         print(pots)
         #         break
         # print(len(pots),self.start_pre-self.end_suf)
-        bamfile.close()
+        bam_file.close()
 
         # print()
 
@@ -381,20 +377,20 @@ class MSHAP:
         read_block = []
         read_pos = 0
         ref_pos = align_start
-        for cigartupe in alignment.cigartuples:
-            if cigartupe[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
-                ref_block.append((ref_pos, ref_pos + cigartupe[1], 0))
-                read_block.append((read_pos, read_pos + cigartupe[1], 0))
-                read_pos += cigartupe[1]
-                ref_pos += cigartupe[1]
-            elif cigartupe[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
+        for cigartuple in alignment.cigartuples:
+            if cigartuple[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
+                ref_block.append((ref_pos, ref_pos + cigartuple[1], 0))
+                read_block.append((read_pos, read_pos + cigartuple[1], 0))
+                read_pos += cigartuple[1]
+                ref_pos += cigartuple[1]
+            elif cigartuple[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
                 ref_block.append((ref_pos, ref_pos + 0, 1))
-                read_block.append((read_pos, read_pos + cigartupe[1], 1))
-                read_pos += cigartupe[1]
-            elif cigartupe[0] in [2, ]:  # 2:D; 3:N: skip region of reference
-                ref_block.append((ref_pos, ref_pos + cigartupe[1], 2))
+                read_block.append((read_pos, read_pos + cigartuple[1], 1))
+                read_pos += cigartuple[1]
+            elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
+                ref_block.append((ref_pos, ref_pos + cigartuple[1], 2))
                 read_block.append((read_pos, read_pos, 2))
-                ref_pos += cigartupe[1]
+                ref_pos += cigartuple[1]
             else:
                 return -1
 
@@ -436,10 +432,10 @@ class MSHAP:
         start_pos = start - pre_content
         end_pos = end + suf_content
         ref_seq = fafile.fetch(self.chrom, start_pos, end_pos)
-        bamfile = pysam.AlignmentFile(self.bam_path)
+        bam_file = pysam.AlignmentFile(self.bam_path)
         print('++++++++++++++++++')
-        outfile = pysam.AlignmentFile("-", "w", template=bamfile, index_filename=self.bam_path + ".bai")
-        for pot in bamfile.fetch(self.chrom, start_pos, end_pos):
+        outfile = pysam.AlignmentFile("-", "w", template=bam_file, index_filename=self.bam_path + ".bai")
+        for pot in bam_file.fetch(self.chrom, start_pos, end_pos):
             outfile.write(pot)
         for pot in outfile.pileup(self.chrom, start_pos, end_pos, truncate=True, index_filename=self.bam_path + ".bai"):
             print(pot)
@@ -556,11 +552,11 @@ def benchmark_init(args):
         cramfile.close()
     else:
         paras["input_format"] = "hap1"
-        bamfile = pysam.AlignmentFile(paras["input"], mode="rb")
-        if not bamfile.has_index():
+        bam_file = pysam.AlignmentFile(paras["input"], mode="rb")
+        if not bam_file.has_index():
             print("[INFO] Build index for the input bam ...")
             pysam.index(paras["input"])
-        bamfile.close()
+        bam_file.close()
     if not os.path.exists(paras["output"]):
         print("[INFO] The output is : " + paras["output"] + ".")
     else:
@@ -603,9 +599,9 @@ def bm_processOneMs(msDetail):
 
 def bm_write_vcf_init(outputpath):
     outputfile = pysam.VariantFile(outputpath, "w")
-    bamfile = pysam.AlignmentFile(get_value("paras")["input"], "rb")
-    contigs = bamfile.references
-    contigsLen = bamfile.lengths
+    bam_file = pysam.AlignmentFile(get_value("paras")["input"], "rb")
+    contigs = bam_file.references
+    contigsLen = bam_file.lengths
     chromList = get_value("chrom_list")
     contigs_len_dict = {}
     sortedContig = []

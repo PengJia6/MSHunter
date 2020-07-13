@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
 """==============================================================================
 # Project: MSHunter
 # Script : bam2dis.py

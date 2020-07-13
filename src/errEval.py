@@ -1,11 +1,13 @@
-# =============================================================================
-# Project : MShunter0.0.1
-# Py Name: errEval.py
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""==============================================================================
+# Project: MSHunter
+# Script : errEval.py
 # Author : Peng Jia
-# Date : 20-05-25
-# Email : pengjia@stu.xjtu.edu.cn
-# Description : ''
-# =============================================================================
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: Build benchmark for microsatellite mutation calling
+=============================================================================="""
 import pysam
 import yaml
 from src.global_dict import *
