@@ -1,99 +1,223 @@
+"""==============================================================================
+# Project: MSHunter
+# Script : benchmark.py
+# Author : Peng Jia
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: Build benchmark for microsatellite mutation calling
+=============================================================================="""
 import os
 import re
 import collections
-from src.bam2dis import *
-from src.call import *
-from src.errEval import *
+import pysam
+import multiprocessing
+from src.global_dict import *
+from src.units import load_microsatellites
+# from src.bam2dis import *
+
+
+
+# from src.call import *
+# from src.errEval import *
 
 
 class MSHAP:
-    prefix_len = 10
-    suffix_len = 10
-    repeat_length_dis = {}
-    depth = 0
-    depth_hap1 = 0
-    depth_hap2 = 0
-    depthCall = 0
-    dis_stat = False
-    support_reads = 0
-    support_reads_hap1 = 0
-    support_reads_hap2 = 0
-    more_than_one_alleles = False
-    more_than_one_alleles_ms = False
+    # TODO : normalize the argument
+    # TODO : finished all member variables
+    """
+      chrom : chromsome
+      pos_start: start position of microsatellite
+      motif: repeat unit of microsatellite 
+      motif_len = repeat unit length of microsatellite
+      repeat_times =  the repeat times of microsatellite
+      pos_end :end position of microsatellite
+      bam_path: bam file path
+    """
+    chrom = ""
+    pos_start = 0
+    motif = 0
+    motif_len = 0
+    repeat_times = 0
+    pos_end = 0
+    bam_path = ""
+    reference_path = ""
     start_pre = 0
     end_suf = 0
+    ref_repeat_length = 0
+    prefix_len = 10  # TODO add in command
+    suffix_len = 10  # TODO add in command
+    repeat_length_dis = {}
+    query_repeat_length = 0
+    dis_stat = False
+    more_than_one_alleles = False
+    more_than_one_alleles_ms = False
+    check = True
+    check_stats = []
+    ms_mismatch = []
+    ms_var_type = []
+    mutation_id = ""
+    ref_str = ""
+    alt_str = ""
+    low_support = False
+    depth = 0
 
-    def __init__(self, chr_id, posStart, posEnd, queryStart, queryEnd, motif, motifLen, repeat_times,
-                 bamfile, input_format, reference, prefix, suffix,
-                 prefix_str, suffix_str, fapath):
-        self.chrId = chr_id
-        self.posStart = posStart
+    def __init__(self, chrom, pos_start, pos_end, motif, motif_len, repeat_times,
+                 bam_path, reference_path):
+        """
+        @param chrom: chromsome
+        @param pos_start: start position
+        @param pos_end: end position
+        @param motif: repeat unit
+        @param motif_len: repeat unit length
+        @param repeat_times: repeat times
+        @param bam_path: bam path
+        @param reference_path: reference path
+        """
+        self.chrom = chrom
+        self.pos_start = pos_start
         self.motif = motif
-        self.motifLen = motifLen
-        self.repeatTimes = repeat_times
-        self.posEnd = posEnd
-        self.queryStart = queryStart
-        self.queryEnd = queryEnd
-        self.bamfile = bamfile
-        self.input_format = input_format
-        self.reference = reference
-        self.prefix = prefix
-        self.suffix = suffix
-        self.prefix_str = prefix_str
-        self.suffix_str = suffix_str
-        self.fapath = fapath
-        self.start_pre = posStart - self.prefix_len
-        self.end_suf = posEnd + self.suffix_len
+        self.motif_len = motif_len
+        self.repeat_times = repeat_times
+        self.pos_end = pos_end
+        self.bam_path = bam_path
+        self.reference_path = reference_path
+        self.start_pre = pos_start - self.prefix_len
+        self.end_suf = pos_end + self.suffix_len
+        self.ref_repeat_length = repeat_times * motif_len
 
     def get_reads_alignment(self):
-        bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
-        alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
-        bamfile.close()
-        depth = len(alignmentList)
-        if depth < 1:
-            self.lowSupport = True
-        reads_com = []
-        # print(len(alignmentList))
 
-        for alignment in alignmentList:
+        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
+        alignment_list = [alignment for alignment in bamfile.fetch(self.chrom, self.pos_start - 1, self.pos_end + 1)]
+        bamfile.close()
+        reads_com = []
+        for alignment in alignment_list:
             if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary:
-                # print("llflflfl")
-                continue  # remove unmaped reads and duplicated reads
-            # if alignment.query_alignment_start > self.posStart and alignment.cigartuples[0][0] == 0:
-            #     continue  # remove reads outside the boundary
-            # if alignment.query_alignment_end < self.posEnd and alignment.cigartuples[0][0] == 0:
-            #     continue  # remove reads outside the boundary
-            if alignment.reference_start > self.posStart or alignment.reference_end < self.posEnd:
-                # print("lflflfl")
-                # print("--------------")
-                # print(self.posStart,self.posEnd)
-                # print(alignment.query_alignment_start,alignment.query_alignment_end)
-                # print(alignment.get_reference_positions())
+                continue
+            if alignment.reference_start > self.pos_start or alignment.reference_end < self.pos_end:
                 continue
             reads_com.append(alignment)
-
-        self.depth = len(reads_com)
-
         return reads_com
 
-    def get_dis(self):
+    def get_dis2(self):
 
+        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb",
+                                      reference_filename=self.reference_path)
+        # print(bamfile.count(self.chrom, start=self.pos_start, stop=self.pos_end))
+        # return 2
+        # print(type(bamfile.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
+
+        variants = {}
+        pos = self.start_pre
+        for pot in bamfile.pileup(self.chrom,
+                                  self.start_pre,
+                                  self.end_suf,
+                                  truncate=True,
+                                  fastafile=pysam.FastaFile(self.reference_path)):
+            # pots.append(pot)
+            pos += 1
+            alles = list(set(map(lambda x: x.upper(),
+                                 pot.get_query_sequences(mark_matches=True,
+                                                         mark_ends=False,
+                                                         add_indels=True))))
+            alles = collections.Counter(alles).most_common()
+            if len(alles) > 1:
+                self.more_than_one_alleles = True
+            if alles[0][0] in [",", ".", "*"]:
+                continue
+            if alles[0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": alles[0][0]}
+                # print("Mismatch",alles)
+                continue
+            p = re.compile("[\\+\\-][0-9]+")
+            # print(alles[0])
+            indelf = p.findall(alles[0][0])[0]
+            indel_type = "I" if alles[0][0][1] == "-" else "D"
+            # print(indel_type,indelf)
+            indel_len = int(indelf[1:])
+            indel_str = alles[0][0][-indel_len:]
+            # print(indel_len,indel_type,indel_str)
+            if alles[0][0][0] in ["A", "G", "C", "T"]:
+                variants[pos - 1] = {"Mismatch": alles[0][0][0], indel_type: [indel_len, indel_str]}
+            else:
+                variants[pos - 1] = {indel_type: [indel_len, indel_str]}
+
+    def get_dis(self):
         repeat_length_dict = {}
         reads = self.get_reads_alignment()
         for alignment in reads:
-            # add other condition for read selection
             repeat_length = self.get_repeat_length(alignment)
+            if repeat_length < 0: continue
             if repeat_length not in repeat_length_dict:
                 repeat_length_dict[repeat_length] = 0
             repeat_length_dict[repeat_length] += 1
         self.repeat_length_dis = repeat_length_dict
-        if len(repeat_length_dict) > 1:
+        self.depth = len(repeat_length_dict)
+        if self.depth > 1:
             self.more_than_one_alleles = True
             self.more_than_one_alleles_ms = True
-            # print(repeat_length_dict)
-            # print("ldflldl")
+            self.check = False
+            self.check_stats.append("More_alleles_in_MS")
         if len(repeat_length_dict) > 0:
+            self.query_repeat_length = list(repeat_length_dict.values())[0]
             self.dis_stat = True
+        else:
+            self.check = False
+            self.check_stats.append("No_read_covered")
+
+        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
+        if not self.check:
+            self.ms_var_type.append("Fuzzy")
+            return -1
+        fa = pysam.FastaFile(self.reference_path)
+        pos = self.pos_start
+        segment_pos = 0
+        self.ref_str = fa.fetch(self.chrom, self.pos_start, self.pos_end)
+        alt_str = []
+        for pot in bamfile.pileup(self.chrom,
+                                  self.pos_start,
+                                  self.pos_end,
+                                  truncate=True,
+                                  fastafile=pysam.FastaFile(self.reference_path)):
+            alles = list(set(map(lambda x: x.upper(),
+                                 pot.get_query_sequences(mark_matches=True,
+                                                         mark_ends=False,
+                                                         add_indels=True))))
+            alles = collections.Counter(alles).most_common()
+            if alles[0][0][0] in [",", "."]:
+                alt_str.append(self.ref_str[segment_pos])
+            elif alles[0][0][0] in ["A", "G", "C", "T"]:
+                alt_str.append(alles[0][0][0])
+                self.ms_mismatch.append([pos, alles[0][0][0], fa.fetch(self.chrom, pos, pos + 1)])
+            if len(alles[0][0]) > 1 and alles[0][0][1] == "+":
+                p = re.compile("[\\+\\-][0-9]+")
+                # print(alles[0])
+                indelf = p.findall(alles[0][0])[0]
+                # print(indel_type,indelf)
+                indel_len = int(indelf[1:])
+                indel_str = alles[0][0][-indel_len:]
+                alt_str.append(indel_str)
+                # print("indser",alles)
+            pos += 1
+            segment_pos += 1
+        bamfile.close()
+        self.alt_str = "".join(alt_str)
+        print(self.ref_str)
+        print(self.alt_str)
+
+        if self.ref_repeat_length != self.query_repeat_length:
+            indel_type = "DEL" if self.ref_repeat_length > self.query_repeat_length else "INS"
+            if len(self.ms_mismatch) > 0:
+                self.ms_var_type.append("Complex")
+                self.ms_var_type.append(indel_type)
+                self.ms_var_type.append("SNP")
+            else:
+                self.ms_var_type.append(indel_type)
+        else:
+            if len(self.ms_mismatch) > 0:
+                self.ms_var_type.append("SNP")
+            else:
+                self.ms_var_type.append("None")
 
     def compile(self, pots):
         seq = []
@@ -110,17 +234,17 @@ class MSHAP:
         if not self.dis_stat:
             return -1
 
-        bamfile = pysam.AlignmentFile(self.bamfile, mode="rb", reference_filename=self.reference)
+        bamfile = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
 
-        # print(type(bamfile.pileup(self.chrId,self.start_pre,self.end_suf,truncate=True)))
+        # print(type(bamfile.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
 
         variants = {}
         pos = self.start_pre
-        for pot in bamfile.pileup(self.chrId,
+        for pot in bamfile.pileup(self.chrom,
                                   self.start_pre,
                                   self.end_suf,
                                   truncate=True,
-                                  fastafile=pysam.FastaFile(self.reference)):
+                                  fastafile=pysam.FastaFile(self.reference_path)):
             # pots.append(pot)
             pos += 1
             alles = list(set(map(lambda x: x.upper(),
@@ -133,7 +257,7 @@ class MSHAP:
             if alles[0][0] in [",", ".", "*"]:
                 continue
             if alles[0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch":alles[0][0]}
+                variants[pos - 1] = {"Mismatch": alles[0][0]}
                 # print("Mismatch",alles)
                 continue
             p = re.compile("[\\+\\-][0-9]+")
@@ -141,17 +265,15 @@ class MSHAP:
             indelf = p.findall(alles[0][0])[0]
             indel_type = "I" if alles[0][0][1] == "-" else "D"
             # print(indel_type,indelf)
-            indel_len=int(indelf[1:])
-            indel_str=alles[0][0][-indel_len:]
+            indel_len = int(indelf[1:])
+            indel_str = alles[0][0][-indel_len:]
             # print(indel_len,indel_type,indel_str)
             if alles[0][0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": alles[0][0][0], indel_type:[indel_len,indel_str]}
+                variants[pos - 1] = {"Mismatch": alles[0][0][0], indel_type: [indel_len, indel_str]}
             else:
                 variants[pos - 1] = {indel_type: [indel_len, indel_str]}
-        if len(variants)>0:
+        if len(variants) > 0:
             print(variants)
-
-
 
             # print(alles)
 
@@ -172,7 +294,6 @@ class MSHAP:
         #         print(pots)
         #         break
         # print(len(pots),self.start_pre-self.end_suf)
-        # alignmentList = [alignment for alignment in bamfile.fetch(self.chrId, self.queryStart, self.queryEnd)]
         bamfile.close()
 
         # print()
@@ -277,16 +398,18 @@ class MSHAP:
             else:
                 return -1
 
-        if self.posStart >= ref_block[-1][1] or self.posStart <= ref_block[0][0]:
-            print("pos2")
+        if self.pos_start >= ref_block[-1][1] or self.pos_start <= ref_block[0][0]:
+            # print("pos2")
+            # print(self.pos_start)
+            # print(ref_block)
             return -1
-        if self.posEnd >= ref_block[-1][1] or self.posEnd <= ref_block[0][0]:
-            print("pos3")
+        if self.pos_end >= ref_block[-1][1] or self.pos_end <= ref_block[0][0]:
+            # print("pos3")
             return -1
 
-        ref_start, read_start = self.pos_convert_ref2read(ref_block, read_block, self.posStart, direction="start")
-        ref_end, read_end = self.pos_convert_ref2read(ref_block, read_block, self.posEnd, direction="end")
-        rpt = self.repeatTimes * self.motifLen + ((read_end - read_start) - (ref_end - ref_start))
+        ref_start, read_start = self.pos_convert_ref2read(ref_block, read_block, self.pos_start, direction="start")
+        ref_end, read_end = self.pos_convert_ref2read(ref_block, read_block, self.pos_end, direction="end")
+        rpt = self.repeat_times * self.motif_len + ((read_end - read_start) - (ref_end - ref_start))
 
         return rpt
 
@@ -307,34 +430,34 @@ class MSHAP:
     def get_snp_info(self):
         pre_content = 5
         suf_content = 5
-        start = self.posStart
-        end = self.posEnd
-        fafile = pysam.FastaFile(self.reference)
+        start = self.pos_start
+        end = self.pos_end
+        fafile = pysam.FastaFile(self.reference_path)
         start_pos = start - pre_content
         end_pos = end + suf_content
-        ref_seq = fafile.fetch(self.chrId, start_pos, end_pos)
-        bamfile = pysam.AlignmentFile(self.bamfile)
+        ref_seq = fafile.fetch(self.chrom, start_pos, end_pos)
+        bamfile = pysam.AlignmentFile(self.bam_path)
         print('++++++++++++++++++')
-        outfile = pysam.AlignmentFile("-", "w", template=bamfile, index_filename=self.bamfile + ".bai")
-        for pot in bamfile.fetch(self.chrId, start_pos, end_pos):
+        outfile = pysam.AlignmentFile("-", "w", template=bamfile, index_filename=self.bam_path + ".bai")
+        for pot in bamfile.fetch(self.chrom, start_pos, end_pos):
             outfile.write(pot)
-        for pot in outfile.pileup(self.chrId, start_pos, end_pos, truncate=True, index_filename=self.bamfile + ".bai"):
+        for pot in outfile.pileup(self.chrom, start_pos, end_pos, truncate=True, index_filename=self.bam_path + ".bai"):
             print(pot)
 
         return
 
-    def getRepeatTimes2(self, alignment):
+    def getrepeat_times2(self, alignment):
 
         """
         :param alignment:
         :param motif:
-        :param motifLen:
+        :param motif_len:
         :param prefix:
         :param suffix:
         :return:
         """
 
-        # self.getRepeatTimes2(alignment)
+        # self.getrepeat_times2(alignment)
         if alignment.mapping_quality < self.min_mapping_qual:
             return -1
         readString = alignment.query
@@ -348,8 +471,8 @@ class MSHAP:
             start = prefixState + 5
             while start == readString.find(self.motif, start):
                 count += 1
-                start = readString.find(self.motif, start) + self.motifLen
-            if (self.motifLen == 1 and count >= 1) or (self.motifLen > 1 and count >= 1):
+                start = readString.find(self.motif, start) + self.motif_len
+            if (self.motif_len == 1 and count >= 1) or (self.motif_len > 1 and count >= 1):
                 if start == readString.find(self.suffix, start):
                     return count
             prefixState = readString.find(self.prefix, prefixState + 1)
@@ -373,6 +496,8 @@ def benchmark_init(args):
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
+    paras["only_microsatellites"] = args.only_microsatellites[0]
+
     paras["ranges_of_repeat_times"] = {}
 
     for i in args.minimum_repeat_times[0].split(";"):
@@ -468,36 +593,106 @@ def benchmark_init(args):
 
 def bm_processOneMs(msDetail):
     msDetail.get_dis()
-    msDetail.get_alignment_detail()
+    msDetail.get_dis2()
+    if not get_value("default")["benchmark"]["only_microsatellites"]:
+        msDetail.get_alignment_detail()
     # msDetail.calcuShiftProbability()
     # msDetail.get_snp_info()
-
     return msDetail
 
 
+def bm_write_vcf_init(outputpath):
+    outputfile = pysam.VariantFile(outputpath, "w")
+    bamfile = pysam.AlignmentFile(get_value("paras")["input"], "rb")
+    contigs = bamfile.references
+    contigsLen = bamfile.lengths
+    chromList = get_value("chrom_list")
+    contigs_len_dict = {}
+    sortedContig = []
+    for contig, length in zip(contigs, contigsLen):
+        if contig in chromList:
+            sortedContig.append(contig)
+            contigs_len_dict[contig] = length
+    for contig in sortedContig:
+        outputfile.header.add_line(
+            "##contig=<ID={chrom},length={length}>".format(chrom=contig, length=contigs_len_dict[contig]))
+    set_value("contigsInfo", contigs_len_dict)
+    outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
+    outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
+    outputfile.header.add_line('##INFO=<ID=Start,Number=1,Type=Integer,Description="Position start">')
+    outputfile.header.add_line('##INFO=<ID=End,Number=1,Type=Integer,Description="Position End">')
+    outputfile.header.add_line('##INFO=<ID=motif,Number=1,Type=String,Description="Repeat unit">')
+    outputfile.header.add_line('##INFO=<ID=repeat_times,Number=1,Type=Integer,Description="Repeat imes">')
+    outputfile.header.add_line('##INFO=<ID=prefix,Number=1,Type=String,Description="Prefix of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=suffix,Number=1,Type=String,Description="Suffix of microsatellite">')
+    # outputfile.header.add_line('##INFO=<ID=varType,Number=1,Type=String,Description="Variants Type">')
+    outputfile.header.add_line(
+        '##INFO=<ID=MSVarType,Number=1,Type=String,Description="Variants type in microsatellite region">')
+    outputfile.header.add_line(
+        '##INFO=<ID=upstreamVarType,Number=1,Type=String,Description="Variants type in upstream regions of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=dis,Number=1,Type=String,Description='
+                               'Distribution of repeat length>')
+    outputfile.header.add_line('##INFO=<ID=disStat,Number=1,Type=String,Description="Distribution Stat">')
+    return outputfile
+
+
+def bm_write_vcf_close(outputfile):
+    outputfile.close()
+    pysam.tabix_index(get_value("paras")["output_dis"], force=True, preset="vcf")
+
+
+def bm_write_vcf(outputfile, dataList):
+    # print(header.contigs)
+    # print("write", len(dataList))
+    for msDetail in dataList:
+        chrom = msDetail.chrom
+        pos = int(msDetail.pos_start)
+        vcfrec = outputfile.new_record()
+        # print("infoKey",vcfrec.info.keys())
+        vcfrec.contig = chrom
+        # vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
+        vcfrec.pos = pos
+        vcfrec.ref = msDetail.ref_str
+        vcfrec.alt = msDetail.alt_str
+        vcfrec.info["chrom"] = chrom
+        vcfrec.info["pos"] = pos
+        vcfrec.info["Start"] = pos
+        vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
+        vcfrec.info["End"] = pos + msDetail.repeat_times * len(msDetail.motif)
+        vcfrec.info["motif"] = msDetail.motif
+        vcfrec.info["repeat_times"] = msDetail.repeat_times
+        vcfrec.info["prefix"] = msDetail.prefix
+        vcfrec.info["suffix"] = msDetail.suffix
+        vcfrec.info["dis"] = ":".join(
+            [str(key) + "-" + str(value) for key, value in msDetail.repeat_length_dis.items()])
+        vcfrec.info["disStat"] = str(msDetail.disStat)
+
+        outputfile.write(vcfrec)
+
+
 def bm_multiRun(thread, datalist):
-    # pool = multiprocessing.Pool(processes=thread)
-    # result_list = pool.map(bm_processOneMs, datalist)
-    # pool.close()
-    # pool.join()
-    result_list = []
-    for ms in datalist:
-        result_list.append(bm_processOneMs(ms))
+    pool = multiprocessing.Pool(processes=thread)
+    result_list = pool.map(bm_processOneMs, datalist)
+    pool.close()
+    pool.join()
+    # result_list = []
+    # for ms in datalist:
+    #     result_list.append(bm_processOneMs(ms))
 
     # print("input",len(datalist))
     # print("output",len(result_list))
+
     return result_list
 
 
 def getDis(args={}, upstreamLen=5, downstreamLen=5):
     dis = args["output_dis"]
     input_format = args["input_format"]
-    reference = args["reference"]
     thread = args["threads"]
     batch = args["batch"]
-    outputfile = write_vcf_init(dis, [get_value("case")])
+    outputfile = bm_write_vcf_init(dis)
     contigs_info = get_value("contigsInfo")
-    dfMicroSatellites = loadMicroSatellite(args)
+    dfMicroSatellites = load_microsatellites(args)
     curentMSNum = 0
     tmpWindow = []
     ms_number = get_value("ms_number")
@@ -506,57 +701,52 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
     suffix_len = args["suffix_len"]
     # print(len(dfMicroSatellites))
     for ms_id, info in dfMicroSatellites.iterrows():
-        chr_id = info["chr"]
-        if chr_id not in contigs_info:
+        curentMSNum += 1
+        # if curentMSNum < 40000 and args["debug"]:
+        #     continue
+        chrom = info["chr"]
+        if chrom not in contigs_info:
             continue
-        posStart = int(info["pos"])
+        pos_start = int(info["pos"])
         repeat_times = int(info["repeatTimes"])
         motif = info["motif"]
-        motifLen = len(motif)
-        posEnd = posStart + motifLen * repeat_times
-        queryStart = posStart - upstreamLen
-        queryEnd = posEnd + downstreamLen
-        prefix_str = fafile.fetch(chr_id, posStart - prefix_len, posStart)
-        suffix_str = fafile.fetch(chr_id, posEnd, posEnd + suffix_len)
+        motif_len = len(motif)
+        pos_end = pos_start + motif_len * repeat_times
+        # queryStart = pos_start - upstreamLen
+        # queryEnd = pos_end + downstreamLen
+        # prefix_str = fafile.fetch(chrom, pos_start - prefix_len, pos_start)
+        # suffix_str = fafile.fetch(chrom, pos_end, pos_end + suffix_len)
         # print(prefix_str,info["prefix"],motif)
         # print(suffix_str,info["suffix"],motif)
-        thisMSDeail = MSHAP(chr_id=chr_id,
-                            posStart=posStart,
-                            posEnd=posEnd,
+        thisMSDeail = MSHAP(chrom=chrom,
+                            pos_start=pos_start,
+                            pos_end=pos_end,
                             motif=info["motif"],
-                            motifLen=motifLen,
-                            repeat_times=int(info["repeatTimes"]),
-                            queryStart=queryStart,
-                            queryEnd=queryEnd,
-                            bamfile=args["input"],
-                            input_format=input_format,
-                            reference=reference,
-                            prefix=info['prefix'],
-                            suffix=info['suffix'],
-                            prefix_str=prefix_str,
-                            suffix_str=suffix_str,
-                            fapath=args["reference"],
+                            motif_len=motif_len,
+                            repeat_times=repeat_times,
+                            bam_path=args["input"],
+                            # input_format=input_format,
+
+                            # prefix_str=prefix_str,
+                            # suffix_str=suffix_str,
+                            reference_path=args["reference"],
                             )
         tmpWindow.append(thisMSDeail)
-        curentMSNum += 1
-        # if curentMSNum < 16000 and args["debug"]:
-        #     continue
-        # break
-        if curentMSNum % (batch * thread) == 0:
-            print("[INFO] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
-                  "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
-            result_list = bm_multiRun(thread=thread, datalist=tmpWindow)
-            # write_vcf(outputfile, result_list)
-            tmpWindow = []
+
+    if curentMSNum % (batch * thread) == 0:
+        print("[INFO] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
+              "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
+        result_list = bm_multiRun(thread=thread, datalist=tmpWindow)
+        bm_write_vcf(outputfile, result_list)
+        tmpWindow = []
     result_list = bm_multiRun(thread=thread, datalist=tmpWindow)
     fafile.close()
-    # write_vcf(outputfile, result_list)
-    # write_vcf_close(outputfile)
+    bm_write_vcf(outputfile, result_list)
+    bm_write_vcf_close(outputfile)
     print("[INFO] Bam2dis: Total", ms_number, "microsatelite, finish all!")
 
 
 def benchmark(parase):
-    print("1")
     if benchmark_init(parase):
         args = get_value("paras")
         getDis(args)

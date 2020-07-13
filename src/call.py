@@ -1,11 +1,11 @@
-# =============================================================================
-# Project : MShunter0.0.1
-# Py Name: call.py
-# Author :
-# Date : 20-05-25
-# Email : pengjia@stu.xjtu.edu.cn
-# Description : ''
-# =============================================================================
+"""==============================================================================
+# Project: MSHunter
+# Script : call.py
+# Author : Peng Jia
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: TODO
+=============================================================================="""
 
 from src.units import *
 from src.global_dict import *

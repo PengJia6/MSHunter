@@ -8,6 +8,8 @@
 # =============================================================================
 import numpy as np
 import time
+import pandas as pd
+from src.global_dict import *
 
 
 def removeZeroDict(dict):
@@ -92,3 +94,79 @@ if __name__ == "__main__":
     print(getDisdistance2(dict1, dict2))
     print(getDisdistance3(dict1, dict2))
     # getDisdistance(dict2,dict1)
+
+
+def load_microsatellites(args):
+    """
+    :return:
+    """
+    print("[INFO] Loading microsatellite file...")
+    ms = args["microsatellite"]
+    separator = args["separator"]
+    # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
+    if separator == "comma":
+        dfMicroSatellites = pd.read_csv(ms, index_col=0)
+        # print(dfMicroSatellites.columns)
+    elif separator == "tab":
+        dfMicroSatellites = pd.read_table(ms, header=0)
+        columns = dfMicroSatellites.columns
+        if "chromosome" in columns:
+            dfMicroSatellites.rename(columns={"chromosome": "chr"}, inplace=True)
+            # dfMicroSatellites["chr"] = dfMicroSatellites["chromosome"]
+            # del dfMicroSatellites["chromosome"]
+        if "location" in columns:
+            dfMicroSatellites.rename(columns={"location": "pos"}, inplace=True)
+            # dfMicroSatellites["pos"] = dfMicroSatellites["location"]
+            # del dfMicroSatellites["location"]
+        if "repeat_unit_bases" in columns:
+            dfMicroSatellites.rename(columns={"repeat_unit_bases": "motif"}, inplace=True)
+            # dfMicroSatellites["motif"] = dfMicroSatellites["repeat_unit_bases"]
+            # del dfMicroSatellites["repeat_unit_bases"]
+        if "repeat_unit_length" in columns:
+            dfMicroSatellites.rename(columns={"repeat_unit_length": "motifLen"}, inplace=True)
+            # dfMicroSatellites["motifLen"] = dfMicroSatellites["repeat_unit_length"]
+            # del dfMicroSatellites["repeat_unit_length"]
+        if "repeat_times" in columns:
+            dfMicroSatellites.rename(columns={"repeat_times": "repeatTimes"}, inplace=True)
+            # dfMicroSatellites["repeatTimes"] = dfMicroSatellites["repeat_times"]
+            # del dfMicroSatellites["repeat_times"]
+        if "left_flank_bases" in columns:
+            dfMicroSatellites.rename(columns={"left_flank_bases": "prefix"}, inplace=True)
+            # dfMicroSatellites["prefix"] = dfMicroSatellites["left_flank_bases"]
+            # del dfMicroSatellites["left_flank_bases"]
+        if "right_flank_bases" in columns:
+            dfMicroSatellites.rename(columns={"right_flank_bases": "suffix"}, inplace=True)
+            # dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
+            # del dfMicroSatellites["right_flank_bases"]
+        # dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
+    elif separator == "space":
+        dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
+    chromList = get_value("chrom_list")
+    dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
+    if args["only_homopolymer"]:
+        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
+
+    repeatRange = args["ranges_of_repeat_times"]
+    repeatUnitList = sorted(repeatRange.keys())
+
+    newDf = pd.DataFrame()
+    for ul in repeatUnitList:
+        minr = repeatRange[ul]["min"]
+        maxr = repeatRange[ul]["max"]
+        newDf = pd.concat([newDf, dfMicroSatellites[(dfMicroSatellites["motifLen"] == ul) &
+                                                    (dfMicroSatellites["repeatTimes"] >= minr) &
+                                                    (dfMicroSatellites["repeatTimes"] <= maxr)
+                                                    ]])
+    if args["debug"]:
+        locis_num = 80000
+        newDf = newDf.iloc[100:locis_num + 100, :]
+        # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
+        # if len(newDf) > locis_num:
+        #     newDf = newDf.sample(locis_num)
+    newDf.sort_index(inplace=True)
+
+    print("[INFO] There are total", len(newDf), "microsatellites.")
+    set_value("ms_number", len(newDf))
+    set_value("motifList", set(newDf["motif"]))
+    # print(set(newDf["motif"]))
+    return newDf

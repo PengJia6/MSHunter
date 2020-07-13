@@ -1,11 +1,11 @@
-# =============================================================================
-# Project : mstools-0.0.1
-# Py Name: global_dict
+"""==============================================================================
+# Project: MSHunter
+# Script : global_dict.py
 # Author : Peng Jia
-# Date : 20-05-26
-# Email : pengjia@stu.xjtu.edu.cn
-# Description : 'For global variable'
-# =============================================================================
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: Define global variables
+=============================================================================="""
 
 def global_init():
     global _global_dict
@@ -55,6 +55,26 @@ def global_init():
             "minimum_phasing_reads": 3,
             "tech": "ccs",
             "hap": True,
+        },
+        "benchmark": {
+            "reference": ".",
+            "threads": 4,
+            "minimum_mapping_quality": 1,
+            "minimum_support_reads": 2,
+            "batch": 2000,
+            "debug": False,
+            "separator": "tab",  # comma,tab,space
+            "only_homopolymers": False,
+            "allow_mismatch": True,
+            "minimum_repeat_times": "1:8;2-5:5",
+            "maximum_repeat_times": "1-5:100",
+            "prefix_len": 500,
+            "suffix_len": 500,
+            "kmer_size": 5,
+            "minimum_phasing_reads": 3,
+            "tech": "ccs",
+            "hap": True,
+            "only_microsatellites":True
         },
 
     }

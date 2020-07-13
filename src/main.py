@@ -26,6 +26,7 @@ def args_process():
     """
     defaultPara = get_value("default")
     defaultPara_gt = defaultPara["genotype"]
+    defaultPara_bm = defaultPara["benchmark"]
     commands = ["genotype", "benchmark"]
     commandsParser = {}
     parser = argparse.ArgumentParser(description='mstools: Microsatellite genotyping toolbox.'
@@ -150,77 +151,83 @@ def args_process():
     bm_input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
                                      help="The path of reference file fa/fasta[required]")
     bm_input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
-                                     default=[defaultPara_gt["separator"]],
+                                     default=[defaultPara_bm["separator"]],
                                      help='Separator for microsatellites file [default:'
-                                          + str(defaultPara_gt["separator"]) + ']')
+                                          + str(defaultPara_bm["separator"]) + ']')
     ##################################################################################
     # group read realignment
     bm_general_realign = parser_bm.add_argument_group(title="Read realignment")
     bm_general_realign.add_argument('-pl', '--prefix_len', type=int, nargs=1,
-                                    default=[defaultPara_gt["prefix_len"]],
+                                    default=[defaultPara_bm["prefix_len"]],
                                     help="Debug mode for developers [default:" +
-                                         str(defaultPara_gt["prefix_len"]) + "]")
+                                         str(defaultPara_bm["prefix_len"]) + "]")
     bm_general_realign.add_argument('-sl', '--suffix_len', type=int, nargs=1,
-                                    default=[defaultPara_gt["suffix_len"]],
+                                    default=[defaultPara_bm["suffix_len"]],
                                     help="Debug mode for developers [default:" +
-                                         str(defaultPara_gt["suffix_len"]) + "]")
+                                         str(defaultPara_bm["suffix_len"]) + "]")
     bm_general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
-                                    default=[defaultPara_gt["kmer_size"]],
+                                    default=[defaultPara_bm["kmer_size"]],
                                     help="Debug mode for developers [default:" +
-                                         str(defaultPara_gt["kmer_size"]) + "]")
+                                         str(defaultPara_bm["kmer_size"]) + "]")
 
     ##################################################################################
     # group general option
     bm_general_option = parser_bm.add_argument_group(title="General option")
     bm_general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
-                                   default=[defaultPara_gt["debug"]],
+                                   default=[defaultPara_bm["debug"]],
                                    help="Debug mode for developers [default:" +
-                                        str(defaultPara_gt["debug"]) + "]")
+                                        str(defaultPara_bm["debug"]) + "]")
     bm_general_option.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, choices=[True, False],
-                                   default=[defaultPara_gt["only_homopolymers"]],
+                                   default=[defaultPara_bm["only_homopolymers"]],
                                    help="Only analyze homopolymer regions [default:"
-                                        + str(defaultPara_gt["only_homopolymers"]) + "]")
+                                        + str(defaultPara_bm["only_homopolymers"]) + "]")
+    bm_general_option.add_argument('-om', '--only_microsatellites', type=int, nargs=1, choices=[True, False],
+                                   default=[defaultPara_bm["only_microsatellites"]],
+                                   help="True, only detect variants in microsatelite microsatellite region;"
+                                        " False, also detect upstream and downstream variants [default:"
+                                        + str(defaultPara_bm["only_microsatellites"]) + "]")
     bm_general_option.add_argument("-minr", '--minimum_repeat_times',
-                                   default=[defaultPara_gt["minimum_repeat_times"]],
+                                   default=[defaultPara_bm["minimum_repeat_times"]],
                                    type=str, nargs=1,
                                    help="Minimum repeat times of microsatellites [default:"
-                                        + defaultPara_gt["minimum_repeat_times"] + "]")
+                                        + defaultPara_bm["minimum_repeat_times"] + "]")
     bm_general_option.add_argument('-maxr', '--maximum_repeat_times',
-                                   default=[defaultPara_gt["maximum_repeat_times"]], type=str, nargs=1,
+                                   default=[defaultPara_bm["maximum_repeat_times"]], type=str, nargs=1,
                                    help="Maximum repeat times of microsatellites [default:"
-                                        + defaultPara_gt["maximum_repeat_times"] + "]")
+                                        + defaultPara_bm["maximum_repeat_times"] + "]")
     bm_general_option.add_argument('-minh', '--minimum_phasing_reads',
-                                   default=[defaultPara_gt["minimum_phasing_reads"]], type=str, nargs=1,
+                                   default=[defaultPara_bm["minimum_phasing_reads"]], type=str, nargs=1,
                                    help="Minimum reads for each haplotype reporting [default:"
-                                        + str(defaultPara_gt["minimum_phasing_reads"]) + "]")
+                                        + str(defaultPara_bm["minimum_phasing_reads"]) + "]")
+
     ##################################################################################
     # group for bam2dis
     bm_bam2dis_option = parser_bm.add_argument_group(title="Option for bam2dis")
     bm_bam2dis_option.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1,
-                                   default=[defaultPara_gt["minimum_mapping_quality"]],
+                                   default=[defaultPara_bm["minimum_mapping_quality"]],
                                    help="minimum mapping quality of read [default:" +
-                                        str(defaultPara_gt["minimum_mapping_quality"]) + "]")
+                                        str(defaultPara_bm["minimum_mapping_quality"]) + "]")
     bm_bam2dis_option.add_argument('-s', '--minimum_support_reads', type=int, nargs=1,
-                                   default=[defaultPara_gt["minimum_support_reads"]],
+                                   default=[defaultPara_bm["minimum_support_reads"]],
                                    help="minimum support reads of an available microsatellite [default:" +
-                                        str(defaultPara_gt["minimum_support_reads"]) + "]")
+                                        str(defaultPara_bm["minimum_support_reads"]) + "]")
     bm_bam2dis_option.add_argument('-am', '--allow_mismatch', type=bool, nargs=1, choices=[True, False],
-                                   default=[defaultPara_gt["allow_mismatch"]],
+                                   default=[defaultPara_bm["allow_mismatch"]],
                                    help="allow mismatch when capture microsatellite [default:"
-                                        + str(defaultPara_gt["allow_mismatch"]) + "]")
+                                        + str(defaultPara_bm["allow_mismatch"]) + "]")
 
     ##################################################################################
     # group for multiple_thread
 
     multiple_thread = parser_bm.add_argument_group(title="Multiple thread")
     multiple_thread.add_argument('-t', '--threads', type=int, nargs=1,
-                                 default=[defaultPara_gt["threads"]],
+                                 default=[defaultPara_bm["threads"]],
                                  help="The number of  threads to use [default:" +
-                                      str(defaultPara_gt["threads"]) + "]")
+                                      str(defaultPara_bm["threads"]) + "]")
     multiple_thread.add_argument('-b', '--batch', type=int, nargs=1,
-                                 default=[defaultPara_gt["batch"]],
+                                 default=[defaultPara_bm["batch"]],
                                  help="The number of microsatellite one thread process [default:" +
-                                      str(defaultPara_gt["batch"]) + "]")
+                                      str(defaultPara_bm["batch"]) + "]")
 
     commandsParser["benchmark"] = parser_bm
 

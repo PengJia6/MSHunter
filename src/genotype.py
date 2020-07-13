@@ -1,3 +1,11 @@
+"""==============================================================================
+# Project: MSHunter
+# Script : genotype.py
+# Author : Peng Jia
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: TODO
+=============================================================================="""
 import os
 from src.bam2dis import *
 from src.call import *
