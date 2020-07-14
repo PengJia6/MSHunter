@@ -1,11 +1,13 @@
-# =============================================================================
-# Project : MShunter0.0.1
-# Py Name: ScanMicrosatellites
-# Author : units.py
-# Date : 20-05-25
-# Email : pengjia@stu.xjtu.edu.cn
-# Description : ''
-# =============================================================================
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""==============================================================================
+# Project: MSHunter
+# Script : units.py
+# Author : Peng Jia
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: Useful functions
+=============================================================================="""
 import numpy as np
 import time
 import pandas as pd
@@ -98,7 +100,10 @@ if __name__ == "__main__":
 
 def load_microsatellites(args):
     """
-    :return:
+    Args:
+        args ():
+
+    Returns:
     """
     print("[INFO] Loading microsatellite file...")
     ms = args["microsatellite"]
@@ -170,3 +175,18 @@ def load_microsatellites(args):
     set_value("motifList", set(newDf["motif"]))
     # print(set(newDf["motif"]))
     return newDf
+
+
+def get_max_support_index(input_dict):
+    """
+    @param input_dict: dict value with float or int type
+    @type input_dict: dict
+    @return: key of the max value
+    @rtype: float / int
+    """
+    m = max(input_dict.keys(), key=(lambda x: input_dict[x]))
+    return m
+if __name__ =="__main__":
+    a=get_max_support_index({1:5,6:40,3:2})
+    a=get_max_support_index({})
+    print(a)

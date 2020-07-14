@@ -14,24 +14,42 @@ import collections
 import pysam
 import multiprocessing
 from src.global_dict import *
-from src.units import load_microsatellites
-
-
-# from src.call import *
-# from src.errEval import *
+from src.units import *
 
 
 class MSHAP:
     # TODO : normalize the argument
     # TODO : finished all member variables
     """
-      chrom : chromsome
-      pos_start: start position of microsatellite
-      motif: repeat unit of microsatellite 
-      motif_len = repeat unit length of microsatellite
-      repeat_times =  the repeat times of microsatellite
-      pos_end :end position of microsatellite
-      bam_path: bam file path
+    @chrom : chromsome
+    @pos_start: start position of microsatellite
+    @motif: repeat unit of microsatellite
+    @motif_len = repeat unit length of microsatellite
+    @repeat_times =  the repeat times of microsatellite
+    @pos_end :end position of microsatellite
+    @bam_path: bam file path
+    @reference_path: reference path
+    @start_pre: start pos of this call, default 10bp upstream the microsatellite
+    @end_suf:  start pos of this call, default 10bp downstream the microsatellite
+    @ref_repeat_length: the reference repeat length
+    @prefix_len: how many bps to detect upstream
+    @suffix_len = how many bps to detect downstream
+    @repeat_length_dis: repeat length distribution
+    @query_repeat_length： the repeat length supported by the most reads
+    dis_stat: True, at least one read covered this microsatellite
+    more_than_one_alleles: more than one reads covered this microsatellite, and have more alleles
+    more_than_one_alleles_ms: more than one reads covered this microsatellite, and have more alleles in microsatellite region
+    check: True, could be used as benchmark
+    check_stats: Why do not be applied as benchmark
+    mismatch: position of mishmatch
+    ms_var_type: variant type in ms region (DEL,INS,SNP)
+    up_var_type: variant type in upstream of ms region (DEL,INS,SNP)
+    down_var_type: variant type in downstream of ms region (DEL,INS,SNP)
+    microsatellite_id = ""
+    ref_str = ""
+    alt_str = ""
+    depth = 0
+
     """
     chrom = ""
     pos_start = 0
@@ -44,8 +62,8 @@ class MSHAP:
     start_pre = 0
     end_suf = 0
     ref_repeat_length = 0
-    prefix_len = 10  # TODO add in command
-    suffix_len = 10  # TODO add in command
+    prefix_len = 0
+    suffix_len = 0
     repeat_length_dis = {}
     query_repeat_length = 0
     dis_stat = False
@@ -53,16 +71,19 @@ class MSHAP:
     more_than_one_alleles_ms = False
     check = True
     check_stats = []
-    ms_mismatch = []
+    mismatch = []
     ms_var_type = []
-    mutation_id = ""
+    up_var_type = []
+    down_var_type = []
+    mirosatellite_id = ""
     ref_str = ""
     alt_str = ""
-    low_support = False
     depth = 0
 
     def __init__(self, chrom, pos_start, pos_end, motif, motif_len, repeat_times,
-                 bam_path, reference_path):
+                 bam_path, reference_path,
+                 prefix_len=0,
+                 suffix_len=0):
         """
         @param chrom: chromsome
         @param pos_start: start position
@@ -72,8 +93,10 @@ class MSHAP:
         @param repeat_times: repeat times
         @param bam_path: bam path
         @param reference_path: reference path
+        @prefix_len: {prefix_len} bps upstream of microsatellite to analysis
+        @suffix_len: {suffix_len} bps downstream of microsatellite to analysis
         """
-        self.chrom = chrom
+        self.chrom = str(chrom)
         self.pos_start = pos_start
         self.motif = motif
         self.motif_len = motif_len
@@ -84,11 +107,13 @@ class MSHAP:
         self.start_pre = pos_start - self.prefix_len
         self.end_suf = pos_end + self.suffix_len
         self.ref_repeat_length = repeat_times * motif_len
+        self.mirosatellite_id = chrom + "_" + str(pos_start)
+        self.prefix_len = prefix_len
+        self.suffix_len = suffix_len
 
     def get_reads_alignment(self, bam_file):
 
         alignment_list = [alignment for alignment in bam_file.fetch(self.chrom, self.pos_start - 1, self.pos_end + 1)]
-        # bam_file.close()
         reads_com = []
         for alignment in alignment_list:
             if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary:
@@ -153,29 +178,36 @@ class MSHAP:
             repeat_length_dict[repeat_length] += 1
         self.repeat_length_dis = repeat_length_dict
         self.depth = len(repeat_length_dict)
-        if self.depth > 1:
-            self.more_than_one_alleles = True
-            self.more_than_one_alleles_ms = True
-            self.check = False
-            self.check_stats.append("More_alleles_in_MS")
-        if len(repeat_length_dict) > 0:
-            self.query_repeat_length = list(repeat_length_dict.values())[0]
-            self.dis_stat = True
-        else:
+        if self.depth < 1:
             self.check = False
             self.check_stats.append("No_read_covered")
+        else:
+            self.dis_stat = True
+            print(repeat_length_dict)
+            self.query_repeat_length = get_max_support_index(repeat_length_dict)
+            if self.depth > 1:
+                self.more_than_one_alleles = True
+                self.more_than_one_alleles_ms = True
+                self.check = False
+                self.check_stats.append("More_alleles_in_MS")
+
         if not self.check:
             self.ms_var_type.append("Fuzzy")
             return -1
-
         fa_file = pysam.FastaFile(self.reference_path)
-        pos = self.pos_start
+
+        self.ref_str = fa_file.fetch(self.chrom, self.start_pre, self.end_suf)
+        fa_file.close()
+        pos = self.start_pre
         segment_pos = 0
-        self.ref_str = fa_file.fetch(self.chrom, self.pos_start, self.pos_end)
+        # TODO process the prefix and suffix mutation
         alt_str = []
+        pos_del = []
+        pos_ins = []
+        pos_snp = []
         for pot in bam_file.pileup(self.chrom,
-                                   self.pos_start,
-                                   self.pos_end,
+                                   self.start_pre,
+                                   self.end_suf,
                                    truncate=True,
                                    fastafile=fa_file):
             pot_alleles = list(set(map(lambda x: x.upper(),
@@ -187,33 +219,41 @@ class MSHAP:
                 alt_str.append(self.ref_str[segment_pos])
             elif pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
                 alt_str.append(pot_alleles[0][0][0])
-                self.ms_mismatch.append([pos, pot_alleles[0][0][0], fa.fetch(self.chrom, pos, pos + 1)])
-            if len(pot_alleles[0][0]) > 1 and pot_alleles[0][0][1] == "+":
-                p = re.compile("[\\+\\-][0-9]+")
-                indel_f = p.findall(pot_alleles[0][0])[0]
-                # print(indel_type,indelf)
-                indel_len = int(indel_f[1:])
-                indel_str = pot_alleles[0][0][-indel_len:]
-                alt_str.append(indel_str)
+                self.mismatch.append([pos, pot_alleles[0][0][0], self.ref_str[segment_pos]])
+            if len(pot_alleles[0][0]) > 1:
+                if pot_alleles[0][0][1] == "+":
+                    p = re.compile("[\\+\\-][0-9]+")
+                    indel_f = p.findall(pot_alleles[0][0])[0]
+                    indel_len = int(indel_f[1:])
+                    indel_str = pot_alleles[0][0][-indel_len:]
+                    alt_str.append(indel_str)
+                else:
+                    p = re.compile("[\\+\\-][0-9]+")
+                    indel_f = p.findall(pot_alleles[0][0])[0]
+                    # print(indel_type,indelf)
+                    indel_len = int(indel_f[1:])
+                    indel_str = pot_alleles[0][0][-indel_len:]
+                    alt_str.append(indel_str)
                 # print("indser",pot_alleles)
             pos += 1
             segment_pos += 1
         bam_file.close()
         self.alt_str = "".join(alt_str)
+
         if self.ref_repeat_length != self.query_repeat_length:
             indel_type = "DEL" if self.ref_repeat_length > self.query_repeat_length else "INS"
-            if len(self.ms_mismatch) > 0:
+            if len(self.mismatch) > 0:
                 self.ms_var_type.append("Complex")
                 self.ms_var_type.append(indel_type)
                 self.ms_var_type.append("SNP")
             else:
                 self.ms_var_type.append(indel_type)
         else:
-            if len(self.ms_mismatch) > 0:
+            if len(self.mismatch) > 0:
                 self.ms_var_type.append("SNP")
             else:
                 self.ms_var_type.append("None")
-        print(self.ref_str,self.alt_str)
+        print(self.ref_str, self.alt_str)
 
     def compile(self, pots):
         seq = []
@@ -405,8 +445,7 @@ class MSHAP:
 
         ref_start, read_start = self.pos_convert_ref2read(ref_block, read_block, self.pos_start, direction="start")
         ref_end, read_end = self.pos_convert_ref2read(ref_block, read_block, self.pos_end, direction="end")
-        rpt = self.repeat_times * self.motif_len + ((read_end - read_start) - (ref_end - ref_start))
-
+        rpt = self.ref_repeat_length + ((read_end - read_start) - (ref_end - ref_start))
         return rpt
 
     def dis_sum(self, dict_list):
@@ -493,7 +532,6 @@ def benchmark_init(args):
     paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
     paras["only_microsatellites"] = args.only_microsatellites[0]
-
     paras["ranges_of_repeat_times"] = {}
 
     for i in args.minimum_repeat_times[0].split(";"):
@@ -667,13 +705,13 @@ def bm_write_vcf(outputfile, dataList):
 
 
 def bm_multiRun(thread, datalist):
-    pool = multiprocessing.Pool(processes=thread)
-    result_list = pool.map(bm_processOneMs, datalist)
-    pool.close()
-    pool.join()
-    # result_list = []
-    # for ms in datalist:
-    #     result_list.append(bm_processOneMs(ms))
+    # pool = multiprocessing.Pool(processes=thread)
+    # result_list = pool.map(bm_processOneMs, datalist)
+    # pool.close()
+    # pool.join()
+    result_list = []
+    for ms in datalist:
+        result_list.append(bm_processOneMs(ms))
 
     # print("input",len(datalist))
     # print("output",len(result_list))
@@ -681,22 +719,23 @@ def bm_multiRun(thread, datalist):
     return result_list
 
 
-def getDis(args={}, upstreamLen=5, downstreamLen=5):
+def benchmark(parase):
+    if not benchmark_init(parase):
+        return -1
+        # return if the process the arguments errors
+    args = get_value("paras")
     dis = args["output_dis"]
-    input_format = args["input_format"]
     thread = args["threads"]
     batch = args["batch"]
     outputfile = bm_write_vcf_init(dis)
     contigs_info = get_value("contigsInfo")
-    dfMicroSatellites = load_microsatellites(args)
+    df_microsatellites = load_microsatellites(args)
     curentMSNum = 0
-    tmpWindow = []
+    tmp_window = []
     ms_number = get_value("ms_number")
-    fafile = pysam.FastaFile(args["reference"])
-    prefix_len = args["prefix_len"]
-    suffix_len = args["suffix_len"]
-    # print(len(dfMicroSatellites))
-    for ms_id, info in dfMicroSatellites.iterrows():
+    prefix_len = get_value("default")["benchmark"]["prefix_len"]
+    suffix_len = get_value("default")["benchmark"]["suffix_len"]
+    for ms_id, info in df_microsatellites.iterrows():
         curentMSNum += 1
         # if curentMSNum < 40000 and args["debug"]:
         #     continue
@@ -708,42 +747,27 @@ def getDis(args={}, upstreamLen=5, downstreamLen=5):
         motif = info["motif"]
         motif_len = len(motif)
         pos_end = pos_start + motif_len * repeat_times
-        # queryStart = pos_start - upstreamLen
-        # queryEnd = pos_end + downstreamLen
-        # prefix_str = fafile.fetch(chrom, pos_start - prefix_len, pos_start)
-        # suffix_str = fafile.fetch(chrom, pos_end, pos_end + suffix_len)
-        # print(prefix_str,info["prefix"],motif)
-        # print(suffix_str,info["suffix"],motif)
-        thisMSDeail = MSHAP(chrom=chrom,
-                            pos_start=pos_start,
-                            pos_end=pos_end,
-                            motif=info["motif"],
-                            motif_len=motif_len,
-                            repeat_times=repeat_times,
-                            bam_path=args["input"],
-                            # input_format=input_format,
-
-                            # prefix_str=prefix_str,
-                            # suffix_str=suffix_str,
-                            reference_path=args["reference"],
-                            )
-        tmpWindow.append(thisMSDeail)
+        this_ms_bm = MSHAP(chrom=chrom,
+                           pos_start=pos_start,
+                           pos_end=pos_end,
+                           motif=info["motif"],
+                           motif_len=motif_len,
+                           repeat_times=repeat_times,
+                           bam_path=args["input"],
+                           reference_path=args["reference"],
+                           prefix_len=prefix_len,
+                           suffix_len=suffix_len
+                           )
+        tmp_window.append(this_ms_bm)
 
     if curentMSNum % (batch * thread) == 0:
-        print("[INFO] Bam2dis: Total", ms_number, "microsatelite, processing:", curentMSNum - batch * thread + 1,
+        print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, processing:",
+              curentMSNum - batch * thread + 1,
               "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
-        result_list = bm_multiRun(thread=thread, datalist=tmpWindow)
+        result_list = bm_multiRun(thread=thread, datalist=tmp_window)
         bm_write_vcf(outputfile, result_list)
-        tmpWindow = []
-    result_list = bm_multiRun(thread=thread, datalist=tmpWindow)
-    fafile.close()
+        tmp_window = []
+    result_list = bm_multiRun(thread=thread, datalist=tmp_window)
     bm_write_vcf(outputfile, result_list)
     bm_write_vcf_close(outputfile)
-    print("[INFO] Bam2dis: Total", ms_number, "microsatelite, finish all!")
-
-
-def benchmark(parase):
-    if benchmark_init(parase):
-        args = get_value("paras")
-        getDis(args)
-        print("hhh")
+    print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, finish all!")

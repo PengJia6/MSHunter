@@ -1,11 +1,13 @@
-# =============================================================================
-# Project : MShunter0.0.1
-# Py Name: ScanMicrosatellites
-# Author: main.py
-# Date : 20-05-25
-# Email : pengjia@stu.xjtu.edu.cn
-# Description : ''
-# =============================================================================
+#!/usr/bin/env python
+# -*- coding: UTF-8 -*-
+"""==============================================================================
+# Project: MSHunter
+# Script : main.py
+# Author : Peng Jia
+# Date   : 2020.07.13
+# Email  : pengjia@stu.xjtu.edu.cn
+# Description: main function and arguments processing
+=============================================================================="""
 import argparse
 import os
 import sys
@@ -156,19 +158,12 @@ def args_process():
                                           + str(defaultPara_bm["separator"]) + ']')
     ##################################################################################
     # group read realignment
-    bm_general_realign = parser_bm.add_argument_group(title="Read realignment")
-    bm_general_realign.add_argument('-pl', '--prefix_len', type=int, nargs=1,
-                                    default=[defaultPara_bm["prefix_len"]],
-                                    help="Debug mode for developers [default:" +
-                                         str(defaultPara_bm["prefix_len"]) + "]")
-    bm_general_realign.add_argument('-sl', '--suffix_len', type=int, nargs=1,
-                                    default=[defaultPara_bm["suffix_len"]],
-                                    help="Debug mode for developers [default:" +
-                                         str(defaultPara_bm["suffix_len"]) + "]")
-    bm_general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
-                                    default=[defaultPara_bm["kmer_size"]],
-                                    help="Debug mode for developers [default:" +
-                                         str(defaultPara_bm["kmer_size"]) + "]")
+    # bm_general_realign = parser_bm.add_argument_group(title="Read realignment")
+    #
+    # bm_general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
+    #                                 default=[defaultPara_bm["kmer_size"]],
+    #                                 help="Debug mode for developers [default:" +
+    #                                      str(defaultPara_bm["kmer_size"]) + "]")
 
     ##################################################################################
     # group general option
@@ -181,6 +176,14 @@ def args_process():
                                    default=[defaultPara_bm["only_homopolymers"]],
                                    help="Only analyze homopolymer regions [default:"
                                         + str(defaultPara_bm["only_homopolymers"]) + "]")
+    bm_general_option.add_argument('-pl', '--prefix_len', type=int, nargs=1,
+                                    default=[defaultPara_bm["prefix_len"]],
+                                    help=" {prefix_len} bps upstream of microsatellite to analysis [default:" +
+                                         str(defaultPara_bm["prefix_len"]) + "]")
+    bm_general_option.add_argument('-sl', '--suffix_len', type=int, nargs=1,
+                                    default=[defaultPara_bm["suffix_len"]],
+                                    help=" {suffix_len} bps downstream of microsatellite to analysis [default:" +
+                                         str(defaultPara_bm["suffix_len"]) + "]")
     bm_general_option.add_argument('-om', '--only_microsatellites', type=int, nargs=1, choices=[True, False],
                                    default=[defaultPara_bm["only_microsatellites"]],
                                    help="True, only detect variants in microsatelite microsatellite region;"
