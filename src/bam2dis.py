@@ -492,7 +492,7 @@ def write_vcf(outputfile, dataList):
         vcfrec.info["repeatTimes"] = msDetail.repeatTimes
         vcfrec.info["prefix"] = msDetail.prefix
         vcfrec.info["suffix"] = msDetail.suffix
-        vcfrec.info["depth"] = "|".join(list(map(str, [msDetail.depth, msDetail.depth_hap1, msDetail.depth_hap2])))
+        vcfrec.info["depth"] = "|".join(list(map(str, [msDetail.allele, msDetail.depth_hap1, msDetail.depth_hap2])))
         vcfrec.info["support_reads"] = "|".join(list(map(str, [msDetail.support_reads,
                                                                msDetail.support_reads_hap1,
                                                                msDetail.support_reads_hap2])))

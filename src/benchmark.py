@@ -17,6 +17,80 @@ from src.global_dict import *
 from src.units import *
 
 
+class MutationType:
+    """
+    pos_del_prefix: deletion position in prefix
+    pos_del_ms:  deletion position in ms region
+    pos_del_suffix: deletion position in suffix
+    pos_ins_prefix: insertion position in prefix
+    pos_ins_suffix: insertion position in suffix
+    pos_ins_ms: insertion position in ms region
+    pos_snp_prefix: mismatch position in prefix
+    pos_snp_ms: mismatch position in ms regions
+    pos_snp_suffix: mismatch position in suffix
+    var_type_prefix: variant type in prefix
+    var_type_suffix: variant type in suffix
+    var_type_ms: variant type in ms region
+    var_type: variant type in all region
+    var_list: variant type list
+    """
+    pos_del_prefix = []
+    pos_del_ms = []
+    pos_del_suffix = []
+    pos_ins_prefix = []
+    pos_ins_suffix = []
+    pos_ins_ms = []
+    pos_snp_prefix = []
+    pos_snp_ms = []
+    pos_snp_suffix = []
+    var_type_prefix = []
+    var_type_suffix = []
+    var_type_ms = []
+    var_type = ""
+    var_type_list = []
+
+    def __init__(self):
+        pass
+
+    def prefix_var_type(self):
+        if len(self.pos_del_prefix) > 0:
+            self.var_type_prefix.append("DEL")
+        if len(self.pos_ins_prefix) > 0:
+            self.var_type_prefix.append("INS")
+        if len(self.pos_snp_prefix) > 0:
+            self.var_type_prefix.append("SNV")
+
+    def suffix_var_type(self):
+        if len(self.pos_del_suffix) > 0:
+            self.var_type_suffix.append("DEL")
+        if len(self.pos_ins_suffix) > 0:
+            self.var_type_suffix.append("INS")
+        if len(self.pos_snp_suffix) > 0:
+            self.var_type_suffix.append("SNV")
+
+    def ms_var_type(self, offset):
+        if offset < 0:
+            self.var_type_ms.append("DEL")
+        if offset > 0:
+            self.var_type_ms.append("INS")
+        if len(self.pos_snp_ms) > 0:
+            self.var_type_ms.append("SNV")
+
+    def comput(self, offset):
+        self.ms_var_type(offset)
+        self.prefix_var_type()
+        self.suffix_var_type()
+        self.var_type_list = self.var_type_prefix + self.var_type_ms + self.var_type_suffix
+        var_num = len(self.var_type_list)
+
+        if var_num > 1:
+            self.var_type = "Complex"
+        elif var_num == 1:
+            self.var_type = self.var_type_list[0]
+        else:
+            self.var_type = "None"
+
+
 class MSHAP:
     # TODO : normalize the argument
     # TODO : finished all member variables
@@ -45,10 +119,13 @@ class MSHAP:
     ms_var_type: variant type in ms region (DEL,INS,SNP)
     up_var_type: variant type in upstream of ms region (DEL,INS,SNP)
     down_var_type: variant type in downstream of ms region (DEL,INS,SNP)
-    microsatellite_id = ""
-    ref_str = ""
-    alt_str = ""
-    depth = 0
+    microsatellite_id: microsatellite_id (chrom_pos)
+    ref_str: reference string
+    alt_str: alternative string
+    allele: allele in this haplotype
+    mut_start: mutation start
+    mut_end: mutation end
+
 
     """
     chrom = ""
@@ -71,14 +148,12 @@ class MSHAP:
     more_than_one_alleles_ms = False
     check = True
     check_stats = []
-    mismatch = []
-    ms_var_type = []
-    up_var_type = []
-    down_var_type = []
     mirosatellite_id = ""
-    ref_str = ""
-    alt_str = ""
-    depth = 0
+    ref_str = "."
+    alt_str = "."
+    allele = 0
+    mut_start = 0
+    mut_end = 0
 
     def __init__(self, chrom, pos_start, pos_end, motif, motif_len, repeat_times,
                  bam_path, reference_path,
@@ -104,12 +179,14 @@ class MSHAP:
         self.pos_end = pos_end
         self.bam_path = bam_path
         self.reference_path = reference_path
-        self.start_pre = pos_start - self.prefix_len
-        self.end_suf = pos_end + self.suffix_len
         self.ref_repeat_length = repeat_times * motif_len
         self.mirosatellite_id = chrom + "_" + str(pos_start)
         self.prefix_len = prefix_len
         self.suffix_len = suffix_len
+        self.start_pre = pos_start - self.prefix_len
+        self.end_suf = pos_end + self.suffix_len
+        self.mut_start = pos_start
+        self.mut_end = pos_end
 
     def get_reads_alignment(self, bam_file):
 
@@ -123,53 +200,55 @@ class MSHAP:
             reads_com.append(alignment)
         return reads_com
 
-    def get_dis2(self):
-
-        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb",
-                                       reference_filename=self.reference_path)
-        # print(bam_file.count(self.chrom, start=self.pos_start, stop=self.pos_end))
-        # return 2
-        # print(type(bam_file.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
-
-        variants = {}
-        pos = self.start_pre
-        for pot in bam_file.pileup(self.chrom,
-                                   self.start_pre,
-                                   self.end_suf,
-                                   truncate=True,
-                                   fastafile=pysam.FastaFile(self.reference_path)):
-            # pots.append(pot)
-            pos += 1
-            pot_alleles = list(set(map(lambda x: x.upper(),
-                                       pot.get_query_sequences(mark_matches=True,
-                                                               mark_ends=False,
-                                                               add_indels=True))))
-            pot_alleles = collections.Counter(pot_alleles).most_common()
-            if len(pot_alleles) > 1:
-                self.more_than_one_alleles = True
-            if pot_alleles[0][0] in [",", ".", "*"]:
-                continue
-            if pot_alleles[0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": pot_alleles[0][0]}
-                # print("Mismatch",pot_alleles)
-                continue
-            p = re.compile("[\\+\\-][0-9]+")
-            # print(pot_alleles[0])
-            indelf = p.findall(pot_alleles[0][0])[0]
-            indel_type = "I" if pot_alleles[0][0][1] == "-" else "D"
-            # print(indel_type,indelf)
-            indel_len = int(indelf[1:])
-            indel_str = pot_alleles[0][0][-indel_len:]
-            # print(indel_len,indel_type,indel_str)
-            if pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": pot_alleles[0][0][0], indel_type: [indel_len, indel_str]}
-            else:
-                variants[pos - 1] = {indel_type: [indel_len, indel_str]}
+    # TODO chrck and delete
+    # def get_dis2(self):
+    #
+    #     bam_file = pysam.AlignmentFile(self.bam_path, mode="rb",
+    #                                    reference_filename=self.reference_path)
+    #     # print(bam_file.count(self.chrom, start=self.pos_start, stop=self.pos_end))
+    #     # return 2
+    #     # print(type(bam_file.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
+    #
+    #     variants = {}
+    #     pos = self.start_pre
+    #     for pot in bam_file.pileup(self.chrom,
+    #                                self.start_pre,
+    #                                self.end_suf,
+    #                                truncate=True,
+    #                                fastafile=pysam.FastaFile(self.reference_path)):
+    #         # pots.append(pot)
+    #         pos += 1
+    #         pot_alleles = list(set(map(lambda x: x.upper(),
+    #                                    pot.get_query_sequences(mark_matches=True,
+    #                                                            mark_ends=False,
+    #                                                            add_indels=True))))
+    #         pot_alleles = collections.Counter(pot_alleles).most_common()
+    #         if len(pot_alleles) > 1:
+    #             self.more_than_one_alleles = True
+    #         if pot_alleles[0][0] in [",", ".", "*"]:
+    #             continue
+    #         if pot_alleles[0][0] in ["A", "G", "C", "T"]:
+    #             variants[pos - 1] = {"Mismatch": pot_alleles[0][0]}
+    #             # print("Mismatch",pot_alleles)
+    #             continue
+    #         p = re.compile("[\\+\\-][0-9]+")
+    #         # print(pot_alleles[0])
+    #         indelf = p.findall(pot_alleles[0][0])[0]
+    #         indel_type = "I" if pot_alleles[0][0][1] == "-" else "D"
+    #         # print(indel_type,indelf)
+    #         indel_len = int(indelf[1:])
+    #         indel_str = pot_alleles[0][0][-indel_len:]
+    #         # print(indel_len,indel_type,indel_str)
+    #         if pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
+    #             variants[pos - 1] = {"Mismatch": pot_alleles[0][0][0], indel_type: [indel_len, indel_str]}
+    #         else:
+    #             variants[pos - 1] = {indel_type: [indel_len, indel_str]}
 
     def get_dis(self):
         bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
         repeat_length_dict = {}
         reads = self.get_reads_alignment(bam_file)
+        bam_file.close()
         for alignment in reads:
             repeat_length = self.get_repeat_length(alignment)
             if repeat_length < 0: continue
@@ -177,34 +256,37 @@ class MSHAP:
                 repeat_length_dict[repeat_length] = 0
             repeat_length_dict[repeat_length] += 1
         self.repeat_length_dis = repeat_length_dict
-        self.depth = len(repeat_length_dict)
-        if self.depth < 1:
+        self.allele = len(repeat_length_dict)
+        if self.allele < 1:
+
             self.check = False
             self.check_stats.append("No_read_covered")
         else:
             self.dis_stat = True
-            print(repeat_length_dict)
+            # print(repeat_length_dict)
             self.query_repeat_length = get_max_support_index(repeat_length_dict)
-            if self.depth > 1:
+            if self.allele > 1:
                 self.more_than_one_alleles = True
                 self.more_than_one_alleles_ms = True
                 self.check = False
                 self.check_stats.append("More_alleles_in_MS")
-
         if not self.check:
-            self.ms_var_type.append("Fuzzy")
             return -1
-        fa_file = pysam.FastaFile(self.reference_path)
+        else:
+            return 1
 
+    def get_pileup_info(self):
+        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
+        fa_file = pysam.FastaFile(self.reference_path)
         self.ref_str = fa_file.fetch(self.chrom, self.start_pre, self.end_suf)
         fa_file.close()
-        pos = self.start_pre
-        segment_pos = 0
         # TODO process the prefix and suffix mutation
         alt_str = []
-        pos_del = []
-        pos_ins = []
-        pos_snp = []
+        mut = MutationType()
+        pos = self.start_pre
+        segment_pos = 0
+        left_pos = self.end_suf
+        right_pos = self.start_pre
         for pot in bam_file.pileup(self.chrom,
                                    self.start_pre,
                                    self.end_suf,
@@ -217,122 +299,60 @@ class MSHAP:
             pot_alleles = collections.Counter(pot_alleles).most_common()
             if pot_alleles[0][0][0] in [",", "."]:
                 alt_str.append(self.ref_str[segment_pos])
+            elif pot_alleles[0][0][0] in ["*"]:
+                alt_str.append("")
             elif pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
+                left_pos = min(left_pos, pos)
+                right_pos = max(right_pos, pos)
                 alt_str.append(pot_alleles[0][0][0])
-                self.mismatch.append([pos, pot_alleles[0][0][0], self.ref_str[segment_pos]])
+                if pos < self.pos_start:
+                    mut.pos_snp_prefix.append([pos, pot_alleles[0][0][0], self.ref_str[segment_pos]])
+                elif pos >= self.pos_end:
+                    mut.pos_snp_suffix.append([pos, pot_alleles[0][0][0], self.ref_str[segment_pos]])
+                else:
+                    mut.pos_snp_ms.append([pos, pot_alleles[0][0][0], self.ref_str[segment_pos]])
             if len(pot_alleles[0][0]) > 1:
                 if pot_alleles[0][0][1] == "+":
+                    left_pos = min(left_pos, pos)
+                    right_pos = max(right_pos, pos)
                     p = re.compile("[\\+\\-][0-9]+")
                     indel_f = p.findall(pot_alleles[0][0])[0]
                     indel_len = int(indel_f[1:])
                     indel_str = pot_alleles[0][0][-indel_len:]
                     alt_str.append(indel_str)
+                    if pos < self.pos_start - 1:
+                        mut.pos_ins_prefix.append([pos, indel_str,"."])
+                    elif pos >= self.pos_end:
+                        mut.pos_ins_suffix.append([pos, indel_str,"."]) # TODO
+                    else:
+                        mut.pos_ins_ms.append([pos, indel_str,"."])
                 else:
                     p = re.compile("[\\+\\-][0-9]+")
                     indel_f = p.findall(pot_alleles[0][0])[0]
                     # print(indel_type,indelf)
                     indel_len = int(indel_f[1:])
                     indel_str = pot_alleles[0][0][-indel_len:]
-                    alt_str.append(indel_str)
-                # print("indser",pot_alleles)
+                    # for i in range(pos + 1, pos + indel_len):
+                    #     istr=self.ref_str[segment_pos]
+                    # pos_del.append([i, self.ref_str[segment_pos]])
+                    del_end = pos + 1 + indel_len
+                    left_pos = min(left_pos, pos)
+                    right_pos = max(right_pos, del_end)
+                    if del_end < self.pos_start:
+                        mut.pos_del_prefix.append([pos + 1, '.', indel_str])
+                    elif pos + 1 >= self.pos_end:
+                        mut.pos_del_suffix.append([pos + 1, '.', indel_str])
+                    else:
+                        mut.pos_del_ms.append([pos + 1, '.', indel_str])
             pos += 1
             segment_pos += 1
         bam_file.close()
-        self.alt_str = "".join(alt_str)
-
-        if self.ref_repeat_length != self.query_repeat_length:
-            indel_type = "DEL" if self.ref_repeat_length > self.query_repeat_length else "INS"
-            if len(self.mismatch) > 0:
-                self.ms_var_type.append("Complex")
-                self.ms_var_type.append(indel_type)
-                self.ms_var_type.append("SNP")
-            else:
-                self.ms_var_type.append(indel_type)
-        else:
-            if len(self.mismatch) > 0:
-                self.ms_var_type.append("SNP")
-            else:
-                self.ms_var_type.append("None")
-        print(self.ref_str, self.alt_str)
-
-    def compile(self, pots):
-        seq = []
-        seq_error = {}
-        for pot in pots:
-            thisseq = []
-            for pp in pot:
-                thispp = pp.upper()
-                if thispp not in thisseq:
-                    thisseq = thispp
-
-    def get_alignment_detail(self):
-        # print(self.dis_stat)
-        if not self.dis_stat:
-            return -1
-
-        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
-
-        # print(type(bam_file.pileup(self.chrom,self.start_pre,self.end_suf,truncate=True)))
-
-        variants = {}
-        pos = self.start_pre
-        for pot in bam_file.pileup(self.chrom,
-                                   self.start_pre,
-                                   self.end_suf,
-                                   truncate=True,
-                                   fastafile=pysam.FastaFile(self.reference_path)):
-            # pots.append(pot)
-            pos += 1
-            pot_alleles = list(set(map(lambda x: x.upper(),
-                                       pot.get_query_sequences(mark_matches=True,
-                                                               mark_ends=False,
-                                                               add_indels=True))))
-            pot_alleles = collections.Counter(pot_alleles).most_common()
-            if len(pot_alleles) > 1:
-                self.more_than_one_alleles = True
-            if pot_alleles[0][0] in [",", ".", "*"]:
-                continue
-            if pot_alleles[0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": pot_alleles[0][0]}
-                # print("Mismatch",pot_alleles)
-                continue
-            p = re.compile("[\\+\\-][0-9]+")
-            # print(pot_alleles[0])
-            indelf = p.findall(pot_alleles[0][0])[0]
-            indel_type = "I" if pot_alleles[0][0][1] == "-" else "D"
-            # print(indel_type,indelf)
-            indel_len = int(indelf[1:])
-            indel_str = pot_alleles[0][0][-indel_len:]
-            # print(indel_len,indel_type,indel_str)
-            if pot_alleles[0][0][0] in ["A", "G", "C", "T"]:
-                variants[pos - 1] = {"Mismatch": pot_alleles[0][0][0], indel_type: [indel_len, indel_str]}
-            else:
-                variants[pos - 1] = {indel_type: [indel_len, indel_str]}
-        if len(variants) > 0:
-            print(variants)
-
-            # print(pot_alleles)
-
-            # print(pot_alleles)
-
-            # pots.append()
-            # print(type(pot))
-            # print(pot)
-            # print(pot.indel())
-            # if pot.is_del:
-            #     print("del",pot.get_query_sequences())
-            # if pot.is_refskip:
-            #     print("refskip", pot.get_query_sequences())
-            # print(pot.get_query_sequences())
-            pass
-        # for i in pots:
-        #     if i not in ["A","C","G","T"]:
-        #         print(pots)
-        #         break
-        # print(len(pots),self.start_pre-self.end_suf)
-        bam_file.close()
-
-        # print()
+        mut.comput(self.query_repeat_length - self.ref_repeat_length)
+        if len(mut.var_type_ms) > 0:
+            self.mut_start = min(left_pos, self.pos_start)
+            self.mut_end = max(left_pos, self.pos_end)
+        self.ref_str = self.ref_str[self.mut_start - self.start_pre:self.mut_end + 1 - self.start_pre]
+        self.alt_str = "".join(alt_str[self.mut_start - self.start_pre:self.mut_end + 1 - self.start_pre])
 
     def pos_convert_ref2read(self, ref_block: list, read_block: list, pos: int, direction="start") -> tuple:
         """
@@ -356,7 +376,7 @@ class MSHAP:
             if pos == ref_block[block_index][1]:  # M|D M|I D|M
                 read_pos = read_block[block_index][1]
                 if ref_block[block_index][2] == 2:
-                    self.start_pre = min([self.start_pre, ref_block[block_index][0]])
+                    self.start_pre = min([self.start_pre, ref_block[block_index][0] - 1])
                 return pos, read_pos
 
             if ref_block[block_index][2] == 0:  # match
@@ -365,13 +385,12 @@ class MSHAP:
             elif ref_block[block_index][2] == 2:  # deletion
                 pos = pos
                 read_pos = read_block[block_index][1]
-                self.start_pre = min([read_block[block_index][0], self.start_pre])
+                self.start_pre = min([ref_block[block_index][0] - 1, self.start_pre])
 
                 # pos = ref_block[block_index - 1][1] - 1
                 # read_pos = read_block[block_index - 1][1] - 1
                 return pos, read_pos
             else:
-                print("gjjgjdgffkfkfkfpooooo")
                 pos = ref_block[block_index - 1][1] - 1
                 read_pos = read_block[block_index - 1][1] - 1
                 return pos, read_pos
@@ -383,14 +402,10 @@ class MSHAP:
                     # print(sub_ref_block,pos)
                     break
                 block_index = block_index - 1
-            # if pos==ref_block[block_index][1]:
-            #     print(block_index,len(ref_block))
-            #     print( pos,ref_block[block_index-1],ref_block[block_index],)
-            #     print("end")
             if pos == ref_block[block_index][0]:  # D|M I|M M|D
                 read_pos = read_block[block_index][0]
                 if ref_block[block_index][2] == 2:
-                    self.end_suf = max([self.end_suf, ref_block[block_index][1]])
+                    self.end_suf = max([self.end_suf, ref_block[block_index][1] + 1])
                 return pos, read_pos
 
             if ref_block[block_index][2] == 0:
@@ -399,14 +414,11 @@ class MSHAP:
             elif ref_block[block_index][2] == 2:
                 pos = pos
                 read_pos = read_block[block_index][0]
-                self.end_suf = max([self.end_suf, read_block[block_index][1]])
+                self.end_suf = max([self.end_suf, ref_block[block_index][1] + 1])
                 # pos = ref_block[block_index + 1][0] + 1
                 # read_pos = read_block[block_index + 1][0] + 1
                 return pos, read_pos
             else:
-                print("lfllflflfllflflffkfjfhvjfnjgffjfjjjjjjjj")
-                # ref_block[block_index][0] == pos:
-                # print("llff")
                 pos = pos + 1
                 read_pos = read_block[block_index - 1][0] - 1
                 return pos, read_pos
@@ -448,70 +460,72 @@ class MSHAP:
         rpt = self.ref_repeat_length + ((read_end - read_start) - (ref_end - ref_start))
         return rpt
 
-    def dis_sum(self, dict_list):
-        keylist = []
-        for item in dict_list:
-            for key in item:
-                if key not in keylist:
-                    keylist.append(key)
-        res_dict = {}
-        for key in keylist:
-            res_dict[key] = 0
-        for item in dict_list:
-            for key in item:
-                res_dict[key] += item[key]
-        return res_dict
 
-    def get_snp_info(self):
-        pre_content = 5
-        suf_content = 5
-        start = self.pos_start
-        end = self.pos_end
-        fafile = pysam.FastaFile(self.reference_path)
-        start_pos = start - pre_content
-        end_pos = end + suf_content
-        ref_seq = fafile.fetch(self.chrom, start_pos, end_pos)
-        bam_file = pysam.AlignmentFile(self.bam_path)
-        print('++++++++++++++++++')
-        outfile = pysam.AlignmentFile("-", "w", template=bam_file, index_filename=self.bam_path + ".bai")
-        for pot in bam_file.fetch(self.chrom, start_pos, end_pos):
-            outfile.write(pot)
-        for pot in outfile.pileup(self.chrom, start_pos, end_pos, truncate=True, index_filename=self.bam_path + ".bai"):
-            print(pot)
+# TODO check and delete
+# def dis_sum(self, dict_list):
+#     keylist = []
+#     for item in dict_list:
+#         for key in item:
+#             if key not in keylist:
+#                 keylist.append(key)
+#     res_dict = {}
+#     for key in keylist:
+#         res_dict[key] = 0
+#     for item in dict_list:
+#         for key in item:
+#             res_dict[key] += item[key]
+#     return res_dict
+#
+# def get_snp_info(self):
+#     pre_content = 5
+#     suf_content = 5
+#     start = self.pos_start
+#     end = self.pos_end
+#     fafile = pysam.FastaFile(self.reference_path)
+#     start_pos = start - pre_content
+#     end_pos = end + suf_content
+#     ref_seq = fafile.fetch(self.chrom, start_pos, end_pos)
+#     bam_file = pysam.AlignmentFile(self.bam_path)
+#     print('++++++++++++++++++')
+#     outfile = pysam.AlignmentFile("-", "w", template=bam_file, index_filename=self.bam_path + ".bai")
+#     for pot in bam_file.fetch(self.chrom, start_pos, end_pos):
+#         outfile.write(pot)
+#     for pot in outfile.pileup(self.chrom, start_pos, end_pos, truncate=True, index_filename=self.bam_path + ".bai"):
+#         print(pot)
+#
+#     return
 
-        return
-
-    def getrepeat_times2(self, alignment):
-
-        """
-        :param alignment:
-        :param motif:
-        :param motif_len:
-        :param prefix:
-        :param suffix:
-        :return:
-        """
-
-        # self.getrepeat_times2(alignment)
-        if alignment.mapping_quality < self.min_mapping_qual:
-            return -1
-        readString = alignment.query
-        prefixState = readString.find(self.prefix)
-        if prefixState < 0: return -1
-        suffixState = readString.rfind(self.suffix)
-        if suffixState < 0: return -3
-        if prefixState + 5 >= suffixState: return -2
-        while prefixState >= 0:
-            count = 0
-            start = prefixState + 5
-            while start == readString.find(self.motif, start):
-                count += 1
-                start = readString.find(self.motif, start) + self.motif_len
-            if (self.motif_len == 1 and count >= 1) or (self.motif_len > 1 and count >= 1):
-                if start == readString.find(self.suffix, start):
-                    return count
-            prefixState = readString.find(self.prefix, prefixState + 1)
-        return -4
+# def getrepeat_times2(self, alignment):
+#
+#     """
+#     :param alignment:
+#     :param motif:
+#     :param motif_len:
+#     :param prefix:
+#     :param suffix:
+#     :return:
+#     """
+#
+#     # self.getrepeat_times2(alignment)
+#     if alignment.mapping_quality < self.min_mapping_qual:
+#         return -1
+#     readString = alignment.query
+#     prefixState = readString.find(self.prefix)
+#     if prefixState < 0: return -1
+#     suffixState = readString.rfind(self.suffix)
+#     if suffixState < 0: return -3
+#     if prefixState + 5 >= suffixState: return -2
+#     while prefixState >= 0:
+#         count = 0
+#         start = prefixState + 5
+#         while start == readString.find(self.motif, start):
+#             count += 1
+#             start = readString.find(self.motif, start) + self.motif_len
+#         if (self.motif_len == 1 and count >= 1) or (self.motif_len > 1 and count >= 1):
+#             if start == readString.find(self.suffix, start):
+#                 return count
+#         prefixState = readString.find(self.prefix, prefixState + 1)
+#     return -4
 
 
 def benchmark_init(args):
@@ -627,11 +641,8 @@ def benchmark_init(args):
 
 def bm_processOneMs(msDetail):
     msDetail.get_dis()
-    msDetail.get_dis2()
-    if not get_value("default")["benchmark"]["only_microsatellites"]:
-        msDetail.get_alignment_detail()
-    # msDetail.calcuShiftProbability()
-    # msDetail.get_snp_info()
+    if msDetail.check:
+        msDetail.get_pileup_info()
     return msDetail
 
 
@@ -653,20 +664,35 @@ def bm_write_vcf_init(outputpath):
     set_value("contigsInfo", contigs_len_dict)
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
     outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
-    outputfile.header.add_line('##INFO=<ID=Start,Number=1,Type=Integer,Description="Position start">')
-    outputfile.header.add_line('##INFO=<ID=End,Number=1,Type=Integer,Description="Position End">')
+    outputfile.header.add_line('##INFO=<ID=ms_start,Number=1,Type=Integer,Description='
+                               '"Position start of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=ms_end,Number=1,Type=Integer,Description='
+                               '"Position end of microsatellite">')
     outputfile.header.add_line('##INFO=<ID=motif,Number=1,Type=String,Description="Repeat unit">')
-    outputfile.header.add_line('##INFO=<ID=repeat_times,Number=1,Type=Integer,Description="Repeat imes">')
-    outputfile.header.add_line('##INFO=<ID=prefix,Number=1,Type=String,Description="Prefix of microsatellite">')
-    outputfile.header.add_line('##INFO=<ID=suffix,Number=1,Type=String,Description="Suffix of microsatellite">')
-    # outputfile.header.add_line('##INFO=<ID=varType,Number=1,Type=String,Description="Variants Type">')
-    outputfile.header.add_line(
-        '##INFO=<ID=MSVarType,Number=1,Type=String,Description="Variants type in microsatellite region">')
-    outputfile.header.add_line(
-        '##INFO=<ID=upstreamVarType,Number=1,Type=String,Description="Variants type in upstream regions of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=repeat_times,Number=1,Type=Integer,Description='
+                               '"Repeat times of motif in reference">')
+    outputfile.header.add_line('##INFO=<ID=motif_len,Number=1,Type=Integer,Description="Repeat unit length">')
+    outputfile.header.add_line('##INFO=<ID=ref_repeat_length,Number=1,Type=Integer,Description='
+                               '"length of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=start_pre,Number=1,Type=Integer,Description="Start position for analysis">')
+    outputfile.header.add_line('##INFO=<ID=end_suf,Number=1,Type=Integer,Description="End position for analysis">')
+    outputfile.header.add_line('##INFO=<ID=mut_start,Number=1,Type=Integer,Description="Start position of mutaiton">')
+    outputfile.header.add_line('##INFO=<ID=mut_end,Number=1,Type=Integer,Description="End position of mution">')
+    outputfile.header.add_line('##INFO=<ID=query_repeat_length,Number=1,Type=Integer,Description='
+                               '"Evaluation repeat length of microsatellite">')
+    outputfile.header.add_line('##INFO=<ID=dis_stat,Number=1,Type=String,Description='
+                               '"True,the distribution is available">')
+    outputfile.header.add_line('##INFO=<ID=check,Number=1,Type=String,Description='
+                               '"True,the site is available for benchmark">')
+    outputfile.header.add_line('##INFO=<ID=check_stats,Number=1,Type=String,Description='
+                               '"Why this site is not available for benchmark">')
+    outputfile.header.add_line('##INFO=<ID=allele,Number=1,Type=Integer,Description="Allele number in this site">')
     outputfile.header.add_line('##INFO=<ID=dis,Number=1,Type=String,Description='
                                'Distribution of repeat length>')
-    outputfile.header.add_line('##INFO=<ID=disStat,Number=1,Type=String,Description="Distribution Stat">')
+    outputfile.header.add_line('##INFO=<ID=var_type,Number=1,Type=String,Description='
+                               '"Variant typeComplex, SNP, DEL, INS">')
+    outputfile.header.add_line('##INFO=<ID=var_type_list,Number=1,Type=String,Description='
+                               '"Variant type, Complex, SNP, DEL, INS">')
     return outputfile
 
 
@@ -679,39 +705,59 @@ def bm_write_vcf(outputfile, dataList):
     # print(header.contigs)
     # print("write", len(dataList))
     for msDetail in dataList:
-        chrom = msDetail.chrom
-        pos = int(msDetail.pos_start)
         vcfrec = outputfile.new_record()
         # print("infoKey",vcfrec.info.keys())
-        vcfrec.contig = chrom
+        vcfrec.contig = msDetail.chrom
         # vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
-        vcfrec.pos = pos
+        vcfrec.pos = msDetail.mut_start
         vcfrec.ref = msDetail.ref_str
-        vcfrec.alt = msDetail.alt_str
-        vcfrec.info["chrom"] = chrom
-        vcfrec.info["pos"] = pos
-        vcfrec.info["Start"] = pos
-        vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
-        vcfrec.info["End"] = pos + msDetail.repeat_times * len(msDetail.motif)
+        vcfrec.alts = (msDetail.alt_str,)
+        vcfrec.id = msDetail.mirosatellite_id
+        vcfrec.stop = msDetail.pos_end
+        vcfrec.info["ms_start"] = msDetail.pos_start
+        vcfrec.info["ms_end"] = msDetail.pos_end
         vcfrec.info["motif"] = msDetail.motif
         vcfrec.info["repeat_times"] = msDetail.repeat_times
-        vcfrec.info["prefix"] = msDetail.prefix
-        vcfrec.info["suffix"] = msDetail.suffix
-        vcfrec.info["dis"] = ":".join(
+        vcfrec.info["motif_len"] = msDetail.motif_len
+        vcfrec.info["ref_repeat_length"] = msDetail.ref_repeat_length
+        vcfrec.info["start_pre"] = msDetail.start_pre
+        vcfrec.info["end_suf"] = msDetail.end_suf
+        vcfrec.info["mut_start"] = msDetail.mut_start
+        vcfrec.info["mut_end"] = msDetail.mut_end
+        vcfrec.info["query_repeat_length"] = msDetail.query_repeat_length
+        vcfrec.info["dis_stat"] = str(msDetail.dis_stat)
+        vcfrec.info["check"] = str(msDetail.check)
+        vcfrec.info["check_stats"] = "|".join(msDetail.check_stats)
+        vcfrec.info["dis"] = "|".join(
             [str(key) + "-" + str(value) for key, value in msDetail.repeat_length_dis.items()])
-        vcfrec.info["disStat"] = str(msDetail.disStat)
+        vcfrec.info["allele"] = msDetail.allele
+
+        # pos_del_prefix = []
+        # pos_del_ms = []
+        # pos_del_suffix = []
+        # pos_ins_prefix = []
+        # pos_ins_suffix = []
+        # pos_ins_ms = []
+        # pos_snp_prefix = []
+        # pos_snp_ms = []
+        # pos_snp_suffix = []
+        # var_type_prefix = []
+        # var_type_suffix = []
+        # var_type_ms = []
+        # var_type = ""
+        # var_list = []
 
         outputfile.write(vcfrec)
 
 
 def bm_multiRun(thread, datalist):
-    # pool = multiprocessing.Pool(processes=thread)
-    # result_list = pool.map(bm_processOneMs, datalist)
-    # pool.close()
-    # pool.join()
-    result_list = []
-    for ms in datalist:
-        result_list.append(bm_processOneMs(ms))
+    pool = multiprocessing.Pool(processes=thread)
+    result_list = pool.map(bm_processOneMs, datalist)
+    pool.close()
+    pool.join()
+    # result_list = []
+    # for ms in datalist:
+    #     result_list.append(bm_processOneMs(ms))
 
     # print("input",len(datalist))
     # print("output",len(result_list))
@@ -737,8 +783,9 @@ def benchmark(parase):
     suffix_len = get_value("default")["benchmark"]["suffix_len"]
     for ms_id, info in df_microsatellites.iterrows():
         curentMSNum += 1
-        # if curentMSNum < 40000 and args["debug"]:
-        #     continue
+        # print(curentMSNum)
+        if curentMSNum < 300 and args["debug"]:
+            continue
         chrom = info["chr"]
         if chrom not in contigs_info:
             continue
@@ -760,14 +807,20 @@ def benchmark(parase):
                            )
         tmp_window.append(this_ms_bm)
 
-    if curentMSNum % (batch * thread) == 0:
-        print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, processing:",
-              curentMSNum - batch * thread + 1,
-              "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
-        result_list = bm_multiRun(thread=thread, datalist=tmp_window)
-        bm_write_vcf(outputfile, result_list)
-        tmp_window = []
-    result_list = bm_multiRun(thread=thread, datalist=tmp_window)
-    bm_write_vcf(outputfile, result_list)
-    bm_write_vcf_close(outputfile)
+        if curentMSNum % (batch * thread) == 0:
+            print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, processing:",
+                  curentMSNum - batch * thread + 1,
+                  "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
+            result_list = bm_multiRun(thread=thread, datalist=tmp_window)
+            tmp_window = []
+            bm_write_vcf(outputfile, result_list)
+            # bm_write_vcf(outputfile, result_list)
+            # bm_write_vcf_close(outputfile)
+
     print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, finish all!")
+    result_list = bm_multiRun(thread=thread, datalist=tmp_window)
+    # bm_write_vcf(outputfile, result_list)
+    # tmp_window = []
+    # result_list = bm_multiRun(thread=thread, datalist=tmp_window)
+    # # bm_write_vcf(outputfile, result_list)
+    # bm_write_vcf_close(outputfile)
