@@ -13,7 +13,7 @@ import time
 import pandas as pd
 from src.global_dict import *
 
-
+# TODO check and normalize
 def removeZeroDict(dict):
     newdict = {}
     for key, value in dict.items():
@@ -36,7 +36,7 @@ def getDisdistance(dict1, dict2):
         sum += (err * err)
     return round(np.sqrt(sum), 6)
 
-
+# TODO check and normalize
 def getDisdistance2(dict1, dict2):
     dictkey = list(dict1.keys()) + list(dict2.keys())
     list1 = []
@@ -54,6 +54,7 @@ def getDisdistance2(dict1, dict2):
     # print(np.sqrt(np.sum(np.square(np.array(list1)-np.array(list2)))))
     return np.linalg.norm(np.array(list1) - np.array(list2))
 
+# TODO check and normalize
 
 def getDisdistance3(dict1, dict2):
     dictkey = list(dict1.keys()) + list(dict2.keys())
@@ -72,6 +73,113 @@ def getDisdistance3(dict1, dict2):
     return np.sqrt(np.sum(np.square(np.array(list1) - np.array(list2))))
 
 
+def load_microsatellites(args):
+    """
+    Description: load Microsatellite information
+    Stat: PASS
+    """
+    print("[INFO] Loading microsatellite file...")
+    ms = args["microsatellite"]
+    separator = args["separator"]
+    # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
+    if separator == "comma":
+        df_microSatellites = pd.read_csv(ms, index_col=0)
+        # print(df_microSatellites.columns)
+    elif separator == "tab":
+        df_microSatellites = pd.read_table(ms, header=0)
+        columns = df_microSatellites.columns
+        if "chromosome" in columns:
+            df_microSatellites.rename(columns={"chromosome": "chr"}, inplace=True)
+            # df_microSatellites["chr"] = df_microSatellites["chromosome"]
+            # del df_microSatellites["chromosome"]
+        if "location" in columns:
+            df_microSatellites.rename(columns={"location": "pos"}, inplace=True)
+            # df_microSatellites["pos"] = df_microSatellites["location"]
+            # del df_microSatellites["location"]
+        if "repeat_unit_bases" in columns:
+            df_microSatellites.rename(columns={"repeat_unit_bases": "motif"}, inplace=True)
+            # df_microSatellites["motif"] = df_microSatellites["repeat_unit_bases"]
+            # del df_microSatellites["repeat_unit_bases"]
+        if "repeat_unit_length" in columns:
+            df_microSatellites.rename(columns={"repeat_unit_length": "motifLen"}, inplace=True)
+            # df_microSatellites["motifLen"] = df_microSatellites["repeat_unit_length"]
+            # del df_microSatellites["repeat_unit_length"]
+        if "repeat_times" in columns:
+            df_microSatellites.rename(columns={"repeat_times": "repeatTimes"}, inplace=True)
+            # df_microSatellites["repeatTimes"] = df_microSatellites["repeat_times"]
+            # del df_microSatellites["repeat_times"]
+        if "left_flank_bases" in columns:
+            df_microSatellites.rename(columns={"left_flank_bases": "prefix"}, inplace=True)
+            # df_microSatellites["prefix"] = df_microSatellites["left_flank_bases"]
+            # del df_microSatellites["left_flank_bases"]
+        if "right_flank_bases" in columns:
+            df_microSatellites.rename(columns={"right_flank_bases": "suffix"}, inplace=True)
+            # df_microSatellites["suffix"] = df_microSatellites["right_flank_bases"]
+            # del df_microSatellites["right_flank_bases"]
+        # df_microSatellites.index = df_microSatellites["chr"] + "_" + df_microSatellites["pos"].astype(str)
+    elif separator == "space":
+        df_microSatellites = pd.read_table(ms, header=0, sep=" ")
+    chromList = get_value("chrom_list")
+    df_microSatellites = df_microSatellites[df_microSatellites['chr'].isin(chromList)]
+    if args["only_homopolymer"]:
+        df_microSatellites = df_microSatellites[df_microSatellites['motifLen'] == 1]
+
+    repeatRange = args["ranges_of_repeat_times"]
+    repeatUnitList = sorted(repeatRange.keys())
+
+    df_microsatellite_pass = pd.DataFrame()
+    for ul in repeatUnitList:
+        minr = repeatRange[ul]["min"]
+        maxr = repeatRange[ul]["max"]
+        df_microsatellite_pass = pd.concat([df_microsatellite_pass, df_microSatellites[(df_microSatellites["motifLen"] == ul) &
+                                                    (df_microSatellites["repeatTimes"] >= minr) &
+                                                    (df_microSatellites["repeatTimes"] <= maxr)
+                                                    ]])
+    if args["debug"]:
+        locis_num = 80000
+        df_microsatellite_pass = df_microsatellite_pass.iloc[100:locis_num + 100, :]
+        # df_microSatellites = df_microSatellites[df_microSatellites["motifLen"] == 1]
+        # if len(df_microsatellite_pass) > locis_num:
+        #     df_microsatellite_pass = df_microsatellite_pass.sample(locis_num)
+    df_microsatellite_pass.sort_index(inplace=True)
+
+    print("[INFO] There are total", len(df_microsatellite_pass), "microsatellites.")
+    set_value("ms_number", len(df_microsatellite_pass))
+    set_value("motifList", set(df_microsatellite_pass["motif"]))
+    return df_microsatellite_pass
+
+
+def get_max_support_index(input_dict):
+    """
+    @param input_dict: dict value with float or int type
+    @type input_dict: dict
+    @return: key of the max value
+    @rtype: float / int
+    """
+    m = max(input_dict.keys(), key=(lambda x: input_dict[x]))
+    return m
+
+# TODO chcck and normalize
+def dis_sum(dict_list):
+    keylist = []
+    for item in dict_list:
+        for key in item:
+            if key not in keylist:
+                keylist.append(key)
+    res_dict = {}
+    for key in keylist:
+        res_dict[key] = 0
+    for item in dict_list:
+        for key in item:
+            res_dict[key] += item[key]
+    return res_dict
+
+if __name__ =="__main__":
+    a=get_max_support_index({1:5,6:40,3:2})
+    a=get_max_support_index({})
+    print(a)
+    
+# TODO check and normalize
 if __name__ == "__main__":
     ""
     dict1 = {1: 1, 2: 2, 3: 3}
@@ -95,98 +203,3 @@ if __name__ == "__main__":
     print(getDisdistance(dict1, dict2))
     print(getDisdistance2(dict1, dict2))
     print(getDisdistance3(dict1, dict2))
-    # getDisdistance(dict2,dict1)
-
-
-def load_microsatellites(args):
-    """
-    Args:
-        args ():
-
-    Returns:
-    """
-    print("[INFO] Loading microsatellite file...")
-    ms = args["microsatellite"]
-    separator = args["separator"]
-    # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
-    if separator == "comma":
-        dfMicroSatellites = pd.read_csv(ms, index_col=0)
-        # print(dfMicroSatellites.columns)
-    elif separator == "tab":
-        dfMicroSatellites = pd.read_table(ms, header=0)
-        columns = dfMicroSatellites.columns
-        if "chromosome" in columns:
-            dfMicroSatellites.rename(columns={"chromosome": "chr"}, inplace=True)
-            # dfMicroSatellites["chr"] = dfMicroSatellites["chromosome"]
-            # del dfMicroSatellites["chromosome"]
-        if "location" in columns:
-            dfMicroSatellites.rename(columns={"location": "pos"}, inplace=True)
-            # dfMicroSatellites["pos"] = dfMicroSatellites["location"]
-            # del dfMicroSatellites["location"]
-        if "repeat_unit_bases" in columns:
-            dfMicroSatellites.rename(columns={"repeat_unit_bases": "motif"}, inplace=True)
-            # dfMicroSatellites["motif"] = dfMicroSatellites["repeat_unit_bases"]
-            # del dfMicroSatellites["repeat_unit_bases"]
-        if "repeat_unit_length" in columns:
-            dfMicroSatellites.rename(columns={"repeat_unit_length": "motifLen"}, inplace=True)
-            # dfMicroSatellites["motifLen"] = dfMicroSatellites["repeat_unit_length"]
-            # del dfMicroSatellites["repeat_unit_length"]
-        if "repeat_times" in columns:
-            dfMicroSatellites.rename(columns={"repeat_times": "repeatTimes"}, inplace=True)
-            # dfMicroSatellites["repeatTimes"] = dfMicroSatellites["repeat_times"]
-            # del dfMicroSatellites["repeat_times"]
-        if "left_flank_bases" in columns:
-            dfMicroSatellites.rename(columns={"left_flank_bases": "prefix"}, inplace=True)
-            # dfMicroSatellites["prefix"] = dfMicroSatellites["left_flank_bases"]
-            # del dfMicroSatellites["left_flank_bases"]
-        if "right_flank_bases" in columns:
-            dfMicroSatellites.rename(columns={"right_flank_bases": "suffix"}, inplace=True)
-            # dfMicroSatellites["suffix"] = dfMicroSatellites["right_flank_bases"]
-            # del dfMicroSatellites["right_flank_bases"]
-        # dfMicroSatellites.index = dfMicroSatellites["chr"] + "_" + dfMicroSatellites["pos"].astype(str)
-    elif separator == "space":
-        dfMicroSatellites = pd.read_table(ms, header=0, sep=" ")
-    chromList = get_value("chrom_list")
-    dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['chr'].isin(chromList)]
-    if args["only_homopolymer"]:
-        dfMicroSatellites = dfMicroSatellites[dfMicroSatellites['motifLen'] == 1]
-
-    repeatRange = args["ranges_of_repeat_times"]
-    repeatUnitList = sorted(repeatRange.keys())
-
-    newDf = pd.DataFrame()
-    for ul in repeatUnitList:
-        minr = repeatRange[ul]["min"]
-        maxr = repeatRange[ul]["max"]
-        newDf = pd.concat([newDf, dfMicroSatellites[(dfMicroSatellites["motifLen"] == ul) &
-                                                    (dfMicroSatellites["repeatTimes"] >= minr) &
-                                                    (dfMicroSatellites["repeatTimes"] <= maxr)
-                                                    ]])
-    if args["debug"]:
-        locis_num = 80000
-        newDf = newDf.iloc[100:locis_num + 100, :]
-        # dfMicroSatellites = dfMicroSatellites[dfMicroSatellites["motifLen"] == 1]
-        # if len(newDf) > locis_num:
-        #     newDf = newDf.sample(locis_num)
-    newDf.sort_index(inplace=True)
-
-    print("[INFO] There are total", len(newDf), "microsatellites.")
-    set_value("ms_number", len(newDf))
-    set_value("motifList", set(newDf["motif"]))
-    # print(set(newDf["motif"]))
-    return newDf
-
-
-def get_max_support_index(input_dict):
-    """
-    @param input_dict: dict value with float or int type
-    @type input_dict: dict
-    @return: key of the max value
-    @rtype: float / int
-    """
-    m = max(input_dict.keys(), key=(lambda x: input_dict[x]))
-    return m
-if __name__ =="__main__":
-    a=get_max_support_index({1:5,6:40,3:2})
-    a=get_max_support_index({})
-    print(a)
