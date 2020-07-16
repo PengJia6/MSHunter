@@ -291,12 +291,18 @@ class MSHAP:
 
             self.mut_start = min(left_pos, self.pos_start - 1)
             self.mut_end = max(right_pos, self.pos_end + 1)
-            self.ref_str = self.ref_str[self.mut_start - self.start_pre:self.mut_end - self.start_pre]
             self.alt_str = "".join(alt_str[self.mut_start - self.start_pre:self.mut_end - self.start_pre])
         else:
             pass
         mut.comput(self.query_repeat_length - self.ref_repeat_length)
         self.mut_type = mut
+        # if len(self.alt_str) < 1:
+        #     print(self.ref_str)
+        #     print(self.alt_str)
+        #     print(self.pos_start)
+        #     print(self.mut_start - self.start_pre, self.mut_end - self.start_pre)
+        #     print(self.check_stats)
+        #     print()
         fa_file.close()
 
     def pos_convert_ref2read(self, ref_block: list, read_block: list, pos: int, direction="start") -> tuple:
@@ -573,7 +579,7 @@ def bm_write_vcf(outputfile, dataList):
         # vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
         vcfrec.pos = msDetail.mut_start
         vcfrec.ref = msDetail.ref_str
-        vcfrec.alts = (msDetail.alt_str,)
+        vcfrec.alts = (msDetail.alt_str,) if msDetail.alt_str != "" else "."
         vcfrec.id = msDetail.mirosatellite_id
         vcfrec.stop = msDetail.pos_end
         vcfrec.info["ms_start"] = msDetail.pos_start
@@ -642,7 +648,7 @@ def benchmark(parase):
     for ms_id, info in df_microsatellites.iterrows():
         curentMSNum += 1
         # print(curentMSNum)
-        if curentMSNum < 600 and args["debug"]:
+        if curentMSNum < 5850 and args["debug"]:
             continue
         chrom = info["chr"]
         if chrom not in contigs_info:
@@ -677,8 +683,5 @@ def benchmark(parase):
 
     print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, finish all!")
     result_list = bm_multi_run(thread=thread, datalist=tmp_window)
-    # bm_write_vcf(outputfile, result_list)
-    # tmp_window = []
-    # result_list = bm_multiRun(thread=thread, datalist=tmp_window)
-    # # bm_write_vcf(outputfile, result_list)
-    # bm_write_vcf_close(outputfile)
+    bm_write_vcf(outputfile, result_list)
+    bm_write_vcf_close(outputfile)
