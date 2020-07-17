@@ -17,6 +17,9 @@ If you have any question about this software, please contact with Peng Jia (peng
 * support PacBio clr and ONT reads (fix the extract repeat times module)
 
 ### benchmark
-* build benchmark for ccs assembly contig  
+* build benchmark for ccs assembly contig  (short tandem repeat)
   - for on haplotype (√)
-  - merge two haplotype  
+  - merge two haplotype (√)
+* build benchmark for ccs assembly contig  (more long tandem repeat)
+  - for on haplotype (√)
+  - merge two haplotype (√)
