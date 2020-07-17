@@ -12,8 +12,7 @@
 Version:
 202007016: 0.1.4, update the benchmark command, 202007016
 """
-version_id="0.1.4"
-
+version_id = "0.1.4"
 
 
 def global_init():
@@ -83,10 +82,11 @@ def global_init():
             "minimum_phasing_reads": 3,
             "tech": "ccs",
             "hap": True,
-            "only_microsatellites":True
+            "only_microsatellites": True
         },
-        "benchmark_merge":{
-
+        "benchmark_merge": {
+            "sample": "sample",
+            "debug": False,
         }
 
     }

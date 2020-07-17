@@ -40,7 +40,6 @@ def args_process():
                         version=get_value("tools_name") + get_value("tools_version"))
     subparsers = parser.add_subparsers(title="command", metavar="", dest='command')
 
-
     ###################################################################################################################
     # add arguments for genotype module
     parser_gt = subparsers.add_parser('genotype', help='Microsatellite genotyping')
@@ -182,13 +181,13 @@ def args_process():
                                    help="Only analyze homopolymer regions [default:"
                                         + str(defaultPara_bm["only_homopolymers"]) + "]")
     bm_general_option.add_argument('-pl', '--prefix_len', type=int, nargs=1,
-                                    default=[defaultPara_bm["prefix_len"]],
-                                    help=" {prefix_len} bps upstream of microsatellite to analysis [default:" +
-                                         str(defaultPara_bm["prefix_len"]) + "]")
+                                   default=[defaultPara_bm["prefix_len"]],
+                                   help=" {prefix_len} bps upstream of microsatellite to analysis [default:" +
+                                        str(defaultPara_bm["prefix_len"]) + "]")
     bm_general_option.add_argument('-sl', '--suffix_len', type=int, nargs=1,
-                                    default=[defaultPara_bm["suffix_len"]],
-                                    help=" {suffix_len} bps downstream of microsatellite to analysis [default:" +
-                                         str(defaultPara_bm["suffix_len"]) + "]")
+                                   default=[defaultPara_bm["suffix_len"]],
+                                   help=" {suffix_len} bps downstream of microsatellite to analysis [default:" +
+                                        str(defaultPara_bm["suffix_len"]) + "]")
     bm_general_option.add_argument('-om', '--only_microsatellites', type=int, nargs=1, choices=[True, False],
                                    default=[defaultPara_bm["only_microsatellites"]],
                                    help="True, only detect variants in microsatelite microsatellite region;"
@@ -249,6 +248,8 @@ def args_process():
     parser_bmm = subparsers.add_parser('benchmark_merge', help='Merge two haplotype result.')
     parser_bmm.description = 'Merge two haplotype microsatellite calling result.'
     commands.append('benchmark_merge')
+    default_para_bmm = defaultPara["benchmark_merge"]
+
     ##################################################################################
     # group input and output
     bmm_input_and_output = parser_bmm.add_argument_group(title="Input and output")
@@ -258,9 +259,14 @@ def args_process():
                                       help="microsatellite calling result of haplotype 2, *vcf.gz [required]")
     bmm_input_and_output.add_argument('-o', '--output', required=True, type=str, nargs=1,
                                       help="The path of output file prefix [required]")
-    bmm_input_and_output.add_argument('-r', '--reference', required=False, type=str, nargs=1,
-                                      help="The path of reference file fa/fasta[required]")
-
+    bmm_input_and_output.add_argument('-s', '--sample', required=False, type=str, nargs=1,
+                                      default=[default_para_bmm["sample"]],
+                                      help="Sample name[default:" + default_para_bmm["sample"] + "]")
+    bmm_general_option = parser_bmm.add_argument_group(title="General option")
+    bmm_general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
+                                   default=[default_para_bmm["debug"]],
+                                   help="Debug mode for developers [default:" +
+                                        str(default_para_bmm["debug"]) + "]")
     if len(os.sys.argv) < 2:
         parser.print_help()
         return False
@@ -284,7 +290,6 @@ def args_process():
     return parser
 
 
-
 def main():
     """
     Main function.
@@ -299,7 +304,7 @@ def main():
             genotype(parase)
         if parase.command == "benchmark":
             benchmark(parase)
-        if parase.command=="benchmark_merge":
+        if parase.command == "benchmark_merge":
             benchmark_merge(parase)
 
 

@@ -284,7 +284,16 @@ class MSHAP:
                         elif pos + 1 >= self.pos_end:
                             mut.var_suffix.append([pos + 1, '', indel_str])
                         else:
-                            mut.var_ms.append([pos + 1, '', indel_str])
+
+                            if del_end < self.pos_end or pos + 1 >= self.pos_start:
+                                mut.var_ms.append([pos + 1, '', indel_str])
+                            else:
+                                self.check=False
+                                self.check_stats.append("DEL_Span")
+                            # else:
+                            #     mut.var_ms.append([pos + 1, '', indel_str[0:self.pos_end - (pos + 1)]])  # TODO
+                            #     mut.var_suffix.append([self.pos_end, '', indel_str[self.pos_end - (pos + 1):]])  # TODO
+
                 pos += 1
                 segment_pos += 1
             bam_file.close()
@@ -581,7 +590,7 @@ def bm_write_vcf(outputfile, dataList):
         # vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
         vcfrec.pos = msDetail.mut_start
         vcfrec.ref = msDetail.ref_str
-        vcfrec.alts = (msDetail.alt_str,) if msDetail.alt_str != "" else "."
+        vcfrec.alts = (msDetail.alt_str,) if msDetail.alt_str != "" else ("N",)
         vcfrec.id = msDetail.mirosatellite_id
         vcfrec.stop = msDetail.pos_end
         vcfrec.info["ms_start"] = msDetail.pos_start
@@ -608,10 +617,10 @@ def bm_write_vcf(outputfile, dataList):
                                                  ":".join(msDetail.mut_type.var_type_suffix)])
         # print(msDetail.mut_type.var_prefix,msDetail.mut_type.var_ms,msDetail.mut_type.var_suffix)
         vcfrec.info["var_detail"] = \
-            "|".join([
-                ":".join([",".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_prefix]),
-                ":".join([",".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_ms]),
-                ":".join([",".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_suffix]),
+            "!".join([
+                "|".join([":".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_prefix]),
+                "|".join([":".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_ms]),
+                "|".join([":".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_suffix]),
             ])
         outputfile.write(vcfrec)
 
