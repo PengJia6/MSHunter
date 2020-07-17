@@ -295,6 +295,8 @@ class MSHAP:
         else:
             pass
         mut.comput(self.query_repeat_length - self.ref_repeat_length)
+        self.ref_str = self.ref_str[self.mut_start - self.start_pre:self.mut_end - self.start_pre]
+
         self.mut_type = mut
         # if len(self.alt_str) < 1:
         #     print(self.ref_str)
@@ -648,8 +650,8 @@ def benchmark(parase):
     for ms_id, info in df_microsatellites.iterrows():
         curentMSNum += 1
         # print(curentMSNum)
-        if curentMSNum < 5850 and args["debug"]:
-            continue
+        # if curentMSNum <1  and args["debug"]:
+        #     continue
         chrom = info["chr"]
         if chrom not in contigs_info:
             continue

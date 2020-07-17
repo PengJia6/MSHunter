@@ -85,6 +85,9 @@ def global_init():
             "hap": True,
             "only_microsatellites":True
         },
+        "benchmark_merge":{
+
+        }
 
     }
 

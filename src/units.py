@@ -136,7 +136,7 @@ def load_microsatellites(args):
                                                     (df_microSatellites["repeatTimes"] <= maxr)
                                                     ]])
     if args["debug"]:
-        locis_num = 80000
+        locis_num = 8000
         df_microsatellite_pass = df_microsatellite_pass.iloc[100:locis_num + 100, :]
         # df_microSatellites = df_microSatellites[df_microSatellites["motifLen"] == 1]
         # if len(df_microsatellite_pass) > locis_num:
