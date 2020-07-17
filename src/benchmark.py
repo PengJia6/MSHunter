@@ -568,7 +568,7 @@ def bm_write_vcf_init(outputpath):
 
 def bm_write_vcf_close(outputfile):
     outputfile.close()
-    pysam.tabix_index(get_value("paras")["output_dis"], force=True, preset="vcf")
+    pysam.tabix_index(get_value("paras")["output_vcf"], force=True, preset="vcf")
 
 
 def bm_write_vcf(outputfile, dataList):

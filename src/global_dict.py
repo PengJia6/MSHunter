@@ -8,12 +8,19 @@
 # Email  : pengjia@stu.xjtu.edu.cn
 # Description: Define global variables
 =============================================================================="""
+"""
+Version:
+202007016: 0.1.4, update the benchmark command, 202007016
+"""
+version_id="0.1.4"
+
+
 
 def global_init():
     global _global_dict
     _global_dict = {}
     _global_dict["ms_number"] = 0
-    _global_dict["tools_version"] = "1.0"
+    _global_dict["tools_version"] = version_id
     _global_dict["tools_name"] = "mstools"
     _global_dict["chrom_list"] = [str(i) for i in range(1, 23)] + \
                                  ["chr" + str(i) for i in range(1, 23)] + \

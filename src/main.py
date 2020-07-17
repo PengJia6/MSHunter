@@ -18,6 +18,7 @@ sys.path.append(os.path.dirname(curpath))
 from src.global_dict import *
 from src.benchmark import *
 from src.genotype import *
+from src.benchmark_merge import benchmark_merge
 
 print(" ".join(sys.argv))
 
@@ -27,9 +28,8 @@ def args_process():
     argument procress
     """
     defaultPara = get_value("default")
-    defaultPara_gt = defaultPara["genotype"]
-    defaultPara_bm = defaultPara["benchmark"]
-    commands = ["genotype", "benchmark"]
+
+    commands = []
     commandsParser = {}
     parser = argparse.ArgumentParser(description='mstools: Microsatellite genotyping toolbox.'
                                      # + ".show help of subcommand with '"
@@ -40,10 +40,13 @@ def args_process():
                         version=get_value("tools_name") + get_value("tools_version"))
     subparsers = parser.add_subparsers(title="command", metavar="", dest='command')
 
+
     ###################################################################################################################
     # add arguments for genotype module
     parser_gt = subparsers.add_parser('genotype', help='Microsatellite genotyping')
     parser_gt.description = 'Microsatellite genotype.'
+    commands.append("genotype")
+    defaultPara_gt = defaultPara["genotype"]
     ##################################################################################
     # group input and output
     input_and_output = parser_gt.add_argument_group(title="Input and output")
@@ -141,6 +144,8 @@ def args_process():
     # add arguments for benchmark module
     parser_bm = subparsers.add_parser('benchmark', help='Microsatellite genotyping benchmark using phased assemblies')
     parser_bm.description = 'Microsatellite associate mutaion benchmark.'
+    commands.append('benchmark')
+    defaultPara_bm = defaultPara["benchmark"]
     ##################################################################################
     # group input and output
     bm_input_and_output = parser_bm.add_argument_group(title="Input and output")
@@ -240,6 +245,21 @@ def args_process():
     #                                  help="The path of input bam/cram file [required]")
 
     ###################################################################################################################
+    # add arguments for benchmark module
+    parser_bmm = subparsers.add_parser('benchmark_merge', help='Merge two haplotype result.')
+    parser_bmm.description = 'Merge two haplotype microsatellite calling result.'
+    commands.append('benchmark_merge')
+    ##################################################################################
+    # group input and output
+    bmm_input_and_output = parser_bmm.add_argument_group(title="Input and output")
+    bmm_input_and_output.add_argument('-1', '--hap1', required=True, type=str, nargs=1,
+                                      help="microsatellite calling result of haplotype 1, *vcf.gz [required]")
+    bmm_input_and_output.add_argument('-2', '--hap2', required=True, type=str, nargs=1,
+                                      help="microsatellite calling result of haplotype 2, *vcf.gz [required]")
+    bmm_input_and_output.add_argument('-o', '--output', required=True, type=str, nargs=1,
+                                      help="The path of output file prefix [required]")
+    bmm_input_and_output.add_argument('-r', '--reference', required=False, type=str, nargs=1,
+                                      help="The path of reference file fa/fasta[required]")
 
     if len(os.sys.argv) < 2:
         parser.print_help()
@@ -264,6 +284,7 @@ def args_process():
     return parser
 
 
+
 def main():
     """
     Main function.
@@ -278,6 +299,8 @@ def main():
             genotype(parase)
         if parase.command == "benchmark":
             benchmark(parase)
+        if parase.command=="benchmark_merge":
+            benchmark_merge(parase)
 
 
 if __name__ == "__main__":
