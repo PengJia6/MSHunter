@@ -21,14 +21,6 @@
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/benchmark.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/benchmark.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/benchmark_merge.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/benchmark_merge.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/units.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/units.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/benchmark.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/benchmark.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/benchmark_merge.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/benchmark_merge.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -288,7 +280,7 @@
       <workItem from="1594689737966" duration="598000" />
       <workItem from="1594734816944" duration="2985000" />
       <workItem from="1594794180052" duration="7157000" />
-      <workItem from="1594802240713" duration="65061000" />
+      <workItem from="1594802240713" duration="66293000" />
     </task>
     <servers />
   </component>
