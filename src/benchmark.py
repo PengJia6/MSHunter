@@ -154,7 +154,7 @@ class MSHAP:
         self.suffix_len = suffix_len
         self.start_pre = pos_start - self.prefix_len
         self.end_suf = pos_end + self.suffix_len
-        self.mut_start = pos_start
+        self.mut_start = pos_start-1
         self.mut_end = pos_end
         self.repeat_length_dis = {}
         self.query_repeat_length = self.ref_repeat_length
@@ -299,7 +299,7 @@ class MSHAP:
             bam_file.close()
 
             self.mut_start = min(left_pos, self.pos_start - 1)
-            self.mut_end = max(right_pos, self.pos_end + 1)
+            self.mut_end = max(right_pos, self.pos_end)
             self.alt_str = "".join(alt_str[self.mut_start - self.start_pre:self.mut_end - self.start_pre])
         else:
             pass
