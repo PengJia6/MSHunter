@@ -15,7 +15,6 @@ import sys
 curpath = os.path.abspath(os.path.dirname(sys.argv[0]))
 sys.path.append(os.path.dirname(curpath))
 
-from src.global_dict import *
 from src.benchmark import *
 from src.genotype import *
 from src.benchmark_merge import benchmark_merge
@@ -58,9 +57,12 @@ def args_process():
     input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
                                   help="The path of reference file [required]")
     input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
-                                  default=[defaultPara_gt["tech"]],
-                                  help='Sequencing technology [default:'
-                                       + str(defaultPara_gt["tech"]) + ']')
+                                  required=True,
+                                  help='Sequencing technology [required]')
+    # input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
+    #                               default=[defaultPara_gt["tech"]],
+    #                               help='Sequencing technology [default:'
+    #                                    + str(defaultPara_gt["tech"]) + ']')
     input_and_output.add_argument('-hap', '--haplotype_bam', type=bool, nargs=1, choices=[True, False],
                                   default=[defaultPara_gt["hap"]],
                                   help=" Input bam file with haplotype tags [default:"
@@ -70,8 +72,8 @@ def args_process():
                                   help='Separator for microsatellites file [default:'
                                        + str(defaultPara_gt["separator"]) + ']')
     ##################################################################################
-    # group read realignment
-    general_realign = parser_gt.add_argument_group(title="Read realignment")
+    # group Analysis regions
+    general_realign = parser_gt.add_argument_group(title="Analysis regions")
     general_realign.add_argument('-pl', '--prefix_len', type=int, nargs=1,
                                  default=[defaultPara_gt["prefix_len"]],
                                  help="Debug mode for developers [default:" +
@@ -80,10 +82,10 @@ def args_process():
                                  default=[defaultPara_gt["suffix_len"]],
                                  help="Debug mode for developers [default:" +
                                       str(defaultPara_gt["suffix_len"]) + "]")
-    general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
-                                 default=[defaultPara_gt["kmer_size"]],
-                                 help="Debug mode for developers [default:" +
-                                      str(defaultPara_gt["kmer_size"]) + "]")
+    # general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
+    #                              default=[defaultPara_gt["kmer_size"]],
+    #                              help="Debug mode for developers [default:" +
+    #                                   str(defaultPara_gt["kmer_size"]) + "]")
 
     ##################################################################################
     # group general option
@@ -109,21 +111,23 @@ def args_process():
                                 default=[defaultPara_gt["minimum_phasing_reads"]], type=str, nargs=1,
                                 help="Minimum reads for each haplotype reporting [default:"
                                      + str(defaultPara_gt["minimum_phasing_reads"]) + "]")
-    ##################################################################################
-    # group for bam2dis
-    bam2dis_option = parser_gt.add_argument_group(title="Option for bam2dis")
-    bam2dis_option.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1,
+    general_option.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1,
                                 default=[defaultPara_gt["minimum_mapping_quality"]],
                                 help="minimum mapping quality of read [default:" +
                                      str(defaultPara_gt["minimum_mapping_quality"]) + "]")
-    bam2dis_option.add_argument('-s', '--minimum_support_reads', type=int, nargs=1,
+    general_option.add_argument('-s', '--minimum_support_reads', type=int, nargs=1,
                                 default=[defaultPara_gt["minimum_support_reads"]],
                                 help="minimum support reads of an available microsatellite [default:" +
                                      str(defaultPara_gt["minimum_support_reads"]) + "]")
-    bam2dis_option.add_argument('-am', '--allow_mismatch', type=bool, nargs=1, choices=[True, False],
-                                default=[defaultPara_gt["allow_mismatch"]],
-                                help="allow mismatch when capture microsatellite [default:"
-                                     + str(defaultPara_gt["allow_mismatch"]) + "]")
+
+    ##################################################################################
+    # group for bam2dis
+    # bam2dis_option = parser_gt.add_argument_group(title="Option for bam2dis")
+
+    # bam2dis_option.add_argument('-am', '--allow_mismatch', type=bool, nargs=1, choices=[True, False],
+    #                             default=[defaultPara_gt["allow_mismatch"]],
+    #                             help="allow mismatch when capture microsatellite [default:"
+    #                                  + str(defaultPara_gt["allow_mismatch"]) + "]")
 
     ##################################################################################
     # group for multiple_thread
@@ -138,6 +142,9 @@ def args_process():
                                  help="The number of microsatellite one thread process [default:" +
                                       str(defaultPara_gt["batch"]) + "]")
     commandsParser["genotype"] = parser_gt
+
+
+
 
     ###################################################################################################################
     # add arguments for benchmark module
@@ -302,10 +309,14 @@ def main():
         parase = arg.parse_args()
         if parase.command == "genotype":
             genotype(parase)
+            # genotype_ngs(parase)
         if parase.command == "benchmark":
             benchmark(parase)
         if parase.command == "benchmark_merge":
             benchmark_merge(parase)
+        # if parase.command == "ngs":
+        #     # genotype(parase)
+        #     genotype_ngs(parase)
 
 
 if __name__ == "__main__":

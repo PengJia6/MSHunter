@@ -12,6 +12,7 @@ import os
 from src.bam2dis import *
 from src.call import *
 from src.errEval import *
+from src.ngs import *
 
 def genotype_init(args):
     """
@@ -31,7 +32,7 @@ def genotype_init(args):
     paras["only_homopolymer"] = args.only_homopolymers[0]
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
-    paras["allow_mismatch"] = args.allow_mismatch[0]
+    # paras["allow_mismatch"] = args.allow_mismatch[0]
     paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
     paras["minimum_phasing_reads"] = args.minimum_phasing_reads[0]
@@ -130,6 +131,10 @@ def genotype_init(args):
 
 def genotype(parase):
     if genotype_init(parase):
-        bam2dis()
-        errEval()
-        call()
+        if get_value("paras")["tech"]=="ilm":
+            print("ILM")
+            genotype_ngs()
+        else:
+            bam2dis()
+            errEval()
+            call()

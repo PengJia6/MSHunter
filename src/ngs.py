@@ -13,11 +13,11 @@ import re
 import collections
 import pysam
 import multiprocessing
-from src.global_dict import *
+# from src.global_dict import *
 from src.units import *
 
 
-class MutationType:
+class NGSMutationType:
     """
     Description: Mutation
     pos_del_prefix: deletion position in prefix
@@ -89,7 +89,7 @@ class MutationType:
             self.var_type = "None"
 
 
-class MSHAP:
+class MSHAP_NGS:
     """
     @chrom : chromsome
     @pos_start: start position of microsatellite
@@ -188,6 +188,7 @@ class MSHAP:
         repeat_length_dict = {}
         reads = self.get_reads_alignment(bam_file)
         bam_file.close()
+
         for alignment in reads:
             repeat_length = self.get_repeat_length(alignment)
             if repeat_length < 0: continue
@@ -209,16 +210,46 @@ class MSHAP:
                 self.more_than_one_alleles_ms = True
                 self.check = False
                 self.check_stats.append("More_alleles_in_MS")
+        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length,"000")
         if not self.check:
             return -1
         else:
             return 1
 
+    def get_alignment_info(self):
+        bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
+        repeat_length_dict = {}
+        reads = self.get_reads_alignment(bam_file)
+        bam_file.close()
+
+        for alignment in reads:
+            repeat_length = self.get_repeat_length(alignment)
+            if repeat_length < 0: continue
+            if repeat_length not in repeat_length_dict:
+                repeat_length_dict[repeat_length] = 0
+            repeat_length_dict[repeat_length] += 1
+        self.repeat_length_dis = repeat_length_dict
+        self.allele = len(repeat_length_dict)
+        if self.allele < 1:
+
+            self.check = False
+            self.check_stats.append("No_read_covered")
+        else:
+            self.dis_stat = True
+            # print(repeat_length_dict)
+            self.query_repeat_length = get_max_support_index(repeat_length_dict)
+            if self.allele > 1:
+                self.more_than_one_alleles = True
+                self.more_than_one_alleles_ms = True
+                self.check = False
+                self.check_stats.append("More_alleles_in_MS")
+        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length,"1111")
+
     def get_pileup_info(self):
         """
         Description: get the detail mutational information of upstream and downstream
         """
-        mut = MutationType()
+        mut = NGSMutationType()
         left_pos = self.end_suf
         right_pos = self.start_pre
         alt_str = []
@@ -305,7 +336,6 @@ class MSHAP:
             pass
         mut.comput(self.query_repeat_length - self.ref_repeat_length)
         self.ref_str = self.ref_str[self.mut_start - self.start_pre:self.mut_end - self.start_pre]
-
         self.mut_type = mut
         # if len(self.alt_str) < 1:
         #     print(self.ref_str)
@@ -422,110 +452,15 @@ class MSHAP:
         return rpt
 
 
-def benchmark_init(args):
-    """
-    argument procress
-    """
-    paras = {}
-    paras["input"] = args.input[0]
-    paras["output"] = args.output[0]
-    paras["microsatellite"] = args.microsatellite[0]
-    paras["reference"] = args.reference[0]
-    paras["separator"] = args.separator[0]
-    paras["prefix_len"] = args.prefix_len[0]
-    paras["suffix_len"] = args.suffix_len[0]
-    paras["debug"] = args.debug[0]
-    paras["only_homopolymer"] = args.only_homopolymers[0]
-    paras["minimum_support_reads"] = args.minimum_support_reads[0]
-    paras["threads"] = args.threads[0]
-    paras["batch"] = args.batch[0]
-    paras["only_microsatellites"] = args.only_microsatellites[0]
-    paras["ranges_of_repeat_times"] = {}
-
-    for i in args.minimum_repeat_times[0].split(";"):
-        unit_range, repeat_range = i.split(":")
-        if "-" in unit_range:
-            unit_start, unit_end = tuple(map(int, unit_range.split("-")))
-        else:
-            unit_start = int(unit_range)
-            unit_end = unit_start
-        repeat_start = int(repeat_range)
-        # print(unit_start,unit_end,"  ",repeat_start, repeatEnd)
-        for ur in range(unit_start, unit_end + 1):
-            if ur not in paras["ranges_of_repeat_times"]:
-                paras["ranges_of_repeat_times"][ur] = {}
-            paras["ranges_of_repeat_times"][ur]["min"] = repeat_start
-        for i in args.maximum_repeat_times[0].split(";"):
-            # print(i)
-            unit_range, repeat_range = i.split(":")
-            if "-" in unit_range:
-                unit_start, unit_end = tuple(map(int, unit_range.split("-")))
-            else:
-                unit_start = int(unit_range)
-                unit_end = unit_start
-            repeat_start = int(repeat_range)
-            # print(unit_start,unit_end,"  ",repeat_start, repeatEnd)
-            for ur in range(unit_start, unit_end + 1):
-                if ur not in paras["ranges_of_repeat_times"]:
-                    paras["ranges_of_repeat_times"][ur] = {}
-                paras["ranges_of_repeat_times"][ur]["max"] = repeat_start
-    error_stat = False
-    if os.path.exists(paras["input"]):
-        print("[INFO] The input file is : '" + paras["input"] + "'.")
-    else:
-        print('[ERROR] The input file '
-              + paras["input"] + ' is not exist, please check again')
-        error_stat = True
-
-    if os.path.isfile(paras["microsatellite"]):
-        print("[INFO] The microsatellites file  is : " + paras["microsatellite"])
-    else:
-        print('[ERROR] The microsatellites file '
-              + paras["microsatellite"] + ' is not exist, please check again')
-        error_stat = True
-    if os.path.isfile(paras["reference"]):
-        print("[INFO] The reference file is : '" + paras["reference"] + "'.")
-    else:
-        paras["reference"] = "" if paras["reference"] == "." else paras["reference"]
-        print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
-        error_stat = True
-    if paras["input"][-4:] == "cram":
-        paras["input_format"] = "cram"
-        cramfile = pysam.AlignmentFile(paras["input"], mode="rb", reference_filename=paras["reference"])
-        if not cramfile.has_index():
-            print("[INFO] Build index for the input cram ...")
-            pysam.index(paras["input"])
-        cramfile.close()
-    else:
-        paras["input_format"] = "hap1"
-        bam_file = pysam.AlignmentFile(paras["input"], mode="rb")
-        if not bam_file.has_index():
-            print("[INFO] Build index for the input bam ...")
-            pysam.index(paras["input"])
-        bam_file.close()
-    paras["output_vcf"] = paras["output"] + ".vcf.gz"
-    if not os.path.exists(paras["output_vcf"]):
-        print("[INFO] The output is : " + paras["output_vcf"] + ".")
-    else:
-        print(
-            '[ERROR] The output ' + paras["output_vcf"] +
-            ' is still exist! in case of overwrite files in this workspace, '
-            'please check your script!')
-        if not paras["debug"]:
-            error_stat = True
-    if error_stat: return False
-    set_value("paras", paras)
-    return True
-
-
-def bm_process_one_ms_site(msDetail):
+def ngs_process_one_ms_site(msDetail):
     msDetail.get_dis()
     # if msDetail.check:
-    msDetail.get_pileup_info()
+    # msDetail.get_pileup_info()
+    msDetail.get_alignment_info()
     return msDetail
 
 
-def bm_write_vcf_init(outputpath):
+def ngs_write_vcf_init(outputpath):
     outputfile = pysam.VariantFile(outputpath, "w")
     bam_file = pysam.AlignmentFile(get_value("paras")["input"], "rb")
     contigs = bam_file.references
@@ -540,7 +475,7 @@ def bm_write_vcf_init(outputpath):
     for contig in sortedContig:
         outputfile.header.add_line(
             "##contig=<ID={chrom},length={length}>".format(chrom=contig, length=contigs_len_dict[contig]))
-    set_value("contigsInfo", contigs_len_dict)
+    set_value("contigs_info", contigs_len_dict)
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
     outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
     outputfile.header.add_line('##INFO=<ID=ms_start,Number=1,Type=Integer,Description='
@@ -577,12 +512,12 @@ def bm_write_vcf_init(outputpath):
     return outputfile
 
 
-def bm_write_vcf_close(outputfile):
+def ngs_write_vcf_close(outputfile):
     outputfile.close()
     pysam.tabix_index(get_value("paras")["output_vcf"], force=True, preset="vcf")
 
 
-def bm_write_vcf(outputfile, dataList):
+def ngs_write_vcf(outputfile, dataList):
     for msDetail in dataList:
         vcfrec = outputfile.new_record()
         # print("infoKey",vcfrec.info.keys())
@@ -625,9 +560,9 @@ def bm_write_vcf(outputfile, dataList):
         outputfile.write(vcfrec)
 
 
-def bm_multi_run(thread, datalist):
+def ngs_multi_run(thread, datalist):
     pool = multiprocessing.Pool(processes=thread)
-    result_list = pool.map(bm_process_one_ms_site, datalist)
+    result_list = pool.map(ngs_process_one_ms_site, datalist)
     pool.close()
     pool.join()
     # result_list = []
@@ -640,15 +575,12 @@ def bm_multi_run(thread, datalist):
     return result_list
 
 
-def benchmark(parase):
-    if not benchmark_init(parase):
-        return -1
-        # return if the process the arguments errors
+def genotype_ngs():
     args = get_value("paras")
-    dis = args["output_vcf"]
+    dis = args["output_dis"]
     thread = args["threads"]
     batch = args["batch"]
-    outputfile = bm_write_vcf_init(dis)
+    outputfile = ngs_write_vcf_init(dis)
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
     curentMSNum = 0
@@ -658,9 +590,6 @@ def benchmark(parase):
     suffix_len = args["suffix_len"]
     for ms_id, info in df_microsatellites.iterrows():
         curentMSNum += 1
-        # print(curentMSNum)
-        # if curentMSNum <1  and args["debug"]:
-        #     continue
         chrom = info["chr"]
         if chrom not in contigs_info:
             continue
@@ -669,30 +598,30 @@ def benchmark(parase):
         motif = info["motif"]
         motif_len = len(motif)
         pos_end = pos_start + motif_len * repeat_times
-        this_ms_bm = MSHAP(chrom=chrom,
-                           pos_start=pos_start,
-                           pos_end=pos_end,
-                           motif=info["motif"],
-                           motif_len=motif_len,
-                           repeat_times=repeat_times,
-                           bam_path=args["input"],
-                           reference_path=args["reference"],
-                           prefix_len=prefix_len,
-                           suffix_len=suffix_len
-                           )
+        this_ms_bm = MSHAP_NGS(chrom=chrom,
+                               pos_start=pos_start,
+                               pos_end=pos_end,
+                               motif=info["motif"],
+                               motif_len=motif_len,
+                               repeat_times=repeat_times,
+                               bam_path=args["input"],
+                               reference_path=args["reference"],
+                               prefix_len=prefix_len,
+                               suffix_len=suffix_len
+                               )
         tmp_window.append(this_ms_bm)
 
         if curentMSNum % (batch * thread) == 0:
             print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, processing:",
                   curentMSNum - batch * thread + 1,
                   "-", curentMSNum, "(" + str(round(curentMSNum / ms_number * 100, 2)) + "%)")
-            result_list = bm_multi_run(thread=thread, datalist=tmp_window)
+            result_list = ngs_multi_run(thread=thread, datalist=tmp_window)
             tmp_window = []
-            bm_write_vcf(outputfile, result_list)
-            # bm_write_vcf(outputfile, result_list)
-            # bm_write_vcf_close(outputfile)
+            # ngs_write_vcf(outputfile, result_list)
+            # ngs_write_vcf(outputfile, result_list)
+            # ngs_write_vcf_close(outputfile)
 
     print("[INFO] Build Benchmark: Total", ms_number, "microsatelite, finish all!")
-    result_list = bm_multi_run(thread=thread, datalist=tmp_window)
-    bm_write_vcf(outputfile, result_list)
-    bm_write_vcf_close(outputfile)
+    result_list = ngs_multi_run(thread=thread, datalist=tmp_window)
+    ngs_write_vcf(outputfile, result_list)
+    ngs_write_vcf_close(outputfile)

@@ -176,30 +176,31 @@ def dis_sum(dict_list):
 
 if __name__ =="__main__":
     a=get_max_support_index({1:5,6:40,3:2})
-    a=get_max_support_index({})
-    print(a)
-    
-# TODO check and normalize
-if __name__ == "__main__":
-    ""
-    dict1 = {1: 1, 2: 2, 3: 3}
-    dict2 = {1: 2, 2: 4, 3: 8}
-    start = time.time()
-    step = 90000
-    for i in range(step):
-        getDisdistance(dict2, dict1)
-    end = time.time()
-    print(end - start)
-    start = time.time()
-    for i in range(step):
-        getDisdistance2(dict2, dict1)
-    end = time.time()
-    print(end - start)
-    start = time.time()
-    for i in range(step):
-        getDisdistance3(dict2, dict1)
-    end = time.time()
-    print(end - start)
-    print(getDisdistance(dict1, dict2))
-    print(getDisdistance2(dict1, dict2))
-    print(getDisdistance3(dict1, dict2))
+    # a=get_max_support_index({})
+    print(get_max_support_index( {13: 8, 14: 11, 12: 1}))
+#     print(a)
+#     
+# # TODO check and normalize
+# if __name__ == "__main__":
+#     ""
+#     dict1 = {1: 1, 2: 2, 3: 3}
+#     dict2 = {1: 2, 2: 4, 3: 8}
+#     start = time.time()
+#     step = 90000
+#     for i in range(step):
+#         getDisdistance(dict2, dict1)
+#     end = time.time()
+#     print(end - start)
+#     start = time.time()
+#     for i in range(step):
+#         getDisdistance2(dict2, dict1)
+#     end = time.time()
+#     print(end - start)
+#     start = time.time()
+#     for i in range(step):
+#         getDisdistance3(dict2, dict1)
+#     end = time.time()
+#     print(end - start)
+#     print(getDisdistance(dict1, dict2))
+#     print(getDisdistance2(dict1, dict2))
+#     print(getDisdistance3(dict1, dict2))

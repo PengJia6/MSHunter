@@ -25,26 +25,6 @@ def global_init():
                                  ["chr" + str(i) for i in range(1, 23)] + \
                                  ["X", "Y", "chrX", "chrY", "chrM", "MT"]
     _global_dict["default"] = {
-        "bam2dis": {
-            "threads": 4,
-            "minimum_mapping_quality": 1,
-            "minimum_support_reads": 2,
-            "batch": 2000,
-            "debug": False,
-            "separator": "tab",  # comma,tab,space
-            "only_homopolymers": False,
-            "allow_mismatch": True,
-            "minimum_repeat_times": "1:8;2-5:5",
-            "maximum_repeat_times": "1-5:100",
-
-        },
-        "errEval": {
-            "threads": 4,
-            "batch": 2000,
-        },
-
-        "call": {
-        },
         "genotype": {
             "reference": ".",
             "threads": 4,
@@ -59,10 +39,10 @@ def global_init():
             "maximum_repeat_times": "1-5:100",
             "prefix_len": 500,
             "suffix_len": 500,
-            "kmer_size": 5,
+            # "kmer_size": 5,
             "minimum_phasing_reads": 3,
-            "tech": "ccs",
-            "hap": True,
+            # "tech": "ccs",
+            "hap": False,
         },
         "benchmark": {
             "reference": ".",
