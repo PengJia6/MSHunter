@@ -144,7 +144,8 @@ def merge():
         merged_rec.samples[sample]["mut_start"] = "|".join(mut_start)
         merged_rec.samples[sample]["mut_end"] = "|".join(mut_end)
         merged_rec.samples[sample].phased = True
-        mergerd_file.write(merged_rec)
+        if merged_rec.info["check"]:
+            mergerd_file.write(merged_rec)
 
     mergerd_file.close()
     print("[INFO] Finished")

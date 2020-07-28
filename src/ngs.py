@@ -124,10 +124,19 @@ class MSHAP_NGS:
     mut_type: mutation type and details
     """
 
-    def __init__(self, chrom, pos_start, pos_end, motif, motif_len, repeat_times,
-                 bam_path, reference_path,
+    def __init__(self,
+                 chrom,
+                 pos_start,
+                 pos_end,
+                 motif,
+                 motif_len,
+                 repeat_times,
+                 bam_path,
+                 reference_path,
                  prefix_len=0,
-                 suffix_len=0):
+                 suffix_len=0,
+                 min_mapping_qual=1
+                 ):
         """
         @param chrom: chromsome
         @param pos_start: start position
@@ -167,6 +176,7 @@ class MSHAP_NGS:
         self.alt_str = "."
         self.allele = 0
         self.mut_type = None
+        self.min_mapping_qual = min_mapping_qual
 
     def get_reads_alignment(self, bam_file):
 
@@ -175,8 +185,11 @@ class MSHAP_NGS:
         for alignment in alignment_list:
             if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary:
                 continue
-            if alignment.reference_start > self.pos_start or alignment.reference_end < self.pos_end:
+            # if alignment.reference_start > self.pos_start or alignment.reference_end < self.pos_end:
+            if alignment.reference_start > self.start_pre or alignment.reference_end < self.end_suf:
                 continue
+            if alignment.mapping_quality < self.min_mapping_qual: continue
+
             reads_com.append(alignment)
         return reads_com
 
@@ -210,7 +223,7 @@ class MSHAP_NGS:
                 self.more_than_one_alleles_ms = True
                 self.check = False
                 self.check_stats.append("More_alleles_in_MS")
-        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length,"000")
+        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length, "000")
         if not self.check:
             return -1
         else:
@@ -221,9 +234,9 @@ class MSHAP_NGS:
         repeat_length_dict = {}
         reads = self.get_reads_alignment(bam_file)
         bam_file.close()
-
         for alignment in reads:
-            repeat_length = self.get_repeat_length(alignment)
+            # repeat_length = self.get_repeat_length(alignment)
+            repeat_length = self.get_repeat_info_from_one_read(alignment)
             if repeat_length < 0: continue
             if repeat_length not in repeat_length_dict:
                 repeat_length_dict[repeat_length] = 0
@@ -243,7 +256,7 @@ class MSHAP_NGS:
                 self.more_than_one_alleles_ms = True
                 self.check = False
                 self.check_stats.append("More_alleles_in_MS")
-        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length,"1111")
+        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length, self.pos_start)
 
     def get_pileup_info(self):
         """
@@ -375,7 +388,7 @@ class MSHAP_NGS:
                 read_pos = read_block[block_index][0] + (pos - ref_block[block_index][0])
                 return pos, read_pos
             elif ref_block[block_index][2] == 2:  # deletion
-                pos = pos
+                # pos = pos
                 read_pos = read_block[block_index][1]
                 self.start_pre = min([ref_block[block_index][0] - 1, self.start_pre])
 
@@ -404,7 +417,7 @@ class MSHAP_NGS:
                 read_pos = read_block[block_index][0] + (pos - ref_block[block_index][0])
                 return pos, read_pos
             elif ref_block[block_index][2] == 2:
-                pos = pos
+                # pos = pos
                 read_pos = read_block[block_index][0]
                 self.end_suf = max([self.end_suf, ref_block[block_index][1] + 1])
                 # pos = ref_block[block_index + 1][0] + 1
@@ -414,6 +427,66 @@ class MSHAP_NGS:
                 pos = pos + 1
                 read_pos = read_block[block_index - 1][0] - 1
                 return pos, read_pos
+
+    def get_repeat_info_from_one_read(self, alignment):
+        # print(self.pos_start, self.start_pre)
+        # print(self.pos_end, self.end_suf)
+        align_start = alignment.reference_start
+        align_end = alignment.reference_end
+        this_ref_str = pysam.FastaFile(self.reference_path).fetch(self.chrom, start=align_start, end=align_end)
+        this_read_str = alignment.query_sequence  # excludes flanking bases that were soft clipped
+        sub_read_str = []
+        sub_ref_str = []
+        ref_block = []
+        read_block = []
+        read_pos = 0
+        ref_pos = align_start
+        ref_pos_str = 0
+        for cigartuple in alignment.cigartuples:
+            if cigartuple[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
+                ref_block.append((ref_pos, ref_pos + cigartuple[1], 0))
+                read_block.append((read_pos, read_pos + cigartuple[1], 0))
+                sub_ref_str.extend(list(this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]]))
+                sub_read_str.extend(list(this_read_str[read_pos:read_pos + cigartuple[1]]))
+                read_pos += cigartuple[1]
+                ref_pos += cigartuple[1]
+                ref_pos_str += cigartuple[1]
+            elif cigartuple[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
+                ref_block.append((ref_pos, ref_pos + 0, 1))
+                read_block.append((read_pos, read_pos + cigartuple[1], 1))
+                if cigartuple[0] == 1:
+                    # print(read_pos)
+                    # print(alignment.cigartuples)
+                    sub_read_str[-1] += this_read_str[read_pos:read_pos + cigartuple[1]]
+                read_pos += cigartuple[1]
+            elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
+                ref_block.append((ref_pos, ref_pos + cigartuple[1], 2))
+                read_block.append((read_pos, read_pos, 2))
+                sub_ref_str.extend(list(this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]]))
+                sub_read_str.extend([""] * cigartuple[1])
+                ref_pos += cigartuple[1]
+                ref_pos_str += cigartuple[1]
+            else:
+                return -1
+        if self.start_pre >= ref_block[-1][1] or self.start_pre <= ref_block[0][0]:
+            return -1
+        if self.end_suf >= ref_block[-1][1] or self.end_suf <= ref_block[0][0]:
+            return -1
+
+        # ref_start, read_start = self.pos_convert_ref2read(ref_block, read_block, self.start_pre, direction="start")
+        # ref_end, read_end = self.pos_convert_ref2read(ref_block, read_block, self.end_suf, direction="end")
+        # rpt = self.ref_repeat_length + ((read_end - read_start) - (ref_end - ref_start))
+
+        if not this_ref_str[self.start_pre - align_start:self.end_suf - align_start] == pysam.FastaFile(
+                self.reference_path).fetch(self.chrom, start=self.start_pre, end=self.end_suf):
+            print(this_ref_str[self.start_pre - align_start:self.end_suf - align_start])
+            print((pysam.FastaFile(self.reference_path).fetch(self.chrom, start=self.start_pre, end=self.end_suf)))
+            # print(alignment.query_sequence[read_start:read_end])
+            print()
+
+        return self.ref_repeat_length + \
+               len("".join(sub_read_str[self.pos_start - 1 - align_start:self.pos_end - align_start + 1])) - \
+               len("".join(sub_ref_str[self.pos_start - 1 - align_start:self.pos_end - align_start + 1]))
 
     def get_repeat_length(self, alignment):
         """
@@ -457,6 +530,7 @@ def ngs_process_one_ms_site(msDetail):
     # if msDetail.check:
     # msDetail.get_pileup_info()
     msDetail.get_alignment_info()
+    print()
     return msDetail
 
 
@@ -514,7 +588,7 @@ def ngs_write_vcf_init(outputpath):
 
 def ngs_write_vcf_close(outputfile):
     outputfile.close()
-    pysam.tabix_index(get_value("paras")["output_vcf"], force=True, preset="vcf")
+    pysam.tabix_index(get_value("paras")["output_dis"], force=True, preset="vcf")
 
 
 def ngs_write_vcf(outputfile, dataList):
@@ -561,13 +635,13 @@ def ngs_write_vcf(outputfile, dataList):
 
 
 def ngs_multi_run(thread, datalist):
-    pool = multiprocessing.Pool(processes=thread)
-    result_list = pool.map(ngs_process_one_ms_site, datalist)
-    pool.close()
-    pool.join()
-    # result_list = []
-    # for ms in datalist:
-    #     result_list.append(bm_processOneMs(ms))
+    # pool = multiprocessing.Pool(processes=thread)
+    # result_list = pool.map(ngs_process_one_ms_site, datalist)
+    # pool.close()
+    # pool.join()
+    result_list = []
+    for ms in datalist:
+        result_list.append(ngs_process_one_ms_site(ms))
 
     # print("input",len(datalist))
     # print("output",len(result_list))
@@ -580,6 +654,7 @@ def genotype_ngs():
     dis = args["output_dis"]
     thread = args["threads"]
     batch = args["batch"]
+    min_mapping_quailty = args["minimum_mapping_quality"]
     outputfile = ngs_write_vcf_init(dis)
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
@@ -607,7 +682,8 @@ def genotype_ngs():
                                bam_path=args["input"],
                                reference_path=args["reference"],
                                prefix_len=prefix_len,
-                               suffix_len=suffix_len
+                               suffix_len=suffix_len,
+                               min_mapping_qual=min_mapping_quailty,
                                )
         tmp_window.append(this_ms_bm)
 

@@ -540,7 +540,7 @@ def bm_write_vcf_init(outputpath):
     for contig in sortedContig:
         outputfile.header.add_line(
             "##contig=<ID={chrom},length={length}>".format(chrom=contig, length=contigs_len_dict[contig]))
-    set_value("contigsInfo", contigs_len_dict)
+    set_value("contigs_info", contigs_len_dict)
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
     outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
     outputfile.header.add_line('##INFO=<ID=ms_start,Number=1,Type=Integer,Description='
