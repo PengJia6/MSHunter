@@ -17,7 +17,10 @@ import multiprocessing
 from src.units import *
 
 
-class NGSMutationType:
+# class MutationInfo:
+#     def __init__(self):
+#         read_info=[]
+class ReadInfo:
     """
     Description: Mutation
     pos_del_prefix: deletion position in prefix
@@ -45,6 +48,15 @@ class NGSMutationType:
         self.var_type_ms = []
         self.var_type = ""
         self.var_type_list = []
+        self.deletion = []
+        self.insertion = []
+        self.mismatch = []
+        self.direction = True  # True read is forward, False: read is reversed
+        self.rpl = 0  # repeat length
+        self.read_name = ""
+        self.read_str = ""
+        self.del_span = "None"  # all ,left,right,
+        self.hap = 0  # 0: unknow , 1, 2
 
     def prefix_var_type(self):
         for var in self.var_prefix:
@@ -88,8 +100,19 @@ class NGSMutationType:
         else:
             self.var_type = "None"
 
+    def show_info(self):
+        # if len()
+        print("read_name", self.read_name)
+        print("read_str", self.read_str)
+        print("deletion", self.deletion)
+        print("insertion", self.insertion)
+        print("mismatch", self.mismatch)
+        print("direction", self.direction)
+        print("rpl", self.rpl)
+        print()
 
-class MSHAP_NGS:
+
+class Microsatellite:
     """
     @chrom : chromsome
     @pos_start: start position of microsatellite
@@ -135,7 +158,8 @@ class MSHAP_NGS:
                  reference_path,
                  prefix_len=0,
                  suffix_len=0,
-                 min_mapping_qual=1
+                 min_mapping_qual=1,
+                 phasing=False,
                  ):
         """
         @param chrom: chromsome
@@ -177,9 +201,13 @@ class MSHAP_NGS:
         self.allele = 0
         self.mut_type = None
         self.min_mapping_qual = min_mapping_qual
+        self.reads_info = []
+        self.phasing = phasing
+        self.support_reads = 0
+        self.dis = {}
+        self.dis_hap = {}
 
     def get_reads_alignment(self, bam_file):
-
         alignment_list = [alignment for alignment in bam_file.fetch(self.chrom, self.pos_start - 1, self.pos_end + 1)]
         reads_com = []
         for alignment in alignment_list:
@@ -189,7 +217,6 @@ class MSHAP_NGS:
             if alignment.reference_start > self.start_pre or alignment.reference_end < self.end_suf:
                 continue
             if alignment.mapping_quality < self.min_mapping_qual: continue
-
             reads_com.append(alignment)
         return reads_com
 
@@ -201,7 +228,6 @@ class MSHAP_NGS:
         repeat_length_dict = {}
         reads = self.get_reads_alignment(bam_file)
         bam_file.close()
-
         for alignment in reads:
             repeat_length = self.get_repeat_length(alignment)
             if repeat_length < 0: continue
@@ -223,46 +249,58 @@ class MSHAP_NGS:
                 self.more_than_one_alleles_ms = True
                 self.check = False
                 self.check_stats.append("More_alleles_in_MS")
-        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length, "000")
+        # print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length, "000")
+
         if not self.check:
             return -1
         else:
             return 1
 
-    def get_alignment_info(self):
+    def get_reads_info(self):
         bam_file = pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
         repeat_length_dict = {}
         reads = self.get_reads_alignment(bam_file)
         bam_file.close()
+        self.ref_str_ms = pysam.FastaFile(self.reference_path).fetch(self.chrom, start=self.start_pre,
+                                                                     end=self.end_suf)
+        reads_info = []
         for alignment in reads:
-            # repeat_length = self.get_repeat_length(alignment)
-            repeat_length = self.get_repeat_info_from_one_read(alignment)
-            if repeat_length < 0: continue
-            if repeat_length not in repeat_length_dict:
-                repeat_length_dict[repeat_length] = 0
-            repeat_length_dict[repeat_length] += 1
-        self.repeat_length_dis = repeat_length_dict
-        self.allele = len(repeat_length_dict)
-        if self.allele < 1:
+            one_read_info = self.get_repeat_info_from_one_read(alignment)
+            reads_info.append(one_read_info)
+        self.reads_info = reads_info
 
-            self.check = False
-            self.check_stats.append("No_read_covered")
-        else:
-            self.dis_stat = True
-            # print(repeat_length_dict)
-            self.query_repeat_length = get_max_support_index(repeat_length_dict)
-            if self.allele > 1:
-                self.more_than_one_alleles = True
-                self.more_than_one_alleles_ms = True
-                self.check = False
-                self.check_stats.append("More_alleles_in_MS")
-        print(self.query_repeat_length, self.repeat_length_dis, self.ref_repeat_length, self.pos_start)
+    def genotype(self):
+        self.support_reads = len(self.reads_info)
+        if self.support_reads < get_value("paras")["minimum_support_reads"]:
+            return False
+        dis_hap = {0: {}, 1: {}, 2: {}}
+        for read in self.reads_info:
+            repeat_length = read.rpl
+            if repeat_length < 0:
+                self.support_reads -= 1
+                continue
+            hap = read.hap
+            # print()
+            if repeat_length not in dis_hap[hap]:
+                dis_hap[hap][repeat_length] = 0
+            dis_hap[hap][repeat_length] += 1
+        dis_all = dis_sum([dis_hap[0], dis_hap[1], dis_hap[2]])
+        self.dis = dis_all
+        self.dis_hap = dis_hap
+
+
+
+
+        # print(self.dis)
+        # TODO
+
+    # print()
 
     def get_pileup_info(self):
         """
         Description: get the detail mutational information of upstream and downstream
         """
-        mut = NGSMutationType()
+        mut = ReadInfo()
         left_pos = self.end_suf
         right_pos = self.start_pre
         alt_str = []
@@ -360,7 +398,6 @@ class MSHAP_NGS:
         fa_file.close()
 
     def pos_convert_ref2read(self, ref_block: list, read_block: list, pos: int, direction="start") -> tuple:
-
         """
         Description: get the read position according the reference position and cigar staring
         @param direction:  start of end
@@ -429,16 +466,18 @@ class MSHAP_NGS:
                 return pos, read_pos
 
     def get_repeat_info_from_one_read(self, alignment):
-        # print(self.pos_start, self.start_pre)
-        # print(self.pos_end, self.end_suf)
         align_start = alignment.reference_start
         align_end = alignment.reference_end
         this_ref_str = pysam.FastaFile(self.reference_path).fetch(self.chrom, start=align_start, end=align_end)
-        this_read_str = alignment.query_sequence  # excludes flanking bases that were soft clipped
+        this_read_str = alignment.query_sequence
         sub_read_str = []
         sub_ref_str = []
         ref_block = []
         read_block = []
+        read_mut_info = ReadInfo()
+        read_mut_info.direction = False if alignment.is_reverse else True
+        if alignment.has_tag("HP"):
+            read_mut_info.hap = int(alignment.get_tag("HP"))
         read_pos = 0
         ref_pos = align_start
         ref_pos_str = 0
@@ -446,8 +485,20 @@ class MSHAP_NGS:
             if cigartuple[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
                 ref_block.append((ref_pos, ref_pos + cigartuple[1], 0))
                 read_block.append((read_pos, read_pos + cigartuple[1], 0))
-                sub_ref_str.extend(list(this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]]))
-                sub_read_str.extend(list(this_read_str[read_pos:read_pos + cigartuple[1]]))
+                match_ref = list(this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]])
+                match_read = list(this_read_str[read_pos:read_pos + cigartuple[1]])
+                sub_ref_str.extend(match_ref)
+                sub_read_str.extend(match_read)
+                if ref_pos + cigartuple[1] < self.start_pre or ref_pos > self.end_suf:
+                    pass
+                else:
+                    pos = ref_pos - 1
+                    for ref_pot, read_pot in zip(match_ref, match_read):
+                        pos += 1
+                        if pos < self.start_pre or pos > self.end_suf: continue
+                        if read_pot == "N" or ref_pot == "N": continue
+                        if read_pot == ref_pot: continue
+                        read_mut_info.mismatch.append([pos, ref_pot, read_pot])
                 read_pos += cigartuple[1]
                 ref_pos += cigartuple[1]
                 ref_pos_str += cigartuple[1]
@@ -458,35 +509,46 @@ class MSHAP_NGS:
                     # print(read_pos)
                     # print(alignment.cigartuples)
                     sub_read_str[-1] += this_read_str[read_pos:read_pos + cigartuple[1]]
+                    pos = ref_pos - 1
+                    if ref_pos + cigartuple[1] < self.start_pre or ref_pos > self.end_suf:
+                        pass
+                    else:
+                        if pos < self.start_pre or pos > self.end_suf: continue
+                        read_mut_info.insertion.append([pos, sub_ref_str[-1], sub_read_str[-1]])
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
                 ref_block.append((ref_pos, ref_pos + cigartuple[1], 2))
                 read_block.append((read_pos, read_pos, 2))
-                sub_ref_str.extend(list(this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]]))
+                delete_str = this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]]
+                sub_ref_str.extend(list(delete_str))
                 sub_read_str.extend([""] * cigartuple[1])
+                pos = ref_pos
+                end_pos = ref_pos + cigartuple[1]
+                if ref_pos < self.start_pre:  # ref_pos + cigartuple[1]
+                    if end_pos < self.start_pre:
+                        pass
+                    elif end_pos < self.end_suf:
+                        read_mut_info.del_span = "Left"
+                    else:
+                        read_mut_info.del_span = "All"
+                elif ref_pos > self.end_suf:
+                    pass
+                else:
+                    if end_pos >= self.end_suf:
+                        read_mut_info.del_span = "Right"
+                    else:
+                        # if pos < self.start_pre or pos > self.end_suf: continue
+                        read_mut_info.deletion.append([pos, delete_str, ""])
+                    # if
                 ref_pos += cigartuple[1]
                 ref_pos_str += cigartuple[1]
             else:
                 return -1
-        if self.start_pre >= ref_block[-1][1] or self.start_pre <= ref_block[0][0]:
-            return -1
-        if self.end_suf >= ref_block[-1][1] or self.end_suf <= ref_block[0][0]:
-            return -1
-
-        # ref_start, read_start = self.pos_convert_ref2read(ref_block, read_block, self.start_pre, direction="start")
-        # ref_end, read_end = self.pos_convert_ref2read(ref_block, read_block, self.end_suf, direction="end")
-        # rpt = self.ref_repeat_length + ((read_end - read_start) - (ref_end - ref_start))
-
-        if not this_ref_str[self.start_pre - align_start:self.end_suf - align_start] == pysam.FastaFile(
-                self.reference_path).fetch(self.chrom, start=self.start_pre, end=self.end_suf):
-            print(this_ref_str[self.start_pre - align_start:self.end_suf - align_start])
-            print((pysam.FastaFile(self.reference_path).fetch(self.chrom, start=self.start_pre, end=self.end_suf)))
-            # print(alignment.query_sequence[read_start:read_end])
-            print()
-
-        return self.ref_repeat_length + \
-               len("".join(sub_read_str[self.pos_start - 1 - align_start:self.pos_end - align_start + 1])) - \
-               len("".join(sub_ref_str[self.pos_start - 1 - align_start:self.pos_end - align_start + 1]))
+        this_repeat_length = len("".join(sub_read_str[self.pos_start - 1 - align_start:self.pos_end - align_start - 1]))
+        read_mut_info.rpl = this_repeat_length
+        read_mut_info.read_name = alignment.query_name + "_" + ("1" if alignment.is_read1 else "2")
+        read_mut_info.read_str = "".join(sub_read_str[self.start_pre - align_start:self.end_suf - align_start])
+        return read_mut_info
 
     def get_repeat_length(self, alignment):
         """
@@ -525,13 +587,14 @@ class MSHAP_NGS:
         return rpt
 
 
-def ngs_process_one_ms_site(msDetail):
-    msDetail.get_dis()
+def ngs_process_one_ms_site(microsatellite):
+    # msDetail.get_dis()
     # if msDetail.check:
     # msDetail.get_pileup_info()
-    msDetail.get_alignment_info()
-    print()
-    return msDetail
+    microsatellite.get_reads_info()
+    microsatellite.genotype()
+    # print()
+    return microsatellite
 
 
 def ngs_write_vcf_init(outputpath):
@@ -671,20 +734,22 @@ def genotype_ngs():
         pos_start = int(info["pos"])
         repeat_times = int(info["repeatTimes"])
         motif = info["motif"]
+        phasing = args["hap"]
         motif_len = len(motif)
         pos_end = pos_start + motif_len * repeat_times
-        this_ms_bm = MSHAP_NGS(chrom=chrom,
-                               pos_start=pos_start,
-                               pos_end=pos_end,
-                               motif=info["motif"],
-                               motif_len=motif_len,
-                               repeat_times=repeat_times,
-                               bam_path=args["input"],
-                               reference_path=args["reference"],
-                               prefix_len=prefix_len,
-                               suffix_len=suffix_len,
-                               min_mapping_qual=min_mapping_quailty,
-                               )
+        this_ms_bm = Microsatellite(chrom=chrom,
+                                    pos_start=pos_start,
+                                    pos_end=pos_end,
+                                    motif=info["motif"],
+                                    motif_len=motif_len,
+                                    repeat_times=repeat_times,
+                                    bam_path=args["input"],
+                                    reference_path=args["reference"],
+                                    prefix_len=prefix_len,
+                                    suffix_len=suffix_len,
+                                    min_mapping_qual=min_mapping_quailty,
+                                    phasing=phasing,
+                                    )
         tmp_window.append(this_ms_bm)
 
         if curentMSNum % (batch * thread) == 0:
