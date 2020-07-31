@@ -73,15 +73,8 @@ def args_process():
                                        + str(defaultPara_gt["separator"]) + ']')
     ##################################################################################
     # group Analysis regions
-    general_realign = parser_gt.add_argument_group(title="Analysis regions")
-    general_realign.add_argument('-pl', '--prefix_len', type=int, nargs=1,
-                                 default=[defaultPara_gt["prefix_len"]],
-                                 help="Debug mode for developers [default:" +
-                                      str(defaultPara_gt["prefix_len"]) + "]")
-    general_realign.add_argument('-sl', '--suffix_len', type=int, nargs=1,
-                                 default=[defaultPara_gt["suffix_len"]],
-                                 help="Debug mode for developers [default:" +
-                                      str(defaultPara_gt["suffix_len"]) + "]")
+    # general_realign = parser_gt.add_argument_group(title="Analysis regions")
+
     # general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
     #                              default=[defaultPara_gt["kmer_size"]],
     #                              help="Debug mode for developers [default:" +
@@ -89,7 +82,16 @@ def args_process():
 
     ##################################################################################
     # group general option
+
     general_option = parser_gt.add_argument_group(title="General option")
+    general_option.add_argument('-pl', '--prefix_len', type=int, nargs=1,
+                                default=[defaultPara_gt["prefix_len"]],
+                                help="Debug mode for developers [default:" +
+                                     str(defaultPara_gt["prefix_len"]) + "]")
+    general_option.add_argument('-sl', '--suffix_len', type=int, nargs=1,
+                                default=[defaultPara_gt["suffix_len"]],
+                                help="Debug mode for developers [default:" +
+                                     str(defaultPara_gt["suffix_len"]) + "]")
     general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_gt["debug"]],
                                 help="Debug mode for developers [default:" +
@@ -119,6 +121,10 @@ def args_process():
                                 default=[defaultPara_gt["minimum_support_reads"]],
                                 help="minimum support reads of an available microsatellite [default:" +
                                      str(defaultPara_gt["minimum_support_reads"]) + "]")
+    general_option.add_argument('-a', '--min_allele_fraction', type=int, nargs=1,
+                                default=[defaultPara_gt["min_allele_fraction"]],
+                                help="minimum allele fraction report [default:" +
+                                     str(defaultPara_gt["min_allele_fraction"]) + "]")
 
     ##################################################################################
     # group for bam2dis
@@ -142,9 +148,6 @@ def args_process():
                                  help="The number of microsatellite one thread process [default:" +
                                       str(defaultPara_gt["batch"]) + "]")
     commandsParser["genotype"] = parser_gt
-
-
-
 
     ###################################################################################################################
     # add arguments for benchmark module
@@ -271,9 +274,9 @@ def args_process():
                                       help="Sample name[default:" + default_para_bmm["sample"] + "]")
     bmm_general_option = parser_bmm.add_argument_group(title="General option")
     bmm_general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
-                                   default=[default_para_bmm["debug"]],
-                                   help="Debug mode for developers [default:" +
-                                        str(default_para_bmm["debug"]) + "]")
+                                    default=[default_para_bmm["debug"]],
+                                    help="Debug mode for developers [default:" +
+                                         str(default_para_bmm["debug"]) + "]")
     if len(os.sys.argv) < 2:
         parser.print_help()
         return False

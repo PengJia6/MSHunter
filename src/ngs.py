@@ -6,7 +6,8 @@
 # Author : Peng Jia
 # Date   : 2020.07.13
 # Email  : pengjia@stu.xjtu.edu.cn
-# Description: Build benchmark for microsatellite mutation calling
+# Description: gnotyping microsatellite by Next generation data (for Illumina and
+               Pacbio CCS data.)
 =============================================================================="""
 import os
 import re
@@ -17,9 +18,6 @@ import multiprocessing
 from src.units import *
 
 
-# class MutationInfo:
-#     def __init__(self):
-#         read_info=[]
 class ReadInfo:
     """
     Description: Mutation
@@ -48,13 +46,20 @@ class ReadInfo:
         self.var_type_ms = []
         self.var_type = ""
         self.var_type_list = []
-        self.deletion = []
-        self.insertion = []
-        self.mismatch = []
+        self.deletion_ms = []
+        self.insertion_ms = []
+        self.mismatch_ms = []
+        self.deletion_prefix = []
+        self.insertion_prefix = []
+        self.mismatch_prefix = []
+        self.deletion_suffix = []
+        self.insertion_suffix = []
+        self.mismatch_suffix = []
         self.direction = True  # True read is forward, False: read is reversed
         self.rpl = 0  # repeat length
         self.read_name = ""
         self.read_str = ""
+        self.read_list = []
         self.del_span = "None"  # all ,left,right,
         self.hap = 0  # 0: unknow , 1, 2
 
@@ -160,6 +165,8 @@ class Microsatellite:
                  suffix_len=0,
                  min_mapping_qual=1,
                  phasing=False,
+                 min_allele_fraction=0.2,
+                 minimum_support_reads=2
                  ):
         """
         @param chrom: chromsome
@@ -201,11 +208,15 @@ class Microsatellite:
         self.allele = 0
         self.mut_type = None
         self.min_mapping_qual = min_mapping_qual
-        self.reads_info = []
+        self.reads_info = {}
         self.phasing = phasing
         self.support_reads = 0
         self.dis = {}
         self.dis_hap = {}
+        self.hap_info_mismatch = {}
+        self.direction_info_mismatch = {}
+        self.min_allele_fraction = min_allele_fraction
+        self.minimum_support_reads = minimum_support_reads
 
     def get_reads_alignment(self, bam_file):
         alignment_list = [alignment for alignment in bam_file.fetch(self.chrom, self.pos_start - 1, self.pos_end + 1)]
@@ -263,33 +274,85 @@ class Microsatellite:
         bam_file.close()
         self.ref_str_ms = pysam.FastaFile(self.reference_path).fetch(self.chrom, start=self.start_pre,
                                                                      end=self.end_suf)
-        reads_info = []
+        reads_info = {}
         for alignment in reads:
             one_read_info = self.get_repeat_info_from_one_read(alignment)
-            reads_info.append(one_read_info)
+            reads_info[one_read_info.read_name] = one_read_info
         self.reads_info = reads_info
 
-    def genotype(self):
+    def remove_low_fraction(self):
+        # for
+        candidate_snp = {}
+
+        for pos, pos_info in self.direction_info_mismatch.items():
+            read_num = 0
+            all_check = True
+            reads_num_debug = []
+            for dir in ["F", "R"]:
+                this_dir_num = len(pos_info[dir]) if dir in pos_info else 0
+                read_num += this_dir_num
+                reads_num_debug.append([dir, this_dir_num])
+                if all_check and this_dir_num < self.min_expect_support_half:
+                    all_check = False
+            if all_check and read_num >= self.min_expect_support:
+                candidate_snp[pos] = read_num
+                reads_num_debug.append(["all", read_num])
+                print(reads_num_debug)
+                print(candidate_snp, self.min_expect_support, self.min_expect_support_half)
+                print()
+
+        pass
+
+    def genotype_sits(self):
+        pass
+
+    def phasing(self):
+        pass
+
+    def genotype_microsatellite(self):
         self.support_reads = len(self.reads_info)
         if self.support_reads < get_value("paras")["minimum_support_reads"]:
             return False
         dis_hap = {0: {}, 1: {}, 2: {}}
-        for read in self.reads_info:
+        # hap_info_mismatch = {0: {}, 1: {}, 2: {}}
+
+        hap_info_mismatch = {}
+        # direction_info_mismatch = {"F": {}, "R": {}}
+        direction_info_mismatch = {}
+        for read_name, read in self.reads_info.items():
+            # print(read.read_list)
             repeat_length = read.rpl
             if repeat_length < 0:
                 self.support_reads -= 1
                 continue
             hap = read.hap
-            # print()
+            direction = "F" if read.direction else "R"
+            for mis_info in read.mismatch_prefix + read.mismatch_ms + read.mismatch_suffix:
+                if mis_info[0] not in hap_info_mismatch:
+                    hap_info_mismatch[mis_info[0]] = {}
+                if hap not in hap_info_mismatch[mis_info[0]]:
+                    hap_info_mismatch[mis_info[0]][hap] = []
+
+                hap_info_mismatch[mis_info[0]][hap] += [read_name]
+
+                if mis_info[0] not in direction_info_mismatch:
+                    direction_info_mismatch[mis_info[0]] = {}
+                if direction not in direction_info_mismatch[mis_info[0]]:
+                    direction_info_mismatch[mis_info[0]][direction] = []
+                direction_info_mismatch[mis_info[0]][direction] += [read_name]
             if repeat_length not in dis_hap[hap]:
                 dis_hap[hap][repeat_length] = 0
             dis_hap[hap][repeat_length] += 1
         dis_all = dis_sum([dis_hap[0], dis_hap[1], dis_hap[2]])
         self.dis = dis_all
         self.dis_hap = dis_hap
-
-
-
+        self.hap_info_mismatch = hap_info_mismatch
+        self.direction_info_mismatch = direction_info_mismatch
+        self.min_expect_support = max(2, self.minimum_support_reads, int(self.support_reads * self.min_allele_fraction))
+        self.min_expect_support_half = max(1, self.minimum_support_reads * 7 // 20, self.min_expect_support * 7 // 20)
+        self.remove_low_fraction()
+        # self.remove_strand_bias()
+        # snps_pos
 
         # print(self.dis)
         # TODO
@@ -466,6 +529,7 @@ class Microsatellite:
                 return pos, read_pos
 
     def get_repeat_info_from_one_read(self, alignment):
+        # TODO:  To be optimized
         align_start = alignment.reference_start
         align_end = alignment.reference_end
         this_ref_str = pysam.FastaFile(self.reference_path).fetch(self.chrom, start=align_start, end=align_end)
@@ -498,7 +562,12 @@ class Microsatellite:
                         if pos < self.start_pre or pos > self.end_suf: continue
                         if read_pot == "N" or ref_pot == "N": continue
                         if read_pot == ref_pot: continue
-                        read_mut_info.mismatch.append([pos, ref_pot, read_pot])
+                        if pos < self.pos_start:
+                            read_mut_info.mismatch_prefix.append([pos, ref_pot, read_pot])
+                        elif pos >= self.pos_end:
+                            read_mut_info.mismatch_suffix.append([pos, ref_pot, read_pot])
+                        else:
+                            read_mut_info.mismatch_ms.append([pos, ref_pot, read_pot])
                 read_pos += cigartuple[1]
                 ref_pos += cigartuple[1]
                 ref_pos_str += cigartuple[1]
@@ -514,7 +583,13 @@ class Microsatellite:
                         pass
                     else:
                         if pos < self.start_pre or pos > self.end_suf: continue
-                        read_mut_info.insertion.append([pos, sub_ref_str[-1], sub_read_str[-1]])
+                        if pos < self.pos_start - 1:
+                            read_mut_info.insertion_prefix.append([pos, sub_ref_str[-1], sub_read_str[-1]])
+                        elif pos >= self.pos_end:
+                            read_mut_info.insertion_suffix.append([pos, sub_ref_str[-1], sub_read_str[-1]])
+                        else:
+                            read_mut_info.insertion_ms.append([pos, sub_ref_str[-1], sub_read_str[-1]])
+
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
                 ref_block.append((ref_pos, ref_pos + cigartuple[1], 2))
@@ -538,7 +613,12 @@ class Microsatellite:
                         read_mut_info.del_span = "Right"
                     else:
                         # if pos < self.start_pre or pos > self.end_suf: continue
-                        read_mut_info.deletion.append([pos, delete_str, ""])
+                        if pos < self.pos_start:
+                            read_mut_info.deletion_prefix.append([pos, delete_str, ""])
+                        elif pos >= self.pos_end:
+                            read_mut_info.deletion_suffix.append([pos, delete_str, ""])
+                        else:
+                            read_mut_info.deletion_ms.append([pos, delete_str, ""])
                     # if
                 ref_pos += cigartuple[1]
                 ref_pos_str += cigartuple[1]
@@ -548,6 +628,7 @@ class Microsatellite:
         read_mut_info.rpl = this_repeat_length
         read_mut_info.read_name = alignment.query_name + "_" + ("1" if alignment.is_read1 else "2")
         read_mut_info.read_str = "".join(sub_read_str[self.start_pre - align_start:self.end_suf - align_start])
+        read_mut_info.read_list = sub_read_str[self.start_pre - align_start:self.end_suf - align_start]
         return read_mut_info
 
     def get_repeat_length(self, alignment):
@@ -592,7 +673,7 @@ def ngs_process_one_ms_site(microsatellite):
     # if msDetail.check:
     # msDetail.get_pileup_info()
     microsatellite.get_reads_info()
-    microsatellite.genotype()
+    microsatellite.genotype_microsatellite()
     # print()
     return microsatellite
 
@@ -718,6 +799,9 @@ def genotype_ngs():
     thread = args["threads"]
     batch = args["batch"]
     min_mapping_quailty = args["minimum_mapping_quality"]
+    min_allele_fraction = args["min_allele_fraction"]
+    minimum_support_reads = args["minimum_support_reads"]
+
     outputfile = ngs_write_vcf_init(dis)
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
@@ -749,6 +833,8 @@ def genotype_ngs():
                                     suffix_len=suffix_len,
                                     min_mapping_qual=min_mapping_quailty,
                                     phasing=phasing,
+                                    min_allele_fraction=min_allele_fraction,
+                                    minimum_support_reads=minimum_support_reads,
                                     )
         tmp_window.append(this_ms_bm)
 

@@ -14,6 +14,7 @@ from src.call import *
 from src.errEval import *
 from src.ngs import *
 
+
 def genotype_init(args):
     """
     argument procress
@@ -36,6 +37,7 @@ def genotype_init(args):
     paras["threads"] = args.threads[0]
     paras["batch"] = args.batch[0]
     paras["minimum_phasing_reads"] = args.minimum_phasing_reads[0]
+    paras["min_allele_fraction"] = args.min_allele_fraction[0]
     paras["ranges_of_repeat_times"] = {}
 
     for i in args.minimum_repeat_times[0].split(";"):
@@ -131,7 +133,7 @@ def genotype_init(args):
 
 def genotype(parase):
     if genotype_init(parase):
-        if get_value("paras")["tech"]=="ilm":
+        if get_value("paras")["tech"] == "ilm":
             print("ILM")
             genotype_ngs()
         else:

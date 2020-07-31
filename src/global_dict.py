@@ -43,6 +43,7 @@ def global_init():
             "minimum_phasing_reads": 3,
             # "tech": "ccs",
             "hap": False,
+            "min_allele_fraction": 0.2,
         },
         "benchmark": {
             "reference": ".",
