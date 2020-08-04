@@ -589,7 +589,6 @@ class Microsatellite:
                             read_mut_info.insertion_suffix.append([pos, sub_ref_str[-1], sub_read_str[-1]])
                         else:
                             read_mut_info.insertion_ms.append([pos, sub_ref_str[-1], sub_read_str[-1]])
-
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
                 ref_block.append((ref_pos, ref_pos + cigartuple[1], 2))
