@@ -19,7 +19,7 @@ from src.benchmark import *
 from src.genotype import *
 from src.benchmark_merge import benchmark_merge
 
-print(" ".join(sys.argv))
+logger.info(" ".join(sys.argv))
 
 
 def args_process():
@@ -27,7 +27,6 @@ def args_process():
     argument procress
     """
     defaultPara = get_value("default")
-
     commands = []
     commandsParser = {}
     parser = argparse.ArgumentParser(description='mstools: Microsatellite genotyping toolbox.'
@@ -289,8 +288,9 @@ def args_process():
         parser.parse_args()
         return False
     if os.sys.argv[1] not in commands:
-        print("[Error] Command Error! ", os.sys.argv[1], "is not the available command")
-        print("[Tips] Please input correct command such as " + ", ".join(commands) + "!")
+        logger.error("Command Error! " + os.sys.argv[1] +
+                     "is not the available command.\n"
+                     "[Tips] Please input correct command such as " + ", ".join(commands) + "!")
         parser.print_help()
         # parser.parse_args()
         return False

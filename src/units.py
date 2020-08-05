@@ -13,6 +13,7 @@ import time
 import pandas as pd
 from src.global_dict import *
 
+
 # TODO check and normalize
 def removeZeroDict(dict):
     newdict = {}
@@ -36,6 +37,7 @@ def getDisdistance(dict1, dict2):
         sum += (err * err)
     return round(np.sqrt(sum), 6)
 
+
 # TODO check and normalize
 def getDisdistance2(dict1, dict2):
     dictkey = list(dict1.keys()) + list(dict2.keys())
@@ -53,6 +55,7 @@ def getDisdistance2(dict1, dict2):
     # print(np.linalg.norm(np.array(list1)-np.array(list2)))
     # print(np.sqrt(np.sum(np.square(np.array(list1)-np.array(list2)))))
     return np.linalg.norm(np.array(list1) - np.array(list2))
+
 
 # TODO check and normalize
 
@@ -78,7 +81,7 @@ def load_microsatellites(args):
     Description: load Microsatellite information
     Stat: PASS
     """
-    print("[INFO] Loading microsatellite file...")
+    logger.info("Loading microsatellite file...")
     ms = args["microsatellite"]
     separator = args["separator"]
     # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
@@ -131,10 +134,11 @@ def load_microsatellites(args):
     for ul in repeatUnitList:
         minr = repeatRange[ul]["min"]
         maxr = repeatRange[ul]["max"]
-        df_microsatellite_pass = pd.concat([df_microsatellite_pass, df_microSatellites[(df_microSatellites["motifLen"] == ul) &
-                                                    (df_microSatellites["repeatTimes"] >= minr) &
-                                                    (df_microSatellites["repeatTimes"] <= maxr)
-                                                    ]])
+        df_microsatellite_pass = pd.concat(
+            [df_microsatellite_pass, df_microSatellites[(df_microSatellites["motifLen"] == ul) &
+                                                        (df_microSatellites["repeatTimes"] >= minr) &
+                                                        (df_microSatellites["repeatTimes"] <= maxr)
+                                                        ]])
     if args["debug"]:
         locis_num = 8000
         df_microsatellite_pass = df_microsatellite_pass.iloc[100:locis_num + 100, :]
@@ -143,7 +147,7 @@ def load_microsatellites(args):
         #     df_microsatellite_pass = df_microsatellite_pass.sample(locis_num)
     df_microsatellite_pass.sort_index(inplace=True)
 
-    print("[INFO] There are total", len(df_microsatellite_pass), "microsatellites.")
+    logger.info("There are total " + str(len(df_microsatellite_pass)) + " microsatellites.")
     set_value("ms_number", len(df_microsatellite_pass))
     set_value("motifList", set(df_microsatellite_pass["motif"]))
     return df_microsatellite_pass
@@ -158,6 +162,7 @@ def get_max_support_index(input_dict):
     """
     m = max(input_dict.keys(), key=(lambda x: input_dict[x]))
     return m
+
 
 # TODO chcck and normalize
 def dis_sum(dict_list):
@@ -174,10 +179,11 @@ def dis_sum(dict_list):
             res_dict[key] += item[key]
     return res_dict
 
-if __name__ =="__main__":
-    a=get_max_support_index({1:5,6:40,3:2})
+
+if __name__ == "__main__":
+    a = get_max_support_index({1: 5, 6: 40, 3: 2})
     # a=get_max_support_index({})
-    print(get_max_support_index( {13: 8, 14: 11, 12: 1}))
+    print(get_max_support_index({13: 8, 14: 11, 12: 1}))
 #     print(a)
 #     
 # # TODO check and normalize

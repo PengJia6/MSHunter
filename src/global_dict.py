@@ -12,8 +12,22 @@
 Version:
 202007016: 0.1.4, update the benchmark command, 202007016
 """
-version_id = "0.1.4"
+import logging
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setLevel(logging.DEBUG)
+
+formatter = logging.Formatter('[%(levelname)s] %(message)s')
+consoleHandler.setFormatter(formatter)
+
+logger.addHandler(consoleHandler)
+
+# logger.info("command: " + " ".join(sys.argv))
+
+version_id = "0.1.4"
 
 def global_init():
     global _global_dict
