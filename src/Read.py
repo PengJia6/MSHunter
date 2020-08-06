@@ -117,6 +117,7 @@ class Read:
         self.align_start = alignment.reference_start
         self.align_end = alignment.reference_end
         self.this_read_str = alignment.query_sequence
+        self.this_ref_str = ""
         self.read_id = read_id
         self.reference = reference
         self.support_microsatellites = []
@@ -126,116 +127,38 @@ class Read:
         self.hap = int(alignment.get_tag("HP")) if alignment.has_tag("HP") else 0
         self.cigartuples = alignment.cigartuples
 
-
     # def get_microsatellite_detail(self, ms_info):
     #     self. = ms_info
-
 
     def get_read_str(self):
         pass
         # TODO:  To be optimized
 
-        this_ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, start=self.align_start, end=self.align_end)
-
+        self.this_ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, start=self.align_start,
+                                                                  end=self.align_end)
         sub_read_str = []
-        sub_ref_str = []
-        ref_block = []
-        read_block = []
-        read_mut_info = ReadInfo()
-        read_mut_info.direction = self.direction
-        read_mut_info.hap = self.hap
+        # read_mut_info = ReadInfo()
+        # read_mut_info.direction = self.direction
+        # read_mut_info.hap = self.hap
         read_pos = 0
-        ref_pos = self.align_start
-        ref_pos_str = 0
         for cigartuple in self.cigartuples:
             if cigartuple[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
-                ref_block.append((ref_pos, ref_pos + cigartuple[1], 0))
-                read_block.append((read_pos, read_pos + cigartuple[1], 0))
-                match_ref = list(this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]])
                 match_read = list(self.this_read_str[read_pos:read_pos + cigartuple[1]])
-                sub_ref_str.extend(match_ref)
                 sub_read_str.extend(match_read)
-                # if ref_pos + cigartuple[1] < self.start_pre or ref_pos > self.end_suf:
-                #     pass
-                # else:
-                #     pos = ref_pos - 1
-                #     for ref_pot, read_pot in zip(match_ref, match_read):
-                #         pos += 1
-                #         if pos < self.start_pre or pos > self.end_suf: continue
-                #         if read_pot == "N" or ref_pot == "N": continue
-                #         if read_pot == ref_pot: continue
-                #         if pos < self.pos_start:
-                #             read_mut_info.mismatch_prefix.append([pos, ref_pot, read_pot])
-                #         elif pos >= self.pos_end:
-                #             read_mut_info.mismatch_suffix.append([pos, ref_pot, read_pot])
-                #         else:
-                #             read_mut_info.mismatch_ms.append([pos, ref_pot, read_pot])
                 read_pos += cigartuple[1]
-                ref_pos += cigartuple[1]
-                ref_pos_str += cigartuple[1]
             elif cigartuple[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
-                ref_block.append((ref_pos, ref_pos + 0, 1))
-                read_block.append((read_pos, read_pos + cigartuple[1], 1))
                 if cigartuple[0] == 1:
-                    # print(read_pos)
-                    # print(alignment.cigartuples)
-                    # print(sub_read_str[-1])
-                    # print(self.this_read_str[read_pos:read_pos + cigartuple[1]])
-                    if len(sub_read_str)<1:
-                        print(self.cigartuples)
+                    if len(sub_read_str) < 1:
+                        print(self.read_id)
                     sub_read_str[-1] += self.this_read_str[read_pos:read_pos + cigartuple[1]]
-                    # pos = ref_pos - 1
-                    # if ref_pos + cigartuple[1] < self.start_pre or ref_pos > self.end_suf:
-                    #     pass
-                    # else:
-                    #     if pos < self.start_pre or pos > self.end_suf: continue
-                    #     if pos < self.pos_start - 1:
-                    #         read_mut_info.insertion_prefix.append([pos, sub_ref_str[-1], sub_read_str[-1]])
-                    #     elif pos >= self.pos_end:
-                    #         read_mut_info.insertion_suffix.append([pos, sub_ref_str[-1], sub_read_str[-1]])
-                    #     else:
-                    #         read_mut_info.insertion_ms.append([pos, sub_ref_str[-1], sub_read_str[-1]])
+                if cigartuple[0] == 5:
+                    continue
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
-                ref_block.append((ref_pos, ref_pos + cigartuple[1], 2))
-                read_block.append((read_pos, read_pos, 2))
-                delete_str = this_ref_str[ref_pos_str:ref_pos_str + cigartuple[1]]
-                sub_ref_str.extend(list(delete_str))
                 sub_read_str.extend([""] * cigartuple[1])
-                # pos = ref_pos
-                # end_pos = ref_pos + cigartuple[1]
-                # if ref_pos < self.start_pre:  # ref_pos + cigartuple[1]
-                #     if end_pos < self.start_pre:
-                #         pass
-                #     elif end_pos < self.end_suf:
-                #         read_mut_info.del_span = "Left"
-                #     else:
-                #         read_mut_info.del_span = "All"
-                # elif ref_pos > self.end_suf:
-                #     pass
-                # else:
-                #     if end_pos >= self.end_suf:
-                #         read_mut_info.del_span = "Right"
-                #     else:
-                #         # if pos < self.start_pre or pos > self.end_suf: continue
-                #         if pos < self.pos_start:
-                #             read_mut_info.deletion_prefix.append([pos, delete_str, ""])
-                #         elif pos >= self.pos_end:
-                #             read_mut_info.deletion_suffix.append([pos, delete_str, ""])
-                #         else:
-                #             read_mut_info.deletion_ms.append([pos, delete_str, ""])
-                    # if
-                ref_pos += cigartuple[1]
-                ref_pos_str += cigartuple[1]
             else:
                 return -1
-        # this_repeat_length = len(
-        #     "".join(sub_read_str[self.pos_start - 1 - self.align_start:self.pos_end - self.align_start - 1]))
-        # read_mut_info.rpl = this_repeat_length
-        # read_mut_info.read_name = alignment.query_name + "_" + ("1" if alignment.is_read1 else "2")
-        # read_mut_info.read_str = "".join(sub_read_str[self.start_pre - align_start:self.end_suf - align_start])
-        # read_mut_info.read_list = sub_read_str[self.start_pre - align_start:self.end_suf - align_start]
-        return read_mut_info
+        return
 
-# def update_ms_id(self, ms_id):
+    # def update_ms_id(self, ms_id):
 # if ms_id

@@ -63,7 +63,9 @@ class Window:
                     continue
                 if alignment.reference_start > ms_info.start_pre or alignment.reference_end < ms_info.end_suf:
                     continue
-                read_id = alignment.query_name + str(alignment.reference_name)
+                if len(alignment.query_sequence) < 2:
+                    continue
+                read_id = alignment.query_name + "_" + str(alignment.reference_start)
                 if read_id not in reads:
                     reads[read_id] = Read(read_id=read_id,
                                           chrom=self.contig,
@@ -87,8 +89,8 @@ class Window:
         # result_list = pool.map(self.get_one_read_info, self.reads.values())
         # pool.close()
         # pool.join()
-        result_list=[]
-        for item in  self.reads.values():
+        result_list = []
+        for item in self.reads.values():
             result_list.append(self.get_one_read_info(item))
 
         self.reads = {read.read_id: read for read in result_list}
