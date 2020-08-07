@@ -11,6 +11,11 @@
 import pysam
 
 
+class Read_Mutation:
+    def __init__(self, repeat_length):
+        self.repeat_length = repeat_length
+
+
 class ReadInfo:
     """
     Description: Mutation
@@ -55,6 +60,7 @@ class ReadInfo:
         self.read_list = []
         self.del_span = "None"  # all ,left,right,
         self.hap = 0  # 0: unknow , 1, 2
+        self.microsatellites_num = 0
 
     def prefix_var_type(self):
         for var in self.var_prefix:
@@ -122,7 +128,7 @@ class Read:
         self.reference = reference
         self.support_microsatellites = []
         # self.alignment = alignment
-        self.microsatellite = {}
+        self.microsatellites = {}
         self.direction = False if alignment.is_reverse else True
         self.hap = int(alignment.get_tag("HP")) if alignment.has_tag("HP") else 0
         self.cigartuples = alignment.cigartuples
@@ -158,7 +164,21 @@ class Read:
                 sub_read_str.extend([""] * cigartuple[1])
             else:
                 return -1
-        return
+        self.this_read_str = sub_read_str
 
-    # def update_ms_id(self, ms_id):
+    def get_ms_length_one_read(self):
+        self.microsatellites_num = len(self.microsatellites)
+        print(self.read_id, self.microsatellites_num,len(self.support_microsatellites))
+        read_muts = {}
+        for ms_id, ms in self.microsatellites.items():
+            ms_start = ms.start
+            ms_end = ms.end
+            query_repeat_length = len(
+                "".join(self.this_read_str[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
+            # print(query_repeat_length,ms.repeat_len)
+            read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length)  # TODO
+        self.microsatellites = read_muts
+        pass
+
+# def update_ms_id(self, ms_id):
 # if ms_id

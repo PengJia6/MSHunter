@@ -31,10 +31,11 @@ class Window:
         self.win_end = ms_info_list[-1]["pos"] + ms_info_list[-1]["repeatTimes"] * ms_info_list[-1]["motifLen"] + \
                        self.paras["suffix_len"]
         self.reads = {}
+        self.reads_num = 0
         self.microsatellites = {}
         self.microsatellites_id = {}
-        logger.info(
-            "Processing " + contig + " " + str(self.win_start) + "-" + str(self.win_end) + " " + str(len(ms_info_list)))
+        logger.info("Processing " + contig + " " + str(self.win_start) + "-" +
+                    str(self.win_end) + "\t Microsatellites: " + str(len(ms_info_list)))
 
         # self.ms_list_pos=[ () for info in ms_info_list]
 
@@ -44,14 +45,10 @@ class Window:
 
     def init_microsatellites(self):
         pool = multiprocessing.Pool(processes=self.threads)
-        result_list = pool.map(self.init_one_microsatellite, self.ms_list)
+        microsatellites = pool.map(self.init_one_microsatellite, self.ms_list)
+        self.microsatellites = {ms_info.ms_id: ms_info for ms_info in microsatellites}
         pool.close()
         pool.join()
-        # print(result_list)
-        # pass
-        self.microsatellites = {ms.ms_id: ms for ms in result_list}
-        self.ms_list = [ms.ms_id for ms in result_list]
-        # print(self.microsatellites)
 
     def init_reads(self):
         reads = {}
@@ -71,37 +68,60 @@ class Window:
                                           chrom=self.contig,
                                           alignment=alignment,
                                           reference=self.paras["reference"])
-                    if ms_info.ms_id not in reads[read_id].support_microsatellites:
-                        reads[read_id].support_microsatellites.append(ms_info.ms_id)
+                if ms_info.ms_id not in reads[read_id].support_microsatellites:
+                    reads[read_id].support_microsatellites.append(ms_info.ms_id)
             # print(reads)
             self.reads = reads
+        self.reads_num = len(self.reads)
+        logger.info("Processing " + self.contig + " " + str(self.win_start) + "-" +
+                    str(self.win_end) + "\tReads: " + str(self.reads_num))
 
     def get_one_read_info(self, read):
-        ms_id_list = read.support_microsatellites
-        read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in ms_id_list}
+
+        read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
         read.get_read_str()
+        read.get_ms_length_one_read()
         return read
         pass  # self.ms_list = [ms.ms_id for ms in result_list]
 
     def get_reads_info(self):
-        # pool = multiprocessing.Pool(processes=self.threads)
+        pool = multiprocessing.Pool(processes=self.threads)
         # print(self.reads)
-        # result_list = pool.map(self.get_one_read_info, self.reads.values())
-        # pool.close()
-        # pool.join()
-        result_list = []
-        for item in self.reads.values():
-            result_list.append(self.get_one_read_info(item))
+        result_list = pool.map(self.get_one_read_info, self.reads.values())
+        pool.close()
+        pool.join()
+        # result_list = []
+        # for item in self.reads.values():
+        #     result_list.append(self.get_one_read_info(item))
 
         self.reads = {read.read_id: read for read in result_list}
         pass
 
     def merge_reads_info(self):
-        pass
+        microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
+        for read_id, read in self.reads.items():
+            for ms_id, ms_read_mut in read.microsatellites.items():
+                microsatellites_dict[ms_id][read_id] = ms_read_mut
+        # print(microsatellites_dict)
+        for ms_id, reads_info in microsatellites_dict.items():
+            # print("kkk",reads_info)
+            self.microsatellites[ms_id].reads_info = reads_info
+
+    def genotype_one_microsatellite(self, microsatellite):
+        microsatellite.get_dis()
+        return microsatellite
 
     def genotype_microsatellite(self):
-        # print()
-        pass
+        pool = multiprocessing.Pool(processes=self.threads)
+        microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
+        print(len(microsatellites))
+        pool.close()
+        pool.join()
+        self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
+        # for i in microsatellites:
+        #     if i.depth>0:
+        #         print(i.depth)
+        # pass
 
     def write_to_vcf(self):
         pass

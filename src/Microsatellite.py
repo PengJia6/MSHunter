@@ -19,7 +19,7 @@ class Microsatellite:
                  ):
         self.chrom = ms_info["chr"]
         self.start = ms_info["pos"]
-        self.ms_id = self.chrom + str(self.start)
+        self.ms_id = self.chrom + "_" + str(self.start)
         self.repeat_times = ms_info["repeatTimes"]
         self.repeat_unit = ms_info["motif"]
         self.repeat_unit_len = ms_info["motifLen"]
@@ -28,7 +28,16 @@ class Microsatellite:
         self.start_pre = self.start - ms_info["prefix_len"]
         self.end_suf = self.end + ms_info["suffix_len"]
         self.reads_info = {}
+        self.length_dis_reads = {}
+        self.depth = 0
         # print(ms_info)
+
+    def get_dis(self):
+        self.depth = len(self.reads_info)
+        num = 0
+        for read_info in self.reads_info:
+            num += 1
+        # self.depth = num
 
     # def update_ms_id(self,ms_id):
     #     if ms_id not in self.reads_info
