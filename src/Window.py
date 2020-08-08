@@ -81,6 +81,7 @@ class Window:
         read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
         read.get_read_str()
         read.get_ms_length_one_read()
+        read.get_mut_info()
         return read
         pass  # self.ms_list = [ms.ms_id for ms in result_list]
 
@@ -100,7 +101,7 @@ class Window:
     def merge_reads_info(self):
         microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
         for read_id, read in self.reads.items():
-            for ms_id, ms_read_mut in read.microsatellites.items():
+            for ms_id, ms_read_mut in read.mut_info.items():
                 microsatellites_dict[ms_id][read_id] = ms_read_mut
         # print(microsatellites_dict)
         for ms_id, reads_info in microsatellites_dict.items():

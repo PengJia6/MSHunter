@@ -132,6 +132,7 @@ class Read:
         self.direction = False if alignment.is_reverse else True
         self.hap = int(alignment.get_tag("HP")) if alignment.has_tag("HP") else 0
         self.cigartuples = alignment.cigartuples
+        self.mut_info = {}
 
     # def get_microsatellite_detail(self, ms_info):
     #     self. = ms_info
@@ -168,7 +169,7 @@ class Read:
 
     def get_ms_length_one_read(self):
         self.microsatellites_num = len(self.microsatellites)
-        print(self.read_id, self.microsatellites_num,len(self.support_microsatellites))
+        # print(self.read_id, self.microsatellites_num,len(self.support_microsatellites))
         read_muts = {}
         for ms_id, ms in self.microsatellites.items():
             ms_start = ms.start
@@ -177,7 +178,11 @@ class Read:
                 "".join(self.this_read_str[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
             # print(query_repeat_length,ms.repeat_len)
             read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length)  # TODO
-        self.microsatellites = read_muts
+        self.mut_info = read_muts
+        pass
+
+    def get_mut_info(self):
+
         pass
 
 # def update_ms_id(self, ms_id):
