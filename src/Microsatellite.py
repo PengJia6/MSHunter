@@ -32,11 +32,30 @@ class Microsatellite:
         self.depth = 0
         # print(ms_info)
 
-    def get_dis(self):
+    def set_reads_info(self, reads_info):
+        self.reads_info = reads_info
         self.depth = len(self.reads_info)
-        num = 0
-        for read_info in self.reads_info:
-            num += 1
+
+    def get_dis(self):
+        # print(self.depth)
+        # num = 0
+        ms_dis = {}
+        for read_id, read_info in self.reads_info.items():
+            if read_info.repeat_length not in ms_dis:
+                ms_dis[read_info.repeat_length] = 1
+            else:
+                ms_dis[read_info.repeat_length] += 1
+        self.ms_dis = ms_dis
+
+    def one_hap_genotype(self):
+        ms_dis = {}
+        for read_id, read_info in self.reads_info.items():
+            if read_info.repeat_length not in ms_dis:
+                ms_dis[read_info.repeat_length] = 1
+            else:
+                ms_dis[read_info.repeat_length] += 1
+        self.ms_dis = ms_dis
+        print()
         # self.depth = num
 
     # def update_ms_id(self,ms_id):

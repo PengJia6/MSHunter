@@ -16,6 +16,8 @@ import multiprocessing
 from src.global_dict import *
 from src.units import *
 from src.Window import Window
+
+
 #
 #
 # class MutationType:
@@ -427,21 +429,23 @@ def benchmark_init(args):
     """
     argument procress
     """
-    paras = {}
-    paras["input"] = args.input[0]
-    paras["output"] = args.output[0]
-    paras["microsatellite"] = args.microsatellite[0]
-    paras["reference"] = args.reference[0]
-    paras["separator"] = args.separator[0]
-    paras["prefix_len"] = args.prefix_len[0]
-    paras["suffix_len"] = args.suffix_len[0]
-    paras["debug"] = args.debug[0]
-    paras["only_homopolymer"] = args.only_homopolymers[0]
-    paras["minimum_support_reads"] = args.minimum_support_reads[0]
-    paras["threads"] = args.threads[0]
-    paras["batch"] = args.batch[0]
-    paras["only_microsatellites"] = args.only_microsatellites[0]
-    paras["ranges_of_repeat_times"] = {}
+    paras = {
+        "command": "benchmark",
+        "input": args.input[0],
+        "output": args.output[0],
+        "microsatellite": args.microsatellite[0],
+        "reference": args.reference[0],
+        "separator": args.separator[0],
+        "prefix_len": args.prefix_len[0],
+        "suffix_len": args.suffix_len[0],
+        "debug": args.debug[0],
+        "only_homopolymer": args.only_homopolymers[0],
+        "minimum_support_reads": args.minimum_support_reads[0],
+        "threads": args.threads[0],
+        "batch": args.batch[0],
+        "only_microsatellites": args.only_microsatellites[0],
+        "ranges_of_repeat_times": {}
+    }
 
     for i in args.minimum_repeat_times[0].split(";"):
         unit_range, repeat_range = i.split(":")
@@ -653,7 +657,8 @@ def benchmark(parase):
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
     for contig, contig_len in contigs_info.items():
-        logger.info("Processing " + contig + "...")
+        logger.info("\t--------------------------------------------------------------------------------")
+        logger.info("\tProcessing " + contig + "...")
         this_contig_microsatellite = df_microsatellites[df_microsatellites["chr"] == contig].sort_values("pos")
         window_ms = []
         ms_num = 0
@@ -664,10 +669,8 @@ def benchmark(parase):
             window_ms.append(info)
             if ms_num % (args["batch"] * args["threads"]) == 0:
                 window = Window(contig, window_ms)
-                window_ms = []
                 window.run_window()
-
-                # print(info["pos"])
+                window_ms = []
         if len(window_ms) > 0:
             window = Window(contig, window_ms)
             del window_ms
