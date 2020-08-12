@@ -193,6 +193,7 @@ class Read:
             mismatches = []
             deletions = []
             insertions = []
+            ref_pos=self.align_start
             for pot in range(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start):
                 this_read_base = self.this_read_list[pot]
                 this_ref_base = self.this_ref_list[pot]

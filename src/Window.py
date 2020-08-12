@@ -115,16 +115,20 @@ class Window:
 
     def genotype_microsatellite_ccs_contig(self):
         logger.info("\tMicrosatellites genotyping ... ")
-        pool = multiprocessing.Pool(processes=self.threads)
-        microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
-        pool.close()
-        pool.join()
+        #
+        # pool = multiprocessing.Pool(processes=self.threads)
+        # microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
+        # pool.close()
+        # pool.join()
+        microsatellites=[]
+        for microsatellite in self.microsatellites.values():
+            microsatellites.append(self.genotype_one_microsatellite(microsatellite))
+
+
+
         self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
 
-        # for i in microsatellites:
-        #     if i.depth>0:
-        #         print(i.depth)
-        # pass
+
 
     def write_to_vcf_ccs_contig(self):
         logger.info("\tWrite to vcf ... ")
@@ -138,6 +142,3 @@ class Window:
         if self.paras["command"] == "benchmark":
             self.genotype_microsatellite_ccs_contig()  # 变异检测 并行
             self.write_to_vcf_ccs_contig()  # 一条一条写入
-
-        # print()
-        pass
