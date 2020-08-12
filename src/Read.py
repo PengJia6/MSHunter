@@ -193,8 +193,9 @@ class Read:
             mismatches = []
             deletions = []
             insertions = []
-            ref_pos=self.align_start
+            ref_pos = ms_start_pre - 2
             for pot in range(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start):
+                ref_pos += 1
                 this_read_base = self.this_read_list[pot]
                 this_ref_base = self.this_ref_list[pot]
                 if this_read_base == this_ref_base:
@@ -203,12 +204,12 @@ class Read:
                     this_read_base_len = len(this_read_base)
                     this_ref_base_len = len(this_ref_base)
                     if this_read_base_len == this_ref_base_len:
-                        mismatches.append([pot, this_read_base])
+                        mismatches.append([ref_pos, this_read_base])
                     else:
                         if this_read_base_len < this_ref_base_len:
-                            deletions.append([pot, this_read_base])
+                            deletions.append([ref_pos, this_read_base])
                         else:
-                            insertions.append([pot, this_read_base])
+                            insertions.append([ref_pos, this_read_base])
             read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length, strand=self.strand, hap=self.hap,
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,
                                              )  # TODO

@@ -284,7 +284,6 @@ class MSHAP:
                         elif pos + 1 >= self.pos_end:
                             mut.var_suffix.append([pos + 1, '', indel_str])
                         else:
-
                             if del_end < self.pos_end or pos + 1 >= self.pos_start:
                                 mut.var_ms.append([pos + 1, '', indel_str])
                             else:

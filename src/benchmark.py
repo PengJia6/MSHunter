@@ -586,74 +586,14 @@ def bm_write_vcf_close(outputfile):
     pysam.tabix_index(get_value("paras")["output_vcf"], force=True, preset="vcf")
 
 
-def bm_write_vcf(outputfile, dataList):
-    for msDetail in dataList:
-        vcfrec = outputfile.new_record()
-        # print("infoKey",vcfrec.info.keys())
-        vcfrec.contig = msDetail.chrom
-        # vcfrec.stop = pos + msDetail.repeat_times * len(msDetail.motif)
-        vcfrec.pos = msDetail.mut_start
-        vcfrec.ref = msDetail.ref_str
-        vcfrec.alts = (msDetail.alt_str,) if msDetail.alt_str != "" else ("N",)
-        vcfrec.id = msDetail.mirosatellite_id
-        vcfrec.stop = msDetail.pos_end
-        vcfrec.info["ms_start"] = msDetail.pos_start
-        vcfrec.info["ms_end"] = msDetail.pos_end
-        vcfrec.info["motif"] = msDetail.motif
-        vcfrec.info["repeat_times"] = msDetail.repeat_times
-        vcfrec.info["motif_len"] = msDetail.motif_len
-        vcfrec.info["ref_repeat_length"] = msDetail.ref_repeat_length
-        vcfrec.info["start_pre"] = msDetail.start_pre
-        vcfrec.info["end_suf"] = msDetail.end_suf
-        vcfrec.info["mut_start"] = msDetail.mut_start
-        vcfrec.info["mut_end"] = msDetail.mut_end
-        vcfrec.info["query_repeat_length"] = msDetail.query_repeat_length
-        vcfrec.info["dis_stat"] = str(msDetail.dis_stat)
-        vcfrec.info["check"] = str(msDetail.check)
-        vcfrec.info["check_stats"] = "|".join(msDetail.check_stats)
-        vcfrec.info["dis"] = "|".join(
-            [str(key) + ":" + str(value) for key, value in msDetail.repeat_length_dis.items()])
-        vcfrec.info["allele"] = msDetail.allele
-        # if msDetail.check:
-        vcfrec.info["var_type"] = msDetail.mut_type.var_type
-        vcfrec.info["var_type_list"] = '|'.join([":".join(msDetail.mut_type.var_type_prefix),
-                                                 ":".join(msDetail.mut_type.var_type_ms),
-                                                 ":".join(msDetail.mut_type.var_type_suffix)])
-        # print(msDetail.mut_type.var_prefix,msDetail.mut_type.var_ms,msDetail.mut_type.var_suffix)
-        vcfrec.info["var_detail"] = \
-            "!".join([
-                "|".join([":".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_prefix]),
-                "|".join([":".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_ms]),
-                "|".join([":".join([str(one[0]), one[1], one[2]]) for one in msDetail.mut_type.var_suffix]),
-            ])
-        outputfile.write(vcfrec)
-
-
-def bm_multi_run(thread, datalist):
-    # pool = multiprocessing.Pool(processes=thread)
-    # result_list = pool.map(bm_process_one_ms_site, datalist)
-    # pool.close()
-    # pool.join()
-    result_list = []
-    for ms in datalist:
-        result_list.append(bm_process_one_ms_site(ms))
-
-    # print("input",len(datalist))
-    # print("output",len(result_list))
-
-    return result_list
-
-
 def benchmark(parase):
     if not benchmark_init(parase):
         logger.error("Benchmark init ERROR!")
         return -1
         # return if the process the arguments errors
     args = get_value("paras")
-    dis_out = args["output_vcf"]
-    # thread = args["threads"]
-    # batch = args["batch"]
-    outputfile = bm_write_vcf_init(dis_out)
+    out_vcf = args["output_vcf"]
+    output_file = bm_write_vcf_init(out_vcf)
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
     for contig, contig_len in contigs_info.items():
@@ -666,12 +606,14 @@ def benchmark(parase):
             ms_num += 1
             info["prefix_len"] = args["prefix_len"]
             info["suffix_len"] = args["suffix_len"]
+            info["reference"] = args["reference"]
             window_ms.append(info)
             if ms_num % (args["batch"] * args["threads"]) == 0:
                 window = Window(contig, window_ms)
-                window.run_window()
+                window.run_window(output_file)
                 window_ms = []
         if len(window_ms) > 0:
             window = Window(contig, window_ms)
             del window_ms
-            window.run_window()
+            window.run_window(output_file)
+    bm_write_vcf_close(output_file)

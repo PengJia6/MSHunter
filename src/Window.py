@@ -22,7 +22,6 @@ class Window:
 
         self.paras = get_value("paras")
         self.ms_list = ms_info_list
-
         self.bam_path = self.paras["input"]
         self.threads = self.paras["threads"]
         self.win_start = ms_info_list[0]["pos"] - self.paras["prefix_len"]
@@ -31,7 +30,7 @@ class Window:
         self.reads = {}
         self.reads_num = 0
         self.microsatellites = {}
-        self.microsatellites_id = {}
+        self.microsatellites_id = [it["chr"] + "_" + str(it["pos"]) for it in ms_info_list]
         logger.info("\t--------------------------------------------------------------------------------")
         logger.info("\tProcessing " + contig + ":" + str(self.win_start) + "-" + str(self.win_end))
         logger.info("\tNo. of Microsatellites: " + str(len(ms_info_list)))
@@ -41,7 +40,7 @@ class Window:
         # self.ms_list_pos=[ () for info in ms_info_list]
 
     def init_one_microsatellite(self, ms_info):
-
+        # ref_path=get_value("paras")["reference"]
         ms = Microsatellite(ms_info)
         return ms
 
@@ -105,6 +104,7 @@ class Window:
         for read_id, read in self.reads.items():
             for ms_id, ms_read_mut in read.mut_info.items():
                 microsatellites_dict[ms_id][read_id] = ms_read_mut
+        self.reads = {}
         for ms_id, reads_info in microsatellites_dict.items():
             self.microsatellites[ms_id].set_reads_info(reads_info)
 
@@ -120,25 +120,59 @@ class Window:
         # microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
         # pool.close()
         # pool.join()
-        microsatellites=[]
+        microsatellites = []
         for microsatellite in self.microsatellites.values():
             microsatellites.append(self.genotype_one_microsatellite(microsatellite))
 
-
-
         self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
 
-
-
-    def write_to_vcf_ccs_contig(self):
+    def write_to_vcf_ccs_contig(self, file_output):
         logger.info("\tWrite to vcf ... ")
+        for ms_id in self.microsatellites_id:
+            # print(ms_id)
+            # print(self.microsatellites)
+            ms = self.microsatellites[ms_id]
+            vcfrec = file_output.new_record()
+            # print("infoKey",vcfrec.info.keys())
+            vcfrec.contig = ms.chrom
+            # vcfrec.stop = pos + ms.repeat_times * len(ms.motif)
+            vcfrec.pos = ms.mut_start
+            vcfrec.ref = ms.ref_str
+            vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else ("N",)
+            vcfrec.id = ms.ms_id
+            vcfrec.stop = ms.mut_end
+            vcfrec.info["ms_start"] = ms.start
+            vcfrec.info["ms_end"] = ms.end
+            vcfrec.info["motif"] = ms.repeat_unit
+            vcfrec.info["repeat_times"] = ms.repeat_times
+            vcfrec.info["motif_len"] = ms.repeat_unit_len
+            vcfrec.info["ref_repeat_length"] = ms.repeat_len
+            vcfrec.info["start_pre"] = ms.start_pre
+            vcfrec.info["end_suf"] = ms.end_suf
+            vcfrec.info["mut_start"] = ms.mut_start
+            vcfrec.info["mut_end"] = ms.mut_end
+
+            vcfrec.info["query_repeat_length"] = ms.query_repeat_length
+            vcfrec.info["dis_stat"] = str(ms.dis_stat)
+            vcfrec.info["check"] = str(ms.check)
+            vcfrec.info["check_stats"] = "|".join(ms.check_status)
+            vcfrec.info["dis"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis.items()])
+            # vcfrec.info["allele"] = ms.allele
+            # if ms.check:
+            vcfrec.info["var_type"] = ms.mut.var_type
+            vcfrec.info["var_type_list"] = ms.mut.var_type_detail
+            # print(ms.mut_type.var_prefix,ms.mut_type.var_ms,ms.mut_type.var_suffix)
+            vcfrec.info["var_detail"] = ms.mut.var_detail_str
+            file_output.write(vcfrec)
+
         pass
 
-    def run_window(self):
+    def run_window(self, file_output):
         self.init_microsatellites()  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_info()  # 处理read 并行
         self.merge_reads_info()  # 合并read信息为MS信息
         if self.paras["command"] == "benchmark":
             self.genotype_microsatellite_ccs_contig()  # 变异检测 并行
-            self.write_to_vcf_ccs_contig()  # 一条一条写入
+            self.write_to_vcf_ccs_contig(file_output)  # 一条一条写入
