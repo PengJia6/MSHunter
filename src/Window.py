@@ -116,13 +116,13 @@ class Window:
     def genotype_microsatellite_ccs_contig(self):
         logger.info("\tMicrosatellites genotyping ... ")
         #
-        # pool = multiprocessing.Pool(processes=self.threads)
-        # microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
-        # pool.close()
-        # pool.join()
-        microsatellites = []
-        for microsatellite in self.microsatellites.values():
-            microsatellites.append(self.genotype_one_microsatellite(microsatellite))
+        pool = multiprocessing.Pool(processes=self.threads)
+        microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
+        pool.close()
+        pool.join()
+        # microsatellites = []
+        # for microsatellite in self.microsatellites.values():
+        #     microsatellites.append(self.genotype_one_microsatellite(microsatellite))
 
         self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
 
