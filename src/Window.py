@@ -31,6 +31,7 @@ class Window:
         self.reads_num = 0
         self.microsatellites = {}
         self.microsatellites_id = [it["chr"] + "_" + str(it["pos"]) for it in ms_info_list]
+        self.vcf_recs = []
         # logger.info("\t--------------------------------------------------------------------------------")
         # logger.info("\tProcessing " + contig + ":" + str(self.win_start) + "-" + str(self.win_end))
         # logger.info("\tNo. of Microsatellites: " + str(len(ms_info_list)))
@@ -58,9 +59,10 @@ class Window:
         reads = {}
         sam_file = pysam.AlignmentFile(self.paras["input"], mode="rb", reference_filename=self.paras["reference"])
         # pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
+        # TODO optimize
         for ms_id, ms_info in self.microsatellites.items():
             for alignment in sam_file.fetch(ms_info.chrom, ms_info.start_pre - 1, ms_info.end_suf + 1):
-                if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary:
+                if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary or alignment.is_supplementary:
                     continue
                 if alignment.reference_start > ms_info.start_pre - 1 or alignment.reference_end < ms_info.end_suf + 1:
                     continue
@@ -74,10 +76,8 @@ class Window:
                                           reference=self.paras["reference"])
                 if ms_info.ms_id not in reads[read_id].support_microsatellites:
                     reads[read_id].support_microsatellites.append(ms_info.ms_id)
-            # print(reads)
-            self.reads = reads
+        self.reads = reads
         self.reads_num = len(self.reads)
-        # logger.info("\tNo. of Reads: " + str(self.reads_num))
 
     def get_one_read_info(self, read):
         read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
@@ -130,6 +130,7 @@ class Window:
 
     def write_to_vcf_ccs_contig(self, file_output):
         # logger.info("\tWrite to vcf ... ")
+        recs = []
         for ms_id in self.microsatellites_id:
             # print(ms_id)
             # print(self.microsatellites)
@@ -166,9 +167,9 @@ class Window:
             vcfrec.info["var_type_list"] = ms.mut.var_type_detail
             # print(ms.mut_type.var_prefix,ms.mut_type.var_ms,ms.mut_type.var_suffix)
             vcfrec.info["var_detail"] = ms.mut.var_detail_str
-            file_output.write(vcfrec)
-
-        pass
+            # file_output.write(vcfrec)
+            recs.append(vcfrec)
+        return recs
 
     def run_window(self):
         self.init_microsatellites()  # 并行

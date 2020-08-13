@@ -277,5 +277,6 @@ class Microsatellite:
         # print(alt_list)
         self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start-1, self.mut_end+1)
         self.alt_str = "." if self.mut.var_type == "None" else self.get_alt(alt_list, offset=self.mut_start-1)
+
         # print("=================")
         # mutation.show()

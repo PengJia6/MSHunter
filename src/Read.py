@@ -21,107 +21,6 @@ class Read_Mutation:
         self.hap = hap
 
 
-#
-# class ReadInfo:
-#     """
-#     Description: Mutation
-#     pos_del_prefix: deletion position in prefix
-#     pos_del_ms:  deletion position in ms region
-#     pos_del_suffix: deletion position in suffix
-#     pos_ins_prefix: insertion position in prefix
-#     pos_ins_suffix: insertion position in suffix
-#     pos_ins_ms: insertion position in ms region
-#     pos_snp_prefix: mismatch position in prefix
-#     pos_snp_ms: mismatch position in ms regions
-#     pos_snp_suffix: mismatch position in suffix
-#     var_type_prefix: variant type in prefix
-#     var_type_suffix: variant type in suffix
-#     var_type_ms: variant type in ms region
-#     var_type: variant type in all region
-#     var_list: variant type list
-#     """
-#
-#     def __init__(self):
-#         self.var_prefix = []
-#         self.var_suffix = []
-#         self.var_ms = []
-#         self.var_type_prefix = []
-#         self.var_type_suffix = []
-#         self.var_type_ms = []
-#         self.var_type = ""
-#         self.var_type_list = []
-#         self.deletion_ms = []
-#         self.insertion_ms = []
-#         self.mismatch_ms = []
-#         self.deletion_prefix = []
-#         self.insertion_prefix = []
-#         self.mismatch_prefix = []
-#         self.deletion_suffix = []
-#         self.insertion_suffix = []
-#         self.mismatch_suffix = []
-#         self.direction = True  # True read is forward, False: read is reversed
-#         self.rpl = 0  # repeat length
-#         self.read_name = ""
-#         self.read_str = ""
-#         self.read_list = []
-#         self.del_span = "None"  # all ,left,right,
-#         self.hap = 0  # 0: unknow , 1, 2
-#         self.microsatellites_num = 0
-#
-#     def prefix_var_type(self):
-#         for var in self.var_prefix:
-#             if len(var[1]) == len(var[2]):
-#                 self.var_type_prefix.append("SNP")
-#             elif len(var[1]) > len(var[2]):
-#                 self.var_type_prefix.append("INS")
-#             elif len(var[1]) < len(var[2]):
-#                 self.var_type_prefix.append("DEL")
-#
-#     def suffix_var_type(self):
-#         for var in self.var_suffix:
-#             if len(var[1]) == len(var[2]):
-#                 self.var_type_suffix.append("SNP")
-#             elif len(var[1]) > len(var[2]):
-#                 self.var_type_suffix.append("INS")
-#             elif len(var[1]) < len(var[2]):
-#                 self.var_type_suffix.append("DEL")
-#
-#     def ms_var_type(self, offset):
-#
-#         if offset < 0:
-#             self.var_type_ms.append("DEL")
-#         if offset > 0:
-#             self.var_type_ms.append("INS")
-#
-#         for var in self.var_ms:
-#             if len(var[1]) == len(var[2]):
-#                 self.var_type_ms.append("SNP")
-#
-#     def comput(self, offset):
-#         self.ms_var_type(offset)
-#         self.prefix_var_type()
-#         self.suffix_var_type()
-#         self.var_type_list = self.var_type_prefix + self.var_type_ms + self.var_type_suffix
-#         var_num = len(self.var_type_list)
-#         if var_num > 1:
-#             self.var_type = "Complex"
-#         elif var_num == 1:
-#             self.var_type = self.var_type_list[0]
-#         else:
-#             self.var_type = "None"
-#
-#     def show_info(self):
-#         # if len()
-#         print("read_name", self.read_name)
-#         print("read_str", self.read_str)
-#         print("deletion", self.deletion)
-#         print("insertion", self.insertion)
-#         print("mismatch", self.mismatch)
-#         print("direction", self.direction)
-#         print("rpl", self.rpl)
-#         print()
-
-
 class Read:
     def __init__(self, read_id, alignment, reference, chrom):
         self.chrom = chrom
@@ -165,13 +64,13 @@ class Read:
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
                 if cigartuple[0] == 1:
-                    if len(sub_read_str) < 1:
-                        print(self.read_id)
+                    # if len(sub_read_str) < 1:
+                    #     # print(self.read_id)
                     sub_read_str[-1] += self.this_read_str[read_pos:read_pos + cigartuple[1]]
                 if cigartuple[0] == 5:
                     continue
                 read_pos += cigartuple[1]
-            elif cigartuple[0] in [2, ]:  # 2:D; 3:N: skip region of reference
+            elif cigartuple[0] in [2, 3]:  # 2:D; 3:N: skip region of reference
                 sub_read_str.extend([""] * cigartuple[1])
             else:
                 return -1
@@ -194,6 +93,12 @@ class Read:
             deletions = []
             insertions = []
             ref_pos = ms_start_pre - 2
+            # if len(self.this_ref_list) == 13746:
+            #     print("13746", ms_id)
+            # if len(self.this_ref_list) <= ms_end_suf - self.align_start:
+            #     print('index out', ms_id, self.read_id, )
+            #     print('align', self.align_start, self.align_end)
+            #     print('ms_pos', ms_start_pre, ms_end_suf)
             # print(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start)
             # print(len(self.this_ref_list))
             for pot in range(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start):

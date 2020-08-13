@@ -201,8 +201,10 @@ def run_window_mul(windows, args, file_output):
     windows = pool.map(run_one_window, windows)
     pool.close()
     pool.join()
+    # win_recs=[]
     for win in windows:
-        win.write_to_vcf_ccs_contig(file_output)
+        for rec in win.write_to_vcf_ccs_contig(file_output):
+            file_output.write(rec)
     logger.info("\tTotal Microsatellites: " + str(args["ms_num"]))
     logger.info("\tFinished Microsatellites: " + str(args["current_num"]) +
                 " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2))+"%)")
