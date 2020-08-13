@@ -209,8 +209,8 @@ def run_window_mul(windows, args, file_output):
     logger.info("\tFinished Microsatellites: " + str(args["current_num"]) +
                 " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2))+"%)")
 
-    return
-
+    # return
+    #
 
 def benchmark(parase):
     if not benchmark_init(parase):
@@ -249,16 +249,20 @@ def benchmark(parase):
                 # window.run_window(output_file)
                 # window_ms = []
         if len(window_ms) > 0:
-            item_num = len(window_ms) // args["threads"] + 1
+            ms_num=0
+            for win in window_ms:
+                ms_num+=len(win)
+            item_num = ms_num // args["threads"] + 1
             window_ms_tmp = []
             window_sub = []
             num = 0
             for win in window_ms:
-                num += 1
-                window_sub.append(win)
-                if num % item_num == 0:
-                    window_ms_tmp.append(window_sub)
-                    window_sub = []
+                for ms in win:
+                    num += 1
+                    window_sub.append(ms)
+                    if num % item_num == 0:
+                        window_ms_tmp.append(window_sub)
+                        window_sub = []
             if len(window_sub) > 0:
                 window_ms_tmp.append(window_sub)
             del window_sub, window_ms
