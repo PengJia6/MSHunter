@@ -17,6 +17,7 @@ from src.global_dict import *
 from src.units import *
 from src.Window import Window
 
+
 def benchmark_init(args):
     """
     argument procress
@@ -178,6 +179,37 @@ def bm_write_vcf_close(outputfile):
     pysam.tabix_index(get_value("paras")["output_vcf"], force=True, preset="vcf")
 
 
+def run_one_window(win_info):
+    window = Window(win_info)
+    window.run_window()
+    return window
+
+
+def run_window_mul(windows, args, file_output):
+    contig = windows[0][0]["chr"]
+    start = windows[0][0]["pos"]
+    end = windows[-1][-1]["pos"]
+    num = 0
+    for win in windows:
+        num += len(win)
+    logger.info("\t--------------------------------------------------------------------------------")
+    logger.info("\tProcessing " + contig + ":" + str(start) + "-" + str(end))
+    logger.info("\tNo. of Microsatellites in windows: " + str(num))
+    # logger.info("Processing " + contig + " " + str(self.win_start) + "-" +
+    #             str(self.win_end) + "\t Microsatellites: " + str(len(ms_info_list)))
+    pool = multiprocessing.Pool(processes=args["threads"])
+    windows = pool.map(run_one_window, windows)
+    pool.close()
+    pool.join()
+    for win in windows:
+        win.write_to_vcf_ccs_contig(file_output)
+    logger.info("\tTotal Microsatellites: " + str(args["ms_num"]))
+    logger.info("\tFinished Microsatellites: " + str(args["current_num"]) +
+                " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2))+"%)")
+
+    return
+
+
 def benchmark(parase):
     if not benchmark_init(parase):
         logger.error("Benchmark init ERROR!")
@@ -188,24 +220,46 @@ def benchmark(parase):
     output_file = bm_write_vcf_init(out_vcf)
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
+    args["ms_num"] = len(df_microsatellites)
     for contig, contig_len in contigs_info.items():
         logger.info("\t--------------------------------------------------------------------------------")
         logger.info("\tProcessing " + contig + "...")
         this_contig_microsatellite = df_microsatellites[df_microsatellites["chr"] == contig].sort_values("pos")
         window_ms = []
         ms_num = 0
+        win_num = 0
+        window_sub = []
         for ms_id, info in this_contig_microsatellite.iterrows():
             ms_num += 1
             info["prefix_len"] = args["prefix_len"]
             info["suffix_len"] = args["suffix_len"]
             info["reference"] = args["reference"]
-            window_ms.append(info)
-            if ms_num % (args["batch"] * args["threads"]) == 0:
-                window = Window(contig, window_ms)
-                window.run_window(output_file)
-                window_ms = []
+            window_sub.append(info)
+            if ms_num % (args["batch"]) == 0:
+                window_ms.append(window_sub)
+                window_sub = []
+                win_num += 1
+                if win_num % args["threads"] == 0:
+                    args["current_num"] = ms_num
+                    run_window_mul(window_ms, args, file_output=output_file)
+                    window_ms = []
+                # window = Window(contig, window_ms)
+                # window.run_window(output_file)
+                # window_ms = []
         if len(window_ms) > 0:
-            window = Window(contig, window_ms)
-            del window_ms
-            window.run_window(output_file)
+            item_num = len(window_ms) // args["threads"] + 1
+            window_ms_tmp = []
+            window_sub = []
+            num = 0
+            for win in window_ms:
+                num += 1
+                window_sub.append(win)
+                if num % item_num == 0:
+                    window_ms_tmp.append(window_sub)
+                    window_sub = []
+            if len(window_sub) > 0:
+                window_ms_tmp.append(window_sub)
+            del window_sub, window_ms
+            run_window_mul(window_ms_tmp, args, file_output=output_file)
+            del window_ms_tmp
     bm_write_vcf_close(output_file)
