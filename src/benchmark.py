@@ -69,7 +69,7 @@ def benchmark_init(args):
                 paras["ranges_of_repeat_times"][ur]["max"] = repeat_start
     error_stat = False
     if os.path.exists(paras["input"]):
-        logger.info("The input file is : '" + paras["input"] + "'.")
+        logger.info("The input file is : " + paras["input"] + ".")
     else:
         logger.error('The input file '
                      + paras["input"] + ' is not exist, please check again')
@@ -82,7 +82,7 @@ def benchmark_init(args):
                      + paras["microsatellite"] + ' is not exist, please check again')
         error_stat = True
     if os.path.isfile(paras["reference"]):
-        logger.info("The reference file is : '" + paras["reference"] + "'.")
+        logger.info("The reference file is : " + paras["reference"] + ".")
     else:
         paras["reference"] = "" if paras["reference"] == "." else paras["reference"]
         logger.error('The reference file ' + paras["reference"] + ' is not exist, please check again')
@@ -105,21 +105,18 @@ def benchmark_init(args):
     if not os.path.exists(paras["output_vcf"]):
         logger.info("The output is : " + paras["output_vcf"] + ".")
     else:
-        logger.error(
-            '[ERROR] The output ' + paras["output_vcf"] +
-            ' is still exist! in case of overwrite files in this workspace, '
-            'please check your script!')
-        if not paras["debug"]:
+        if paras["debug"]:
+            pass
+        else:
+            logger.error(
+                'The output ' + paras["output_vcf"] +
+                ' is still exist! in case of overwrite files in this workspace, '
+                'please check your script!')
             error_stat = True
+
     if error_stat: return False
     set_value("paras", paras)
     return True
-
-
-def bm_process_one_ms_site(msDetail):
-    msDetail.get_dis()
-    msDetail.get_pileup_info()
-    return msDetail
 
 
 def bm_write_vcf_init(outputpath):
@@ -181,7 +178,7 @@ def bm_write_vcf_close(outputfile):
 
 def run_one_window(win_info):
     window = Window(win_info)
-    window.run_window()
+    window.run_window_benchmark()
     return window
 
 
@@ -192,11 +189,9 @@ def run_window_mul(windows, args, file_output):
     num = 0
     for win in windows:
         num += len(win)
-    logger.info("\t--------------------------------------------------------------------------------")
-    logger.info("\tProcessing " + contig + ":" + str(start) + "-" + str(end))
-    logger.info("\tNo. of Microsatellites in windows: " + str(num))
-    # logger.info("Processing " + contig + " " + str(self.win_start) + "-" +
-    #             str(self.win_end) + "\t Microsatellites: " + str(len(ms_info_list)))
+    logger.info("--------------------------------------------------------------------------------")
+    logger.info("Processing " + contig + ":" + str(start) + "-" + str(end))
+    logger.info("No. of Microsatellites in windows: " + str(num))
     pool = multiprocessing.Pool(processes=args["threads"])
     windows = pool.map(run_one_window, windows)
     pool.close()
@@ -205,8 +200,8 @@ def run_window_mul(windows, args, file_output):
     for win in windows:
         for rec in win.write_to_vcf_ccs_contig(file_output):
             file_output.write(rec)
-    logger.info("\tTotal Microsatellites: " + str(args["ms_num"]))
-    logger.info("\tFinished Microsatellites: " + str(args["current_num"]) +
+    logger.info("Total Microsatellites: " + str(args["ms_num"]))
+    logger.info("Finished Microsatellites: " + str(args["current_num"]) +
                 " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2)) + "%)")
 
     # return
@@ -226,8 +221,8 @@ def benchmark(parase):
     args["ms_num"] = len(df_microsatellites)
     total_current_num = 0
     for contig, contig_len in contigs_info.items():
-        logger.info("\t--------------------------------------------------------------------------------")
-        logger.info("\tProcessing " + contig + "...")
+        logger.info("--------------------------------------------------------------------------------")
+        logger.info("Processing " + contig + "...")
         this_contig_microsatellite = df_microsatellites[df_microsatellites["chr"] == contig].sort_values("pos")
         window_ms = []
         ms_num = 0

@@ -86,25 +86,12 @@ def merge():
         merged_rec.id = hap1_rec.id
         mut_start = min(hap1_rec.pos, hap2_rec.pos)
         mut_end = max(hap1_rec.info["mut_end"], hap2_rec.info["mut_end"])
-        merged_rec.pos=mut_start
-        merged_rec.stop=mut_end
-        if None == hap1_rec.alts:
+        merged_rec.pos = mut_start
+        merged_rec.stop = mut_end
+        if "None" == hap1_rec.info["var_type"]:
             hap1_rec.alts = [hap1_rec.ref]
-        if None == hap2_rec.alts:
+        if "None" == hap2_rec.info["var_type"]:
             hap2_rec.alts = [hap2_rec.ref]
-
-        #     ref_prefix = ""
-        #     ref_suffix = ""
-        #     alts = [merged_rec.ref]
-        #
-        #     if hap1_rec.info["mut_start"] > mut_start:
-        #         ref_prefix = hap2_rec.ref[0:hap1_rec.info["mut_start"] - mut_start]
-        #     if hap1_rec.info["mut_end"] < mut_end:
-        #         ref_suffix = hap2_rec.ref[-(hap1_rec.info["mut_end"] - mut_end):]
-        #     merged_rec.ref = ref_prefix + hap1_rec.ref + ref_suffix
-        #     gt = []
-        #     pass
-        # else:
         ref_prefix = ""
         hap1_prefix = ""
         hap2_prefix = ""

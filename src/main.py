@@ -320,7 +320,5 @@ def main():
         # if parase.command == "ngs":
         #     # genotype(parase)
         #     genotype_ngs(parase)
-
-
 if __name__ == "__main__":
     main()

@@ -13,6 +13,7 @@ from src.bam2dis import *
 from src.call import *
 from src.errEval import *
 from src.ngs import *
+from src.ccs import *
 
 
 def genotype_init(args):
@@ -69,48 +70,48 @@ def genotype_init(args):
                 paras["ranges_of_repeat_times"][ur]["max"] = repeatStart
     error_stat = False
     if os.path.exists(paras["input"]):
-        print("[INFO] The input file is : '" + paras["input"] + "'.")
+        logger.info("The input file is : " + paras["input"] + ".")
     else:
-        print('[ERROR] The input file '
-              + paras["input"] + ' is not exist, please check again')
+        logger.error('The input file ' + paras["input"] + ' is not exist, please check again')
         error_stat = True
     if os.path.isfile(paras["microsatellite"]):
-        print("[INFO] The microsatellites file  is : " + paras["microsatellite"])
+        logger.error("The microsatellites file  is : " + paras["microsatellite"])
     else:
-        print('[ERROR] The microsatellites file '
-              + paras["microsatellite"] + ' is not exist, please check again')
+        logger.error('The microsatellites file ' + paras["microsatellite"] + ' is not exist, please check again')
         error_stat = True
     if os.path.isfile(paras["reference"]):
-        print("[INFO] The reference file is : '" + paras["reference"] + "'.")
+        logger.info("The reference file is : " + paras["reference"] + ".")
     else:
         paras["reference"] = "" if paras["reference"] == "." else paras["reference"]
-        print('[ERROR] The reference file ' + paras["reference"] + ' is not exist, please check again')
+        logger.error('The reference file ' + paras["reference"] + ' is not exist, please check again')
         error_stat = True
     if paras["input"][-4:] == "cram":
         paras["input_format"] = "cram"
         cramfile = pysam.AlignmentFile(paras["input"], mode="rb", reference_filename=paras["reference"])
         if not cramfile.has_index():
-            print("[INFO] Build index for the input cram ...")
+            logger.info("Build index for the input cram ...")
             pysam.index(paras["input"])
         cramfile.close()
     else:
         paras["input_format"] = "bam"
         bamfile = pysam.AlignmentFile(paras["input"], mode="rb")
         if not bamfile.has_index():
-            print("[INFO] Build index for the input bam ...")
+            logger.info("Build index for the input bam ...")
             pysam.index(paras["input"])
         bamfile.close()
 
     if not os.path.exists(paras["output"]):
-        print("[INFO] The output is : " + paras["output"] + ".")
+        logger.info("The output is : " + paras["output"] + ".")
     else:
-        print(
-            '[ERROR] The output ' + paras["output"] +
-            ' is still exist! in case of overwrite files in this workspace, '
-            'please check your script!')
-        if not paras["debug"]:
+        if paras["debug"]:
+            pass
+        else:
+            logger.error('The output ' + paras["output"] +
+                         ' is still exist! in case of overwrite files in this workspace, '
+                         'please check your script!')
             error_stat = True
-    if error_stat: return False
+    if error_stat:
+        return False
     output_path = paras["output"]
     output_path = output_path if output_path[-1] == "/" else output_path + "/"
     if not os.path.exists(output_path):
@@ -132,11 +133,10 @@ def genotype_init(args):
 
 
 def genotype(parase):
-    if genotype_init(parase):
-        if get_value("paras")["tech"] == "ilm":
-            print("ILM")
-            genotype_ngs()
-        else:
-            bam2dis()
-            errEval()
-            call()
+    if not genotype_init(parase):
+        logger.error("Genotype init ERROR!")
+        return -1
+    if get_value("paras")["tech"] == "ilm":
+        genotype_ngs()
+    elif get_value("paras")["tech"] == "ccs":
+        genotype_ccs()

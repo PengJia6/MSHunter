@@ -141,7 +141,7 @@ class Window:
             # vcfrec.stop = pos + ms.repeat_times * len(ms.motif)
             vcfrec.pos = ms.mut_start
             vcfrec.ref = ms.ref_str
-            vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else ("N",)
+            vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else (".",)
             vcfrec.id = ms.ms_id
             vcfrec.stop = ms.mut_end
             vcfrec.info["ms_start"] = ms.start
@@ -171,7 +171,7 @@ class Window:
             recs.append(vcfrec)
         return recs
 
-    def run_window(self):
+    def run_window_benchmark(self):
         self.init_microsatellites()  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_info()  # 处理read 并行

@@ -181,6 +181,26 @@ def dis_sum(dict_list):
     return res_dict
 
 
+def change_dim_for_pool_map(input, threads):
+    item_num = 0
+    for win in input:
+        item_num += len(win)
+    item_per_win = item_num // threads + 1
+    item_index = 0
+    output = []
+    win_sub = []
+    for win in input:
+        for item in win:
+            item_index += 1
+            win_sub.append(win_sub)
+            if item_index % item_per_win == 0:
+                output.append(win_sub)
+                win_sub = []
+    if len(win_sub) > 0:
+        output.append(win_sub)
+    return output
+
+
 if __name__ == "__main__":
     a = get_max_support_index({1: 5, 6: 40, 3: 2})
     # a=get_max_support_index({})

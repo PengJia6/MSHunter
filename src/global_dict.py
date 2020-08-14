@@ -20,7 +20,7 @@ logger.setLevel(logging.DEBUG)
 consoleHandler = logging.StreamHandler()
 consoleHandler.setLevel(logging.DEBUG)
 
-formatter = logging.Formatter('[%(levelname)s] %(message)s')
+formatter = logging.Formatter('[%(levelname)s]\t %(message)s')
 consoleHandler.setFormatter(formatter)
 
 logger.addHandler(consoleHandler)
