@@ -207,10 +207,11 @@ def run_window_mul(windows, args, file_output):
             file_output.write(rec)
     logger.info("\tTotal Microsatellites: " + str(args["ms_num"]))
     logger.info("\tFinished Microsatellites: " + str(args["current_num"]) +
-                " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2))+"%)")
+                " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2)) + "%)")
 
     # return
     #
+
 
 def benchmark(parase):
     if not benchmark_init(parase):
@@ -223,6 +224,7 @@ def benchmark(parase):
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
     args["ms_num"] = len(df_microsatellites)
+    total_current_num = 0
     for contig, contig_len in contigs_info.items():
         logger.info("\t--------------------------------------------------------------------------------")
         logger.info("\tProcessing " + contig + "...")
@@ -233,6 +235,7 @@ def benchmark(parase):
         window_sub = []
         for ms_id, info in this_contig_microsatellite.iterrows():
             ms_num += 1
+            total_current_num += 1
             info["prefix_len"] = args["prefix_len"]
             info["suffix_len"] = args["suffix_len"]
             info["reference"] = args["reference"]
@@ -242,16 +245,16 @@ def benchmark(parase):
                 window_sub = []
                 win_num += 1
                 if win_num % args["threads"] == 0:
-                    args["current_num"] = ms_num
+                    args["current_num"] = total_current_num
                     run_window_mul(window_ms, args, file_output=output_file)
                     window_ms = []
                 # window = Window(contig, window_ms)
                 # window.run_window(output_file)
                 # window_ms = []
         if len(window_ms) > 0:
-            ms_num=0
+            ms_num = 0
             for win in window_ms:
-                ms_num+=len(win)
+                ms_num += len(win)
             item_num = ms_num // args["threads"] + 1
             window_ms_tmp = []
             window_sub = []
