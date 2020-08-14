@@ -16,6 +16,9 @@ If you have any question about this software, please contact with Peng Jia (peng
 * add test files 
 * support PacBio clr and ONT reads (fix the extract repeat times module)
 
+### CCS detection: 
+
+
 ### benchmark
 * build benchmark for ccs assembly contig  (short tandem repeat)
   - for on haplotype (√)
@@ -23,3 +26,4 @@ If you have any question about this software, please contact with Peng Jia (peng
 * build benchmark for ccs assembly contig  (more long tandem repeat)
   - for on haplotype (√)
   - merge two haplotype (√)
+  
