@@ -160,6 +160,8 @@ def merge():
             mergerd_file.write(merged_rec)
 
     mergerd_file.close()
+    pysam.tabix_index(paras["output"], force=True, preset="vcf")
+
     print("[INFO] Finished")
 
 
