@@ -105,11 +105,11 @@ def merge():
             # ref_prefix = hap1_rec.ref[0:hap2_rec.info["mut_start"] - mut_start]
             hap2_prefix = hap1_rec.ref[0:hap2_rec.info["mut_start"] - mut_start]
         if hap1_rec.info["mut_end"] < mut_end:
-            ref_suffix = hap2_rec.ref[-(hap1_rec.info["mut_end"] - mut_end):]
-            hap1_suffix = hap2_rec.ref[-(hap1_rec.info["mut_end"] - mut_end):]
+            ref_suffix = hap2_rec.ref[(hap1_rec.info["mut_end"] - mut_end):]
+            hap1_suffix = hap2_rec.ref[(hap1_rec.info["mut_end"] - mut_end):]
         if hap2_rec.info["mut_end"] < mut_end:
             # ref_suffix=hap1_rec.ref[-(hap2_rec.info["mut_end"]-mut_end):]
-            hap2_suffix = hap1_rec.ref[-(hap2_rec.info["mut_end"] - mut_end):]
+            hap2_suffix = hap1_rec.ref[(hap2_rec.info["mut_end"] - mut_end):]
         merged_rec.ref = ref_prefix + hap1_rec.ref + ref_suffix
         hap1_alt = hap1_prefix + hap1_rec.alts[0] + hap1_suffix
         hap2_alt = hap2_prefix + hap2_rec.alts[0] + hap2_suffix
