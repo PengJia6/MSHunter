@@ -77,6 +77,7 @@ def merge():
                                  'Description="End position of this haplotype analysis!">')
     mergerd_file.header.add_line('##FORMAT=<ID=mut_start,Number=1,Type=String,Description="Mutation start position">')
     mergerd_file.header.add_line('##FORMAT=<ID=mut_end,Number=1,Type=String,Description="Mutation end position">')
+    mergerd_file.header.add_line('##FORMAT=<ID=mut_type,Number=1,Type=String,Description="Mutation type">')
     mergerd_file.header.add_sample(sample)
     for hap1_rec, hap2_rec in zip(hap1.fetch(), hap2.fetch()):
         if hap1_rec.info["check"] == "False" or hap2_rec.info["check"] == "False":
@@ -149,12 +150,14 @@ def merge():
         end_suf = list(map(str, [hap1_rec.info["end_suf"], hap2_rec.info["end_suf"]]))
         mut_start = list(map(str, [hap1_rec.info["mut_start"], hap2_rec.info["mut_start"]]))
         mut_end = list(map(str, [hap1_rec.info["mut_end"], hap2_rec.info["mut_end"]]))
+        mut_type = list(map(str, [hap1_rec.info["var_type"], hap2_rec.info["var_type"]]))
         merged_rec.samples[sample]["GT"] = tuple(gt)
         merged_rec.samples[sample]["AL"] = "|".join(al)
         merged_rec.samples[sample]["start_pre"] = "|".join(start_pre)
         merged_rec.samples[sample]["end_suf"] = "|".join(end_suf)
         merged_rec.samples[sample]["mut_start"] = "|".join(mut_start)
         merged_rec.samples[sample]["mut_end"] = "|".join(mut_end)
+        merged_rec.samples[sample]["mut_type"] = "|".join(mut_type)
         merged_rec.samples[sample].phased = True
         if merged_rec.info["check"]:
             mergerd_file.write(merged_rec)
