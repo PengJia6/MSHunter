@@ -75,7 +75,7 @@ def genotype_init(args):
         logger.error('The input file ' + paras["input"] + ' is not exist, please check again')
         error_stat = True
     if os.path.isfile(paras["microsatellite"]):
-        logger.error("The microsatellites file  is : " + paras["microsatellite"])
+        logger.info("The microsatellites file  is : " + paras["microsatellite"])
     else:
         logger.error('The microsatellites file ' + paras["microsatellite"] + ' is not exist, please check again')
         error_stat = True
@@ -136,7 +136,8 @@ def genotype(parase):
     if not genotype_init(parase):
         logger.error("Genotype init ERROR!")
         return -1
+    paras = get_value("paras")
     if get_value("paras")["tech"] == "ilm":
-        genotype_ngs()
+        genotype_ngs(paras)
     elif get_value("paras")["tech"] == "ccs":
-        genotype_ccs()
+        genotype_ccs(paras)

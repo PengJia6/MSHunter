@@ -8,7 +8,14 @@
 # Email  : pengjia@stu.xjtu.edu.cn
 # Description: TODO
 =============================================================================="""
+from src.units import *
+from src.pre_stat import *
 
 
-def genotype_ccs():
+def genotype_ccs(paras):
+    df_microsatellites = load_microsatellites(paras)
+    pre_stat(paras, df_microsatellites)
+
+    # print(df_microsatellites_download_sample)
+    # print("dklldfldl",paras)
     pass

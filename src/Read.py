@@ -77,6 +77,11 @@ class Read:
         self.this_read_list = sub_read_str
         self.this_read_str = ""
 
+    def get_repeat_length(self, ms_start, ms_end):
+        query_repeat_length = len(
+            "".join(self.this_read_list[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
+        return query_repeat_length
+
     def get_ms_info_one_read(self):
 
         self.microsatellites_num = len(self.microsatellites)

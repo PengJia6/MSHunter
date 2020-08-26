@@ -11,6 +11,7 @@
 from src.global_dict import *
 import pysam
 from src.units import *
+from src.Read import Read
 
 
 class Mutation:
@@ -117,6 +118,30 @@ class Microsatellite:
         self.reads_info = reads_info
         self.depth = len(self.reads_info)
 
+    def get_reads_info(self):
+        samfile = pysam.Samfile(get_value("paras")["input"])
+        reads = {}
+        for alignment in samfile.fetch(self.chrom, self.start_pre-1, self.end_suf+1):
+            # print(read)
+            if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary or alignment.is_supplementary:
+                continue
+            if alignment.reference_start > self.start_pre - 1 or alignment.reference_end < self.end_suf + 1:
+                continue
+            if len(alignment.query_sequence) < 2:
+                continue
+            read_ms = Read(read_id="", alignment=alignment, reference=self.reference, chrom=self.chrom)
+            read_ms.get_read_str()
+            q_repeat_length = read_ms.get_repeat_length(self.start, self.end)
+            if q_repeat_length not in reads:
+                reads[q_repeat_length] = 1
+            else:
+                reads[q_repeat_length] += 1
+        return reads
+
+    #         read_id = alignment.query_name + "_" + str(alignment.reference_start)
+    #         reads[read_id]=read_ms.mut_info
+    # def get_dis(self):
+
     def deletion_merge(self):
         #  = []
         all_deletions = {}
@@ -180,7 +205,7 @@ class Microsatellite:
         insertions = {}
         ms_dis = {}
         mut_start = self.start
-        mut_end = self.end-1
+        mut_end = self.end - 1
         for read_id, read_info in self.reads_info.items():
             for mut in read_info.mismatches:
                 mut_start = min(mut_start, mut[0])
@@ -275,8 +300,8 @@ class Microsatellite:
         # print(self.mut_start, self.mut_end)
         # print(self.start)
         # print(alt_list)
-        self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start-1, self.mut_end+1)
-        self.alt_str = "." if self.mut.var_type == "None" else self.get_alt(alt_list, offset=self.mut_start-1)
+        self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start - 1, self.mut_end + 1)
+        self.alt_str = "." if self.mut.var_type == "None" else self.get_alt(alt_list, offset=self.mut_start - 1)
 
         # print("=================")
         # mutation.show()

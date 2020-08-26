@@ -139,14 +139,14 @@ def load_microsatellites(args):
                                                         (df_microSatellites["repeatTimes"] >= minr) &
                                                         (df_microSatellites["repeatTimes"] <= maxr)
                                                         ]])
-    if args["debug"]:
-        locis_num = 10000
-        # df_microsatellite_pass=df_microsatellite_pass[df_microSatellites["pos"]>143200000]
-        df_microsatellite_pass = df_microsatellite_pass.iloc[100000:locis_num + 100000, :]
-        # df_microSatellites = df_microSatellites[df_microSatellites["motifLen"] == 1]
-        # if len(df_microsatellite_pass) > locis_num:
-        #     df_microsatellite_pass = df_microsatellite_pass.sample(locis_num)
-    df_microsatellite_pass.sort_index(inplace=True)
+    # if args["debug"]:
+    #     locis_num = 10000
+    #     # df_microsatellite_pass=df_microsatellite_pass[df_microSatellites["pos"]>143200000]
+    #     df_microsatellite_pass = df_microsatellite_pass.iloc[100000:locis_num + 100000, :]
+    #     # df_microSatellites = df_microSatellites[df_microSatellites["motifLen"] == 1]
+    #     # if len(df_microsatellite_pass) > locis_num:
+    #     #     df_microsatellite_pass = df_microsatellite_pass.sample(locis_num)
+    # df_microsatellite_pass.sort_index(inplace=True)
 
     logger.info("There are total " + str(len(df_microsatellite_pass)) + " microsatellites.")
     set_value("ms_number", len(df_microsatellite_pass))

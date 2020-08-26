@@ -218,6 +218,9 @@ def benchmark(parase):
     output_file = bm_write_vcf_init(out_vcf)
     contigs_info = get_value("contigs_info")
     df_microsatellites = load_microsatellites(args)
+    if args["debug"]:
+        locis_num = 10000
+        df_microsatellites = df_microsatellites.iloc[100000:locis_num + 100000, :]
     args["ms_num"] = len(df_microsatellites)
     total_current_num = 0
     for contig, contig_len in contigs_info.items():
