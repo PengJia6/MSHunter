@@ -24,7 +24,7 @@ class Read_Mutation:
 class Read:
     def __init__(self, read_id, alignment, reference, chrom):
         self.chrom = chrom
-        # self.read_name = alignment.query_name
+        self.read_name = alignment.query_name
         self.align_start = alignment.reference_start
         self.align_end = alignment.reference_end
         self.this_read_str = alignment.query_sequence.upper()
@@ -64,10 +64,11 @@ class Read:
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
                 if cigartuple[0] == 1:
-                    # if len(sub_read_str) < 1:
-                    #     # print(self.read_id)
-                    sub_read_str[-1] += self.this_read_str[read_pos:read_pos + cigartuple[1]]
-                if cigartuple[0] == 5:
+                    if len(sub_read_str) == 0:
+                        continue
+                    else:
+                        sub_read_str[-1] += self.this_read_str[read_pos:read_pos + cigartuple[1]]
+                elif cigartuple[0] == 5:
                     continue
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, 3]:  # 2:D; 3:N: skip region of reference

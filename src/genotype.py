@@ -101,7 +101,7 @@ def genotype_init(args):
         bamfile.close()
 
     if not os.path.exists(paras["output"]):
-        logger.info("The output is : " + paras["output"] + ".")
+        pass
     else:
         if paras["debug"]:
             pass
@@ -112,8 +112,10 @@ def genotype_init(args):
             error_stat = True
     if error_stat:
         return False
+    logger.info("The output is : " + paras["output"] + ".")
     output_path = paras["output"]
     output_path = output_path if output_path[-1] == "/" else output_path + "/"
+
     if not os.path.exists(output_path):
         os.makedirs(output_path)
     paras["output"] = output_path

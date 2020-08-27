@@ -165,6 +165,26 @@ def get_max_support_index(input_dict):
     return m
 
 
+def dis_stats(dis, values=["mean", "std"]):
+    repeat_length_list = []
+    for repeat_len, times in dis.items():
+        repeat_length_list.extend([repeat_len] * times)
+    res_list = []
+    for value in values:
+        if value == "mean":
+            this_value = np.mean(repeat_length_list)
+        elif value == "std":
+            this_value = np.std(repeat_length_list)
+        elif value == "max":
+            this_value = np.max(repeat_length_list)
+        elif value == "min":
+            this_value = np.min(repeat_length_list)
+        else:
+            this_value = None
+        res_list.append(this_value)
+    return res_list
+
+
 # TODO chcck and normalize
 def dis_sum(dict_list):
     keylist = []
