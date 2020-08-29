@@ -17,6 +17,7 @@ sys.path.append(os.path.dirname(curpath))
 
 from src.benchmark import *
 from src.genotype import *
+from src.qc import *
 from src.benchmark_merge import benchmark_merge
 
 logger.info(" ".join(sys.argv))
@@ -85,11 +86,11 @@ def args_process():
     general_option = parser_gt.add_argument_group(title="General option")
     general_option.add_argument('-pl', '--prefix_len', type=int, nargs=1,
                                 default=[defaultPara_gt["prefix_len"]],
-                                help="Debug mode for developers [default:" +
+                                help="[prefix_len] bp upstream for complex event analysis [default:" +
                                      str(defaultPara_gt["prefix_len"]) + "]")
     general_option.add_argument('-sl', '--suffix_len', type=int, nargs=1,
                                 default=[defaultPara_gt["suffix_len"]],
-                                help="Debug mode for developers [default:" +
+                                help="[suffix_len] bp downstream for complex event analysis  [default:" +
                                      str(defaultPara_gt["suffix_len"]) + "]")
     general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_gt["debug"]],
@@ -147,6 +148,115 @@ def args_process():
                                  help="The number of microsatellite one thread process [default:" +
                                       str(defaultPara_gt["batch"]) + "]")
     commandsParser["genotype"] = parser_gt
+    ###################################################################################################################
+    # add arguments for genotype module
+    parser_qc = subparsers.add_parser('qc', help='Quality control in microsatellite regions')
+    parser_qc.description = 'Quality control in microsatellite regions.'
+    commands.append("qc")
+    defaultPara_qc = defaultPara["qc"]
+    ##################################################################################
+    # group input and output
+    qc_input_and_output = parser_qc.add_argument_group(title="Input and output")
+    qc_input_and_output.add_argument('-i', '--input', required=True, type=str, nargs=1,
+                                     help="The path of input bam/cram file [required]")
+    qc_input_and_output.add_argument('-m', '--microsatellite', required=True, type=str, nargs=1,
+                                     help="The path of the microsatellite regions [required]")
+    qc_input_and_output.add_argument('-o', '--output', required=True, type=str, nargs=1,
+                                     help="The path of output file prefix [required]")
+    qc_input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
+                                     help="The path of reference file [required]")
+    qc_input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
+                                     required=True,
+                                     help='Sequencing technology [required]')
+    # input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
+    #                               default=[defaultPara_gt["tech"]],
+    #                               help='Sequencing technology [default:'
+    #                                    + str(defaultPara_gt["tech"]) + ']')
+    qc_input_and_output.add_argument('-hap', '--haplotype_bam', type=bool, nargs=1, choices=[True, False],
+                                     default=[defaultPara_qc["hap"]],
+                                     help=" Input bam file with haplotype tags [default:"
+                                          + str(defaultPara_qc["hap"]) + "]")
+    qc_input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
+                                     default=[defaultPara_qc["separator"]],
+                                     help='Separator for microsatellites file [default:'
+                                          + str(defaultPara_qc["separator"]) + ']')
+    ##################################################################################
+    # group Analysis regions
+    # general_realign = parser_gt.add_argument_group(title="Analysis regions")
+
+    # general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
+    #                              default=[defaultPara_gt["kmer_size"]],
+    #                              help="Debug mode for developers [default:" +
+    #                                   str(defaultPara_gt["kmer_size"]) + "]")
+
+    ##################################################################################
+    # group general option
+
+    qc_general_option = parser_qc.add_argument_group(title="General option")
+    qc_general_option.add_argument('-pl', '--prefix_len', type=int, nargs=1,
+                                   default=[defaultPara_qc["prefix_len"]],
+                                   help="[prefix_len] bp upstream for sequencing quality analysis  [default:" +
+                                        str(defaultPara_qc["prefix_len"]) + "]")
+    qc_general_option.add_argument('-sl', '--suffix_len', type=int, nargs=1,
+                                   default=[defaultPara_qc["suffix_len"]],
+                                   help="[suffix_len] bp downstream for sequencing quality analysis [default:" +
+                                        str(defaultPara_qc["suffix_len"]) + "]")
+    qc_general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
+                                   default=[defaultPara_qc["debug"]],
+                                   help="Debug mode for developers [default:" +
+                                        str(defaultPara_qc["debug"]) + "]")
+    qc_general_option.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, choices=[True, False],
+                                   default=[defaultPara_qc["only_homopolymers"]],
+                                   help="Only analyze homopolymer regions [default:"
+                                        + str(defaultPara_qc["only_homopolymers"]) + "]")
+    qc_general_option.add_argument("-minr", '--minimum_repeat_times',
+                                   default=[defaultPara_qc["minimum_repeat_times"]],
+                                   type=str, nargs=1,
+                                   help="Minimum repeat times of microsatellites [default:"
+                                        + defaultPara_qc["minimum_repeat_times"] + "]")
+    qc_general_option.add_argument('-maxr', '--maximum_repeat_times',
+                                   default=[defaultPara_qc["maximum_repeat_times"]], type=str, nargs=1,
+                                   help="Maximum repeat times of microsatellites [default:"
+                                        + defaultPara_qc["maximum_repeat_times"] + "]")
+    qc_general_option.add_argument('-minh', '--minimum_phasing_reads',
+                                   default=[defaultPara_qc["minimum_phasing_reads"]], type=str, nargs=1,
+                                   help="Minimum reads for each haplotype reporting [default:"
+                                        + str(defaultPara_qc["minimum_phasing_reads"]) + "]")
+    qc_general_option.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1,
+                                   default=[defaultPara_qc["minimum_mapping_quality"]],
+                                   help="minimum mapping quality of read [default:" +
+                                        str(defaultPara_qc["minimum_mapping_quality"]) + "]")
+    qc_general_option.add_argument('-s', '--minimum_support_reads', type=int, nargs=1,
+                                   default=[defaultPara_qc["minimum_support_reads"]],
+                                   help="minimum support reads of an available microsatellite [default:" +
+                                        str(defaultPara_qc["minimum_support_reads"]) + "]")
+    qc_general_option.add_argument('-a', '--min_allele_fraction', type=int, nargs=1,
+                                   default=[defaultPara_qc["min_allele_fraction"]],
+                                   help="minimum allele fraction report [default:" +
+                                        str(defaultPara_qc["min_allele_fraction"]) + "]")
+
+    ##################################################################################
+    # group for bam2dis
+    # bam2dis_option = parser_gt.add_argument_group(title="Option for bam2dis")
+
+    # bam2dis_option.add_argument('-am', '--allow_mismatch', type=bool, nargs=1, choices=[True, False],
+    #                             default=[defaultPara_gt["allow_mismatch"]],
+    #                             help="allow mismatch when capture microsatellite [default:"
+    #                                  + str(defaultPara_gt["allow_mismatch"]) + "]")
+
+    ##################################################################################
+    # group for multiple_thread
+
+    qc_multiple_thread = parser_qc.add_argument_group(title="Multiple thread")
+    qc_multiple_thread.add_argument('-t', '--threads', type=int, nargs=1,
+                                    default=[defaultPara_qc["threads"]],
+                                    help="The number of  threads to use [default:" +
+                                         str(defaultPara_qc["threads"]) + "]")
+    qc_multiple_thread.add_argument('-b', '--batch', type=int, nargs=1,
+                                    default=[defaultPara_qc["batch"]],
+                                    help="The number of microsatellite one thread process [default:" +
+                                         str(defaultPara_qc["batch"]) + "]")
+    commandsParser["qc"] = parser_qc
 
     ###################################################################################################################
     # add arguments for benchmark module
@@ -317,8 +427,12 @@ def main():
             benchmark(parase)
         if parase.command == "benchmark_merge":
             benchmark_merge(parase)
+        if parase.command == "qc":
+            qc(parase)
         # if parase.command == "ngs":
         #     # genotype(parase)
         #     genotype_ngs(parase)
+
+
 if __name__ == "__main__":
     main()

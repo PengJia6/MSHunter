@@ -9,6 +9,7 @@
 # Description: TODO
 =============================================================================="""
 from src.global_dict import *
+import numpy as np
 import pysam
 from src.units import *
 from src.Read import Read
@@ -118,10 +119,10 @@ class Microsatellite:
         self.reads_info = reads_info
         self.depth = len(self.reads_info)
 
-    def get_reads_info(self):
+    def get_dis(self):
         samfile = pysam.Samfile(get_value("paras")["input"])
         reads = {}
-        for alignment in samfile.fetch(self.chrom, self.start_pre-1, self.end_suf+1):
+        for alignment in samfile.fetch(self.chrom, self.start_pre - 1, self.end_suf + 1):
             # print(read)
             if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary or alignment.is_supplementary:
                 continue
@@ -138,9 +139,47 @@ class Microsatellite:
                 reads[q_repeat_length] += 1
         return reads
 
-    #         read_id = alignment.query_name + "_" + str(alignment.reference_start)
-    #         reads[read_id]=read_ms.mut_info
-    # def get_dis(self):
+    def get_dis_qual(self):
+        samfile = pysam.Samfile(get_value("paras")["input"])
+        reads = {}
+        quals = {}
+        prefix = []
+        suffix = []
+        ms = []
+
+        num = 0
+        for alignment in samfile.fetch(self.chrom, self.start_pre - 1, self.end_suf + 1):
+            # print(read)
+            if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary or alignment.is_supplementary:
+                continue
+            if alignment.reference_start > self.start_pre - 1 or alignment.reference_end < self.end_suf + 1:
+                continue
+            if len(alignment.query_sequence) < 2:
+                continue
+            num += 1
+            read_ms = Read(read_id="", alignment=alignment, reference=self.reference, chrom=self.chrom)
+            read_ms.get_read_str()
+            q_repeat_length = read_ms.get_repeat_length(self.start, self.end)
+            if q_repeat_length not in reads:
+                reads[q_repeat_length] = 1
+            else:
+                reads[q_repeat_length] += 1
+            prefix.append(np.array(list(map(str2int, read_ms.get_quals(self.start_pre, self.start)))))
+            suffix.append(np.array(list(map(str2int, read_ms.get_quals(self.end, self.end_suf)))))
+            ms.append(np.array(list(map(str2int, read_ms.get_quals(self.start, self.end)))))
+        # print(set([len(i) for i in suffix]))
+        quals["num"] = num
+        # if (len(prefix[0]))<1 or (len(ms[0]))<1 or  (len(suffix[0]))<1 :
+        #     pass
+
+        quals["prefix"] = np.array(prefix)
+        quals["suffix"] = np.array(suffix)
+        quals["ms"] = np.array(ms)
+        return reads, quals
+
+        #         read_id = alignment.query_name + "_" + str(alignment.reference_start)
+        #         reads[read_id]=read_ms.mut_info
+        # def get_dis(self):
 
     def deletion_merge(self):
         #  = []
@@ -168,17 +207,18 @@ class Microsatellite:
                     deletions.append([pos, deletion_index[pos]])
             self.reads_info[read_id].deletions = deletions
 
-    # def get_dis(self):
-    #     # print(self.depth)
-    #     # num = 0
-    #     ms_dis = {}
-    #     for read_id, read_info in self.reads_info.items():
-    #         if read_info.repeat_length not in ms_dis:
-    #             ms_dis[read_info.repeat_length] = 1
-    #         else:
-    #             ms_dis[read_info.repeat_length] += 1
-    #     self.ms_dis = ms_dis
-    # def check_noise(self):
+        # def get_dis(self):
+        #     # print(self.depth)
+        #     # num = 0
+        #     ms_dis = {}
+        #     for read_id, read_info in self.reads_info.items():
+        #         if read_info.repeat_length not in ms_dis:
+        #             ms_dis[read_info.repeat_length] = 1
+        #         else:
+        #             ms_dis[read_info.repeat_length] += 1
+        #     self.ms_dis = ms_dis
+        # def check_noise(self):
+
     def get_alt(self, alt_dict, offset):
 
         alt_list = list(self.ref_str)

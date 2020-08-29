@@ -9,6 +9,7 @@
 # Description: TODO
 =============================================================================="""
 import pysam
+import numpy as np
 
 
 class Read_Mutation:
@@ -28,8 +29,10 @@ class Read:
         self.align_start = alignment.reference_start
         self.align_end = alignment.reference_end
         self.this_read_str = alignment.query_sequence.upper()
+        self.this_read_quals = "".join([chr(i + 33) for i in alignment.query_qualities])
         self.strand = False if alignment.is_reverse else True  # True: forward False: reverse
         self.this_read_list = []
+        self.this_quals_list = []
         self.this_ref_str = ""
         self.this_ref_list = []
         self.read_id = read_id
@@ -53,6 +56,8 @@ class Read:
                                                                   end=self.align_end).upper()
         self.this_ref_list = list(self.this_ref_str)
         sub_read_str = []
+        sub_read_quals = []
+
         # read_mut_info = ReadInfo()
         # read_mut_info.direction = self.direction
         # read_mut_info.hap = self.hap
@@ -60,7 +65,9 @@ class Read:
         for cigartuple in self.cigartuples:
             if cigartuple[0] in [0, 7, 8]:  # 0 : M : match or mishmatch ; 7: :=:match; 8:X:mismatch
                 match_read = list(self.this_read_str[read_pos:read_pos + cigartuple[1]])
+                match_quals = list(self.this_read_quals[read_pos:read_pos + cigartuple[1]])
                 sub_read_str.extend(match_read)
+                sub_read_quals.extend(match_quals)
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [1, 4, 5]:  # 1:I:inserion ;4:S:soft clip 5:H:hardclip
                 if cigartuple[0] == 1:
@@ -68,23 +75,30 @@ class Read:
                         continue
                     else:
                         sub_read_str[-1] += self.this_read_str[read_pos:read_pos + cigartuple[1]]
+                        sub_read_quals[-1] += self.this_read_quals[read_pos:read_pos + cigartuple[1]]
                 elif cigartuple[0] == 5:
                     continue
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, 3]:  # 2:D; 3:N: skip region of reference
                 sub_read_str.extend([""] * cigartuple[1])
+                sub_read_quals.extend([""] * cigartuple[1])
             else:
                 return -1
         self.this_read_list = sub_read_str
         self.this_read_str = ""
+        self.this_quals_list = sub_read_quals
+        self.this_read_quals = ""
 
     def get_repeat_length(self, ms_start, ms_end):
         query_repeat_length = len(
             "".join(self.this_read_list[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
         return query_repeat_length
 
-    def get_ms_info_one_read(self):
+    def get_quals(self, q_start, q_end):
+        quals_list = self.this_quals_list[q_start - self.align_start-1:q_end - self.align_start - 1]
+        return quals_list
 
+    def get_ms_info_one_read(self):
         self.microsatellites_num = len(self.microsatellites)
         # print(self.read_id, self.microsatellites_num,len(self.support_microsatellites))
         read_muts = {}

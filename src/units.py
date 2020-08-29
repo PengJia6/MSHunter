@@ -185,6 +185,20 @@ def dis_stats(dis, values=["mean", "std"]):
     return res_list
 
 
+def str2int(item):
+    if len(item) > 0:
+        return np.nanmean([ord(i) - 33 for i in item])
+    else:
+        return np.nan
+
+
+def int2str(qual_int):
+    if np.isnan(qual_int):
+        return chr(33)
+    else:
+        return chr(int(qual_int) + 33)
+
+
 # TODO chcck and normalize
 def dis_sum(dict_list):
     keylist = []
