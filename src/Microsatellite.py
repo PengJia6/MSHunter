@@ -143,11 +143,15 @@ class Microsatellite:
         samfile = pysam.Samfile(get_value("paras")["input"])
         reads = {}
         quals = {}
-        prefix = []
-        suffix = []
-        ms = []
+        prefix_forward = []
+        suffix_forward = []
+        ms_forward = []
+        prefix_reversed = []
+        suffix_reversed = []
+        ms_reversed = []
 
-        num = 0
+        num_forward = 0
+        num_reversed = 0
         for alignment in samfile.fetch(self.chrom, self.start_pre - 1, self.end_suf + 1):
             # print(read)
             if alignment.is_unmapped or alignment.is_duplicate or alignment.is_secondary or alignment.is_supplementary:
@@ -156,7 +160,6 @@ class Microsatellite:
                 continue
             if len(alignment.query_sequence) < 2:
                 continue
-            num += 1
             read_ms = Read(read_id="", alignment=alignment, reference=self.reference, chrom=self.chrom)
             read_ms.get_read_str()
             q_repeat_length = read_ms.get_repeat_length(self.start, self.end)
@@ -164,27 +167,32 @@ class Microsatellite:
                 reads[q_repeat_length] = 1
             else:
                 reads[q_repeat_length] += 1
-            prefix.append(np.array(list(map(str2int, read_ms.get_quals(self.start_pre, self.start)))))
-            suffix.append(np.array(list(map(str2int, read_ms.get_quals(self.end, self.end_suf)))))
-            ms.append(np.array(list(map(str2int, read_ms.get_quals(self.start, self.end)))))
+            prefix_qual = read_ms.get_quals(self.start_pre, self.start)
+            suffix_qual = read_ms.get_quals(self.end, self.end_suf)
+            ms_qual = read_ms.get_quals(self.start, self.end)
+            if prefix_qual[1]:
+                num_forward += 1
+                prefix_forward.append(np.array(list(map(str2int, prefix_qual[0]))))
+                suffix_forward.append(np.array(list(map(str2int, suffix_qual[0]))))
+                ms_forward.append(np.array(list(map(str2int, ms_qual[0]))))
+            else:
+                num_reversed += 1
+                prefix_reversed.append(np.array(list(map(str2int, prefix_qual[0]))))
+                suffix_reversed.append(np.array(list(map(str2int, suffix_qual[0]))))
+                ms_reversed.append(np.array(list(map(str2int, ms_qual[0]))))
         # print(set([len(i) for i in suffix]))
-        quals["num"] = num
-        # if (len(prefix[0]))<1 or (len(ms[0]))<1 or  (len(suffix[0]))<1 :
-        #     pass
+        quals["num_forward"] = num_forward
+        quals["prefix_forward"] = np.array(prefix_forward)
+        quals["suffix_forward"] = np.array(suffix_forward)
+        quals["ms_forward"] = np.array(ms_forward)
 
-        quals["prefix"] = np.array(prefix)
-        quals["suffix"] = np.array(suffix)
-        quals["ms"] = np.array(ms)
+        quals["num_reversed"] = num_reversed
+        quals["prefix_reversed"] = np.array(prefix_reversed)
+        quals["suffix_reversed"] = np.array(suffix_reversed)
+        quals["ms_reversed"] = np.array(ms_reversed)
         return reads, quals
 
-        #         read_id = alignment.query_name + "_" + str(alignment.reference_start)
-        #         reads[read_id]=read_ms.mut_info
-        # def get_dis(self):
-
     def deletion_merge(self):
-        #  = []
-        all_deletions = {}
-
         for read_id, read_info in self.reads_info.items():
             deletions_len = len(read_info.deletions)
             deletions = []

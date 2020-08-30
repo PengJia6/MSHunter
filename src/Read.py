@@ -95,8 +95,8 @@ class Read:
         return query_repeat_length
 
     def get_quals(self, q_start, q_end):
-        quals_list = self.this_quals_list[q_start - self.align_start-1:q_end - self.align_start - 1]
-        return quals_list
+        quals_list = self.this_quals_list[q_start - self.align_start - 1:q_end - self.align_start - 1]
+        return quals_list, self.strand
 
     def get_ms_info_one_read(self):
         self.microsatellites_num = len(self.microsatellites)

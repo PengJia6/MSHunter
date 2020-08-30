@@ -145,7 +145,7 @@ def process_one_ms(info):
         # suffix_str = "".join(map(int2str, list(quals["suffix"])))
         # ms_str = "".join(map(int2str, quals["ms"]))
         return ms.ms_id, ms.repeat_unit, ms.repeat_times, dis_mean, dis_std, dis_str, dis, \
-               quals["num"], quals
+                quals
     else:
         return None, None, None, None
 
@@ -174,29 +174,44 @@ def pre_stat(paras, df_microsatellites):
             file = open(path_pre_stat_tmp + suffix_str + ".repeat", "w")
             this_repeat_means = []
             this_repeat_stds = []
-            num = 0
-            prefix = []
-            suffix = []
-            ms = []
+            num_forward = 0
+            num_reversed = 0
+            prefix_forward = []
+            suffix_forward = []
+            ms_forward = []
+            prefix_reversed = []
+            suffix_reversed = []
+            ms_reversed = []
             for res in res_infos:
                 if None not in res:
                     file.write("\t".join(map(str, res[:-1])))
                     this_repeat_means.append(res[3])
                     this_repeat_stds.append(res[4])
-                    prefix.extend(res[-1]["prefix"])
-                    suffix.extend(res[-1]["suffix"])
-                    ms.extend(res[-1]["ms"])
-                    num += 1
+                    prefix_forward.extend(res[-1]["prefix_forward"])
+                    suffix_forward.extend(res[-1]["suffix_forward"])
+                    ms_forward.extend(res[-1]["ms_forward"])
+                    prefix_reversed.extend(res[-1]["prefix_reversed"])
+                    suffix_reversed.extend(res[-1]["suffix_reversed"])
+                    ms_reversed.extend(res[-1]["ms_reversed"])
+                    num_forward += res[-1]["num_forward"]
+                    num_reversed += res[-1]["num_reversed"]
 
             file.close()
-            if num < 2: continue
+            if num_forward + num_reversed < 2: continue
             this_repeat_mean_mean = np.mean(this_repeat_means)
             this_repeat_mean_std = np.std(this_repeat_means)
             this_repeat_std_mean = np.mean(this_repeat_stds)
             this_repeat_std_std = np.std(this_repeat_stds)
-            pd.DataFrame(np.array(prefix)).to_csv(path_pre_stat_tmp + suffix_str + ".qual")
+            pd.concat([pd.DataFrame(np.array(prefix_forward)),
+                       pd.DataFrame(np.array(prefix_forward)),
+                       pd.DataFrame(np.array(prefix_forward))
+                       ], axis=1, ).to_csv(path_pre_stat_tmp + suffix_str + "forward.qual")
+            pd.concat([pd.DataFrame(np.array(prefix_reversed)),
+                       pd.DataFrame(np.array(prefix_reversed)),
+                       pd.DataFrame(np.array(prefix_reversed))
+                       ], axis=1, ).to_csv(path_pre_stat_tmp + suffix_str + "reversed.qual")
 
-            this_info_list = list(map(str, [repeat_unit, repeat_times, num,
+            this_info_list = list(map(str, [repeat_unit, repeat_times, num_forward, num_reversed,
                                             this_repeat_mean_mean, this_repeat_mean_std,
                                             this_repeat_std_mean, this_repeat_std_std,
                                             ]))
