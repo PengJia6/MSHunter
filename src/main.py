@@ -100,6 +100,16 @@ def args_process():
                                 default=[defaultPara_gt["only_homopolymers"]],
                                 help="Only analyze homopolymer regions [default:"
                                      + str(defaultPara_gt["only_homopolymers"]) + "]")
+    general_option.add_argument('-os', '--only_simple', type=int, nargs=1, choices=[True, False],
+                                default=[defaultPara_gt["only_simple"]],
+                                help="Only analyze simple microsatellite copy number variants [default:"
+                                     + str(defaultPara_gt["only_simple"]) + "]")
+    general_option.add_argument('-up', '--using_phasing_info', type=int, nargs=1, choices=[True, False],
+                                default=[defaultPara_gt["using_phasing_info"]],
+                                help="Use phased information from ccs/HiFi reads "
+                                     "to genotype and phase microsatellite allele [default:"
+                                     + str(defaultPara_gt["using_phasing_info"]) + "]")
+
     general_option.add_argument("-minr", '--minimum_repeat_times',
                                 default=[defaultPara_gt["minimum_repeat_times"]],
                                 type=str, nargs=1,

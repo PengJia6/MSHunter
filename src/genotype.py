@@ -32,6 +32,8 @@ def genotype_init(args):
     paras["suffix_len"] = args.suffix_len[0]
     paras["debug"] = args.debug[0]
     paras["only_homopolymer"] = args.only_homopolymers[0]
+    paras["only_simple"] = args.only_simple[0]
+    paras["using_phasing_info"] = args.using_phasing_info[0]
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
     # paras["allow_mismatch"] = args.allow_mismatch[0]
@@ -123,7 +125,7 @@ def genotype_init(args):
     input_path = input_path[:-1] if input_path[-1] == "/" else input_path
     case = input_path.split("/")[-1].strip(".bam")
     case = case.strip(".cram")
-    paras["output_dis"] = paras["output"] + case + ".dis.vcf.gz"
+    paras["output_pre"] = paras["output"] + case + ".pre.vcf.gz"
     paras["output_tmp"] = paras["output"] + case + "_tmp"
     if not os.path.exists(paras["output_tmp"]):
         os.makedirs(paras["output_tmp"])

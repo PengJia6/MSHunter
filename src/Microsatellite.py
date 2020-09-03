@@ -110,7 +110,13 @@ class Microsatellite:
         self.dis_stat = True
         self.mut_start = self.start
         self.mut_end = self.end
+        self.ms_dis_info = {}
         self.ms_dis = {}
+        self.ms_dis_forward = {}
+        self.ms_dis_reversed = {}
+        self.ms_dis_hap1 = {}
+        self.ms_dis_hap2 = {}
+        self.ms_dis_hap0 = {}
         self.query_repeat_length = 0
 
         # print(ms_info)
@@ -118,6 +124,33 @@ class Microsatellite:
     def set_reads_info(self, reads_info):
         self.reads_info = reads_info
         self.depth = len(self.reads_info)
+
+    def set_read_dis_info(self, reads_info):
+        dis = {}
+        dis_stand = {True: {}, False: {}}
+        dis_hap = {0: {}, 1: {}, 2: {}}
+
+        for read_id, ms_info in reads_info.items():
+            repeat_length, stand, hap = ms_info
+            if repeat_length not in dis:
+                dis[repeat_length] = 0
+            dis[repeat_length] += 1
+            if repeat_length not in dis_hap[hap]:
+                dis_hap[hap][repeat_length] = 0
+            dis_hap[hap][repeat_length] += 1
+            if repeat_length not in dis_stand[stand]:
+                dis_stand[stand][repeat_length] = 0
+            dis_stand[stand][repeat_length] += 1
+        self.depth = len(self.reads_info)
+        self.dis_stat = True if self.depth > 0 else False
+        self.ms_dis = dis
+        self.ms_dis_hap0 = dis_hap[0]
+        self.ms_dis_hap1 = dis_hap[1]
+        self.ms_dis_hap2 = dis_hap[2]
+        self.ms_dis_forward = dis_stand[True]
+        self.ms_dis_reversed = dis_stand[False]
+        self.query_repeat_length = get_max_support_index(dis)
+
 
     def get_dis(self):
         samfile = pysam.Samfile(get_value("paras")["input"])
@@ -245,7 +278,6 @@ class Microsatellite:
             self.check_status.append("No_read_covered")
             self.dis_stat = False
             self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
-
             return
         self.deletion_merge()
         mismatches = {}

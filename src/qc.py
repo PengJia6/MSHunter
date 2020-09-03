@@ -145,7 +145,7 @@ def process_one_ms(info):
         # suffix_str = "".join(map(int2str, list(quals["suffix"])))
         # ms_str = "".join(map(int2str, quals["ms"]))
         return ms.ms_id, ms.repeat_unit, ms.repeat_times, dis_mean, dis_std, dis_str, dis, \
-                quals
+               quals
     else:
         return None, None, None, None
 
@@ -155,6 +155,12 @@ def pre_stat(paras, df_microsatellites):
     path_pre_stat = paras["output"].rstrip("/") + "/" + get_value("case") + ".stat"
     path_pre_stat_tmp = paras["output_tmp"].rstrip("/") + "/" + get_value("case") + ".stat"
     file_all_stat = open(path_pre_stat, "w")
+    file_all_stat.write("\t".join(["repeat_unit_length", "repeat_times", "num_forward", "num_reversed",
+                                   "this_repeat_mean_mean", "this_repeat_mean_std",
+                                   "this_repeat_std_mean", "this_repeat_std_std",
+                                   "forward_prefix", "forward_ms", "forward_suffix",
+                                   "reversed_prefix", "reversed_ms", "reversed_suffix"]) + "\n")
+
     df_microsatellites_download_sample = microsatellites_sampling(df_microsatellites, paras)
 
     for repeat_unit, info in df_microsatellites_download_sample.items():
@@ -184,7 +190,7 @@ def pre_stat(paras, df_microsatellites):
             ms_reversed = []
             for res in res_infos:
                 if None not in res:
-                    file.write("\t".join(map(str, res[:-1])))
+                    file.write("\t".join(map(str, res[:-2]))+"\n")
                     this_repeat_means.append(res[3])
                     this_repeat_stds.append(res[4])
                     prefix_forward.extend(res[-1]["prefix_forward"])
@@ -202,18 +208,26 @@ def pre_stat(paras, df_microsatellites):
             this_repeat_mean_std = np.std(this_repeat_means)
             this_repeat_std_mean = np.mean(this_repeat_stds)
             this_repeat_std_std = np.std(this_repeat_stds)
-            pd.concat([pd.DataFrame(np.array(prefix_forward)),
-                       pd.DataFrame(np.array(prefix_forward)),
-                       pd.DataFrame(np.array(prefix_forward))
-                       ], axis=1, ).to_csv(path_pre_stat_tmp + suffix_str + "forward.qual")
-            pd.concat([pd.DataFrame(np.array(prefix_reversed)),
-                       pd.DataFrame(np.array(prefix_reversed)),
-                       pd.DataFrame(np.array(prefix_reversed))
-                       ], axis=1, ).to_csv(path_pre_stat_tmp + suffix_str + "reversed.qual")
+            pd.concat([pd.DataFrame([np.nanmean(np.array(prefix_forward), axis=0)]),
+                       pd.DataFrame([np.nanmean(np.array(ms_forward), axis=0)]),
+                       pd.DataFrame([np.nanmean(np.array(suffix_forward), axis=0)])
+                       ], axis=1, ).to_csv(path_pre_stat_tmp + suffix_str + ".forward.qual")
+            pd.concat([pd.DataFrame([np.nanmean(np.array(prefix_reversed), axis=0)]),
+                       pd.DataFrame([np.nanmean(np.array(ms_reversed), axis=0)]),
+                       pd.DataFrame([np.nanmean(np.array(suffix_reversed), axis=0)])
+                       ], axis=1, ).to_csv(path_pre_stat_tmp + suffix_str + ".reversed.qual")
+            forward_prefix = np.nanmean(prefix_forward)
+            forward_ms = np.nanmean(ms_forward)
+            forward_suffix = np.nanmean(suffix_forward)
 
+            reversed_prefix = np.nanmean(prefix_reversed)
+            reversed_ms = np.nanmean(ms_reversed)
+            reversed_suffix = np.nanmean(suffix_reversed)
             this_info_list = list(map(str, [repeat_unit, repeat_times, num_forward, num_reversed,
                                             this_repeat_mean_mean, this_repeat_mean_std,
                                             this_repeat_std_mean, this_repeat_std_std,
+                                            forward_prefix, forward_ms, forward_suffix,
+                                            reversed_prefix, reversed_ms, reversed_suffix
                                             ]))
             file_all_stat.write("\t".join(this_info_list) + "\n")
     file_all_stat.close()

@@ -12,9 +12,19 @@ from src.units import *
 from src.pre_stat import *
 
 
+
+
+def call_variants():
+    pass
+
+
 def genotype_ccs(paras):
     df_microsatellites = load_microsatellites(paras)
-    pre_stat(paras, df_microsatellites)
+    pre_stat(df_microsatellites)
+    estimate_error()
+    call_variants()
+
+    # pre_stat(paras, df_microsatellites)
 
     # print(df_microsatellites_download_sample)
     # print("dklldfldl",paras)

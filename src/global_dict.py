@@ -29,6 +29,7 @@ logger.addHandler(consoleHandler)
 
 version_id = "0.1.4"
 
+
 def global_init():
     global _global_dict
     _global_dict = {}
@@ -48,6 +49,8 @@ def global_init():
             "debug": False,
             "separator": "tab",  # comma,tab,space
             "only_homopolymers": False,
+            "only_simple": False,
+            "using_phasing_info": True,
             "allow_mismatch": True,
             "minimum_repeat_times": "1:8;2-5:5",
             "maximum_repeat_times": "1-5:100",

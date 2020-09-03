@@ -44,6 +44,7 @@ class Read:
         self.hap = int(alignment.get_tag("HP")) if alignment.has_tag("HP") else 0
         self.cigartuples = alignment.cigartuples
         self.mut_info = {}
+        self.repeat_lengths = {}
 
     # def get_microsatellite_detail(self, ms_info):
     #     self. = ms_info
@@ -89,10 +90,21 @@ class Read:
         self.this_quals_list = sub_read_quals
         self.this_read_quals = ""
 
-    def get_repeat_length(self, ms_start, ms_end):
+    def get_repeat_length(self, ms_start, ms_end):  # give a start and end
         query_repeat_length = len(
             "".join(self.this_read_list[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
         return query_repeat_length
+
+    def get_repeat_length_all_ms(self):  # return all microsatellite covered
+        self.microsatellites_num = len(self.microsatellites)
+        repeat_lengths = {}
+        for ms_id, ms in self.microsatellites.items():
+            ms_start = ms.start
+            ms_end = ms.end
+            query_repeat_length = len(
+                "".join(self.this_read_list[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
+            repeat_lengths[ms_id] = query_repeat_length
+        self.repeat_lengths = repeat_lengths
 
     def get_quals(self, q_start, q_end):
         quals_list = self.this_quals_list[q_start - self.align_start - 1:q_end - self.align_start - 1]
