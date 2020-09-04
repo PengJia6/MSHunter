@@ -153,7 +153,3 @@ class Read:
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,
                                              )  # TODO
         self.mut_info = read_muts
-        pass
-
-# def update_ms_id(self, ms_id):
-# if ms_id

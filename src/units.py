@@ -15,7 +15,7 @@ from src.global_dict import *
 
 
 # TODO check and normalize
-def removeZeroDict(dict):
+def remove_zero_dict(dict):
     newdict = {}
     for key, value in dict.items():
         if value > 0.000001:
@@ -150,7 +150,7 @@ def load_microsatellites(args):
 
     logger.info("There are total " + str(len(df_microsatellite_pass)) + " microsatellites.")
     set_value("ms_number", len(df_microsatellite_pass))
-    set_value("motifList", set(df_microsatellite_pass["motif"]))
+    set_value("motif_list", set(df_microsatellite_pass["motif"]))
     return df_microsatellite_pass
 
 

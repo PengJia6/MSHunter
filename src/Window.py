@@ -97,9 +97,6 @@ class Window:
         for item in self.reads.values():
             result_list.append(self.get_one_read_dis(item))
         self.reads = {read.read_id: read for read in result_list}
-        pass
-
-        return
 
     def get_reads_info(self):
         # logger.info("\tScan reads covered microsatellites ... ")
@@ -112,7 +109,6 @@ class Window:
         for item in self.reads.values():
             result_list.append(self.get_one_read_info(item))
         self.reads = {read.read_id: read for read in result_list}
-        pass
 
     def merge_reads_repeat_length(self):
         microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
@@ -135,9 +131,14 @@ class Window:
         for ms_id, reads_info in microsatellites_dict.items():
             self.microsatellites[ms_id].set_reads_info(reads_info)
 
-    def genotype_one_microsatellite(self, microsatellite):
+    def genotype_one_microsatellite_ccs_contig(self, microsatellite):
         # microsatellite.get_dis()
         microsatellite.one_hap_genotype()
+        return microsatellite
+
+    def genotype_one_microsatellite_ccs(self, microsatellite):
+        # microsatellite.get_dis()
+        microsatellite.ccs_genotype()
         return microsatellite
 
     def genotype_microsatellite_ccs_contig(self):
@@ -149,7 +150,13 @@ class Window:
         # pool.join()
         microsatellites = []
         for microsatellite in self.microsatellites.values():
-            microsatellites.append(self.genotype_one_microsatellite(microsatellite))
+            microsatellites.append(self.genotype_one_microsatellite_ccs_contig(microsatellite))
+        self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
+
+    def call_variants(self):
+        microsatellites = []
+        for microsatellite in self.microsatellites.values():
+            microsatellites.append(self.genotype_one_microsatellite_ccs(microsatellite))
         self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
 
     def write_to_vcf_ccs_contig(self, file_output):
@@ -195,6 +202,19 @@ class Window:
             recs.append(vcfrec)
         return recs
 
+    def write_to_vcf_call_variants(self, file_output):
+        recs = []
+        for ms_id in self.microsatellites_id:
+            # print(ms_id)
+            # print(self.microsatellites)
+            ms = self.microsatellites[ms_id]
+            vcfrec = file_output.new_record()
+
+            recs.append(vcfrec)
+        return recs
+
+        pass
+
     def write_to_vcf_pre_stat(self, file_output):
         # logger.info("\tWrite to vcf ... ")
         recs = []
@@ -218,6 +238,7 @@ class Window:
             vcfrec.info["motif_len"] = ms.repeat_unit_len
             vcfrec.info["ref_repeat_length"] = ms.repeat_len
             vcfrec.info["query_repeat_length"] = ms.query_repeat_length
+            vcfrec.info["depth"] = ms.depth
             vcfrec.info["dis_stat"] = str(ms.dis_stat)
             vcfrec.info["dis"] = "|".join(
                 [str(key) + ":" + str(value) for key, value in ms.ms_dis.items()]
@@ -255,3 +276,12 @@ class Window:
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_dis()  # 处理read 并行
         self.merge_reads_repeat_length()  # 合并read信息为MS信息
+
+    def run_window_call_variant(self):
+        self.init_microsatellites()  # 并行
+        self.init_reads()  # 扫描read 确实其对应的 MS
+        self.get_reads_info()
+        self.merge_reads_info()
+        self.call_variants()
+
+        pass

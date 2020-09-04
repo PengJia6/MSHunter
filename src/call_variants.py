@@ -2,12 +2,13 @@
 # -*- coding: UTF-8 -*-
 """==============================================================================
 # Project: MSHunter
-# Script : pre_stat.py
+# Script : call_variants.py
 # Author : Peng Jia
-# Date   : 2020.08.20
+# Date   : 2020.09.03
 # Email  : pengjia@stu.xjtu.edu.cn
-# Description: TODO TODO
+# Description: TODO
 =============================================================================="""
+
 
 import os
 import re
@@ -19,7 +20,7 @@ from src.units import *
 from src.Window import Window
 
 
-def pre_stat_write_vcf_init(outputpath):
+def call_variant_write_vcf_init(outputpath):
     outputfile = pysam.VariantFile(outputpath, "w")
     bam_file = pysam.AlignmentFile(get_value("paras")["input"], "rb")
     contigs = bam_file.references
@@ -74,14 +75,14 @@ def pre_stat_write_vcf_init(outputpath):
     return outputfile
 
 
-def pre_stat_write_vcf_close(outputfile):
+def call_variant_write_vcf_close(outputfile):
     outputfile.close()
     pysam.tabix_index(get_value("paras")["output_pre"], force=True, preset="vcf")
 
 
 def run_one_window(win_info):
     window = Window(win_info)
-    window.run_window_pre_stat()
+    window.run_window_call_variant()
     return window
 
 
@@ -101,18 +102,17 @@ def run_window_mul(windows, args, file_output):
     pool.join()
     # win_recs=[]
     for win in windows:
-        for rec in win.write_to_vcf_pre_stat(file_output):
+        for rec in win.write_to_vcf_call_variants(file_output):
             file_output.write(rec)
     logger.info("Total Microsatellites: " + str(args["ms_num"]))
     logger.info("Finished Microsatellites: " + str(args["current_num"]) +
                 " (" + str(round(args["current_num"] / args["ms_num"] * 100, 2)) + "%)")
 
 
-def pre_stat(df_microsatellites):
+def call_variants(df_microsatellites):
     args = get_value("paras")
-    out_vcf_pre = args["output_pre"]
-
-    output_file = pre_stat_write_vcf_init(out_vcf_pre)
+    out_vcf = args["output_call"]
+    output_file = call_variant_write_vcf_init(out_vcf)
     contigs_info = get_value("contigs_info")
     if args["debug"]:
         locis_num = 10000
@@ -162,8 +162,4 @@ def pre_stat(df_microsatellites):
             del window_sub, window_ms
             run_window_mul(window_ms_tmp, args, file_output=output_file)
             del window_ms_tmp
-    pre_stat_write_vcf_close(output_file)
-    
-
-if __name__ == "__main__":
-    pass
+    call_variant_write_vcf_close(output_file)

@@ -141,7 +141,7 @@ class Microsatellite:
             if repeat_length not in dis_stand[stand]:
                 dis_stand[stand][repeat_length] = 0
             dis_stand[stand][repeat_length] += 1
-        self.depth = len(self.reads_info)
+        self.depth = len(dis)
         self.dis_stat = True if self.depth > 0 else False
         self.ms_dis = dis
         self.ms_dis_hap0 = dis_hap[0]
@@ -150,7 +150,6 @@ class Microsatellite:
         self.ms_dis_forward = dis_stand[True]
         self.ms_dis_reversed = dis_stand[False]
         self.query_repeat_length = get_max_support_index(dis)
-
 
     def get_dis(self):
         samfile = pysam.Samfile(get_value("paras")["input"])
@@ -271,6 +270,9 @@ class Microsatellite:
         for pos, info in alt_dict:
             alt_list[pos - offset] = info
         return "".join(alt_list)
+
+    def ccs_genotype(self):
+        pass
 
     def one_hap_genotype(self):
         if self.depth == 0:
