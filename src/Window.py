@@ -138,6 +138,8 @@ class Window:
 
     def genotype_one_microsatellite_ccs(self, microsatellite):
         # microsatellite.get_dis()
+        microsatellite.call_init()
+        microsatellite.remove_noise()
         microsatellite.ccs_genotype()
         return microsatellite
 

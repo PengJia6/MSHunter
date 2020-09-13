@@ -15,6 +15,52 @@ from src.units import *
 from src.Read import Read
 
 
+class MutationSingal:
+    # TODO
+    def __init__(self):
+        pass
+
+
+class PatternCluster:
+    reads_id = []
+    pattern = {}  # pos:annotation  1. SNV (pos:A)  2. DEL (pos,-length) 3. INS (pos,length)
+    pattern_num = 0
+    read_num = 0
+    no_mutation = False
+    pattern_id = 0
+    forward = []
+    reversed = []
+    hap0 = []
+    hap1 = []
+    hap2 = []
+
+    def __init__(self, pattern_id):
+        self.pattern_id = pattern_id
+
+    def contain(self, pattern={}):
+        match_num = 0
+        for pos, ann in pattern.items():
+            if pos in self.pattern:
+                if self.pattern[pos] == ann:
+                    match_num += 1
+        match_ratio = (match_num / self.pattern_num + match_num / len(pattern)) * 0.5
+        return match_ratio
+
+    def init_patttern(self, pattern, read_id):
+        self.pattern = pattern
+        self.reads_id = [read_id]
+        self.pattern_num = len(pattern)
+        self.read_num = 1
+        if self.pattern_num == 0:
+            self.no_mutation = True
+
+        pass
+
+    def add_reads(self, read_id):
+        self.reads_id.append(read_id)
+        self.read_num += 1
+
+
 class Mutation:
     def __init__(self):
         self.var_pre = {}
@@ -118,6 +164,9 @@ class Microsatellite:
         self.ms_dis_hap2 = {}
         self.ms_dis_hap0 = {}
         self.query_repeat_length = 0
+        self.deletions = {}
+        self.insertions = {}
+        self.mismatches = {}
 
         # print(ms_info)
 
@@ -271,7 +320,90 @@ class Microsatellite:
             alt_list[pos - offset] = info
         return "".join(alt_list)
 
+    def call_init(self):
+        if self.depth == 0:
+            self.check = False
+            self.check_status.append("No_read_covered")
+            self.dis_stat = False
+            self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
+            return
+        self.deletion_merge()
+        mismatches = {}
+        deletions = {}
+        insertions = {}
+        ms_dis = {}
+        mut_dict_by_pos = {}
+
+        for read_id, read_info in self.reads_info.items():
+            hap = read_info.hap
+            strand = read_info.strand
+            for mut in read_info.mismatches:
+                if mut[0] not in mut_dict_by_pos:
+                    mut_dict_by_pos[mut[0]] = []
+                mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+
+            for mut in read_info.insertions:
+                if mut[0] not in mut_dict_by_pos:
+                    mut_dict_by_pos[mut[0]] = []
+                mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
+
+            for mut in read_info.deletions:
+                if mut[0] not in mut_dict_by_pos:
+                    mut_dict_by_pos[mut[0]] = []
+                mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
+
+            if read_info.repeat_length not in ms_dis:
+                ms_dis[read_info.repeat_length] = 1
+            else:
+                ms_dis[read_info.repeat_length] += 1
+
+        self.ms_dis = ms_dis
+        self.query_repeat_length = get_max_support_index(ms_dis)
+        patterns = {}
+        reads_info = {}
+        for pos, infos in mut_dict_by_pos.items():
+            support = len(infos)
+            support_forward = 0
+            support_reversed = 0
+            for info in infos:
+                if info[4]:
+                    support_forward += 1
+                else:
+                    support_reversed += 1
+            if support < self.depth * 0.2: continue  # remove low frequency mutation
+            if abs(support_forward - support_reversed) > support * 0.4: continue  # remove strand bias
+            for info in infos:
+                if info[2] not in reads_info:
+                    reads_info[info[2]] = []
+                reads_info[info[2]].append(info)
+        pattern_id = 0
+        for read_id, read_info in reads_info.items():
+            pattern = {}
+            for item in read_info:
+                pattern[item[0]] = (item[0], item[5][2])
+
+            if len(patterns) == 0:
+                patterns[pattern_id] = PatternCluster(pattern_id)
+                patterns[pattern_id].init_patttern(pattern, read_id)
+            for
+            # todo 判断是否有模式了
+
+            print(read_id, reads_info)
+
+    # TODO remove noise in reads and processing according reads
+    # if len(patterns) == 0:
+    #     pattern_id = 0
+    #     patterns[pattern_id] = PatternCluster(pattern_id)
+    # else:
+    #     for pattern_id, pattern in patterns.items():
+    #         print(pattern_id)
+    #         if pattern
+    def remove_noise(self):
+        # TODO
+        pass
+
     def ccs_genotype(self):
+        # TODO
         pass
 
     def one_hap_genotype(self):
@@ -375,15 +507,5 @@ class Microsatellite:
                     self.check = False
                     self.check_status.append("DEL_Span")
         self.mut.compute()
-        # if mutation.mut_start==15195980:
-        # print(deletions)
-        # print(insertions)
-        # print(mismatches)
-        # print(self.mut_start, self.mut_end)
-        # print(self.start)
-        # print(alt_list)
         self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start - 1, self.mut_end + 1)
         self.alt_str = "." if self.mut.var_type == "None" else self.get_alt(alt_list, offset=self.mut_start - 1)
-
-        # print("=================")
-        # mutation.show()

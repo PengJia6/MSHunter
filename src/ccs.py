@@ -19,8 +19,8 @@ from src.call_variants import call_variants
 
 def genotype_ccs(paras):
     df_microsatellites = load_microsatellites(paras)
-    pre_stat(df_microsatellites)
-    estimate_error()
+    # pre_stat(df_microsatellites)
+    # estimate_error()
     call_variants(df_microsatellites)
 
     # pre_stat(paras, df_microsatellites)
