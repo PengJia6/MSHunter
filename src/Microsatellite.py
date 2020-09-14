@@ -39,12 +39,21 @@ class PatternCluster:
 
     def contain(self, pattern={}):
         match_num = 0
+        # print(pattern,self.pattern)
         for pos, ann in pattern.items():
             if pos in self.pattern:
                 if self.pattern[pos] == ann:
                     match_num += 1
+                # tag = True
+                # for i, j in zip(self.pattern[pos], ann):
+                #     if i != j: tag = False
+                #     break
+                # if tag: match_num += 1
+
         match_ratio = (match_num / self.pattern_num + match_num / len(pattern)) * 0.5
-        return match_ratio
+        # if match_ratio==0:
+        #     return True
+        return True if match_ratio == 1 else False
 
     def init_patttern(self, pattern, read_id):
         self.pattern = pattern
@@ -328,9 +337,6 @@ class Microsatellite:
             self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
             return
         self.deletion_merge()
-        mismatches = {}
-        deletions = {}
-        insertions = {}
         ms_dis = {}
         mut_dict_by_pos = {}
 
@@ -359,7 +365,6 @@ class Microsatellite:
 
         self.ms_dis = ms_dis
         self.query_repeat_length = get_max_support_index(ms_dis)
-        patterns = {}
         reads_info = {}
         for pos, infos in mut_dict_by_pos.items():
             support = len(infos)
@@ -377,18 +382,41 @@ class Microsatellite:
                     reads_info[info[2]] = []
                 reads_info[info[2]].append(info)
         pattern_id = 0
+        patterns = {}
         for read_id, read_info in reads_info.items():
             pattern = {}
             for item in read_info:
-                pattern[item[0]] = (item[0], item[5][2])
-
-            if len(patterns) == 0:
-                patterns[pattern_id] = PatternCluster(pattern_id)
+                pattern[item[0]] = "_".join([str(item[0]), item[1], str(item[5][1])])
+            new = True
+            for i_pattern in patterns:
+                if patterns[i_pattern].contain(pattern):
+                    patterns[i_pattern].add_reads(read_id)
+                    new = False
+                    break
+            if new:
+                pattern_id += 1
+                patterns[pattern_id] = PatternCluster(pattern)
                 patterns[pattern_id].init_patttern(pattern, read_id)
-            for
-            # todo 判断是否有模式了
 
-            print(read_id, reads_info)
+            # print([pa.pattern for pa in patterns.values()], pattern)
+
+            # if len(patterns) == 0:
+            #     patterns[pattern_id] = PatternCluster(pattern_id)
+            #     patterns[pattern_id].init_patttern(pattern, read_id)
+        #     new = True
+        #     for i_id in patterns:
+        #         if patterns[i_id].contain(pattern):
+        #             patterns[i_id].add_reads(read_id)
+        #             new = False
+        #             break
+        #     if new:
+        #         pattern_id += 1
+        #         patterns[pattern_id] = PatternCluster(pattern_id)
+        #         patterns[pattern_id].init_patttern(pattern, read_id)
+        # print(patterns)
+
+        print("===================================================")
+        # print(read_id, reads_info)
 
     # TODO remove noise in reads and processing according reads
     # if len(patterns) == 0:

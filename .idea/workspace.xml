@@ -22,13 +22,7 @@
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Microsatellite.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Microsatellite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Window.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/call_variants.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/call_variants.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/ccs.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/ccs.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/call_variants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/call_variants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/ccs.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/ccs.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -87,9 +81,6 @@
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -259,11 +250,11 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.Microsatellite" />
         <item itemvalue="Python.units" />
         <item itemvalue="Shell Script.test_ccs.sh" />
         <item itemvalue="Python.Window" />
         <item itemvalue="Python.Read" />
-        <item itemvalue="Python.Microsatellite" />
       </list>
     </recent_temporary>
   </component>
@@ -302,7 +293,7 @@
       <workItem from="1596510603815" duration="35380000" />
       <workItem from="1596636539187" duration="117279000" />
       <workItem from="1597316894116" duration="30477000" />
-      <workItem from="1597911708290" duration="179172000" />
+      <workItem from="1597911708290" duration="191306000" />
     </task>
     <servers />
   </component>
@@ -354,45 +345,45 @@
     </state>
     <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1597279802148" />
     <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594350855551" />
-    <state width="1845" height="277" key="GridCell.Tab.0.bottom" timestamp="1599742395687">
+    <state width="1845" height="261" key="GridCell.Tab.0.bottom" timestamp="1600067020614">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="277" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1599742395687" />
+    <state width="1845" height="261" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600067020614" />
     <state width="1034" height="2" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1597236521964" />
-    <state width="1845" height="277" key="GridCell.Tab.0.center" timestamp="1599742395687">
+    <state width="1845" height="261" key="GridCell.Tab.0.center" timestamp="1600067020614">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="277" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1599742395687" />
+    <state width="1845" height="261" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600067020614" />
     <state width="1034" height="2" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1597236521964" />
-    <state width="1845" height="277" key="GridCell.Tab.0.left" timestamp="1599742395687">
+    <state width="1845" height="261" key="GridCell.Tab.0.left" timestamp="1600067020614">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="277" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1599742395687" />
+    <state width="1845" height="261" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600067020614" />
     <state width="1034" height="2" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1597236521964" />
-    <state width="1845" height="277" key="GridCell.Tab.0.right" timestamp="1599742395687">
+    <state width="1845" height="261" key="GridCell.Tab.0.right" timestamp="1600067020614">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="277" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1599742395687" />
+    <state width="1845" height="261" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600067020614" />
     <state width="1034" height="2" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1597236521964" />
-    <state width="1874" height="421" key="GridCell.Tab.1.bottom" timestamp="1598624555909">
+    <state width="1845" height="-19" key="GridCell.Tab.1.bottom" timestamp="1600066655266">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1874" height="421" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1598624555909" />
+    <state width="1845" height="-19" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600066655266" />
     <state width="1874" height="317" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1595255605494" />
-    <state width="1874" height="421" key="GridCell.Tab.1.center" timestamp="1598624555909">
+    <state width="1845" height="-19" key="GridCell.Tab.1.center" timestamp="1600066655266">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1874" height="421" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1598624555909" />
+    <state width="1845" height="-19" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600066655266" />
     <state width="1874" height="317" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1595255605494" />
-    <state width="1874" height="421" key="GridCell.Tab.1.left" timestamp="1598624555909">
+    <state width="1845" height="-19" key="GridCell.Tab.1.left" timestamp="1600066655265">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1874" height="421" key="GridCell.Tab.1.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1598624555909" />
+    <state width="1845" height="-19" key="GridCell.Tab.1.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600066655265" />
     <state width="1874" height="317" key="GridCell.Tab.1.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1595255605494" />
-    <state width="1874" height="421" key="GridCell.Tab.1.right" timestamp="1598624555909">
+    <state width="1845" height="-19" key="GridCell.Tab.1.right" timestamp="1600066655266">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1874" height="421" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1598624555909" />
+    <state width="1845" height="-19" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1600066655266" />
     <state width="1874" height="317" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1595255605494" />
     <state x="0" y="190" width="1865" height="730" key="SettingsEditor" timestamp="1594645671503">
       <screen x="0" y="27" width="1920" height="988" />
@@ -427,7 +418,8 @@
     <SUITE FILE_PATH="coverage/MSHunter$genotype.coverage" NAME="genotype Coverage Results" MODIFIED="1595850026665" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$bam2dis.coverage" NAME="bam2dis Coverage Results" MODIFIED="1593609358421" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$units.coverage" NAME="units Coverage Results" MODIFIED="1598621727619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1599742259366" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1600066866126" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$Microsatellite.coverage" NAME="Microsatellite Coverage Results" MODIFIED="1600066649454" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$benchmark.coverage" NAME="benchmark Coverage Results" MODIFIED="1594881971585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$call.coverage" NAME="call Coverage Results" MODIFIED="1593743003373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
   </component>
