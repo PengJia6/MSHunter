@@ -12,17 +12,11 @@ import pysam
 import numpy as np
 
 
-class Read_Mutation:
-    def __init__(self, repeat_length, strand, mismatches, deletions, insertions, hap):
-        self.repeat_length = repeat_length
-        self.strand = strand
-        self.mismatches = mismatches
-        self.deletions = deletions
-        self.insertions = insertions
-        self.hap = hap
-
-
 class Read:
+    """
+    Description: Read
+    """
+
     def __init__(self, read_id, alignment, reference, chrom):
         self.chrom = chrom
         self.read_name = alignment.query_name

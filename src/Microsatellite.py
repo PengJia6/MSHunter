@@ -15,128 +15,10 @@ from src.units import *
 from src.Read import Read
 
 
-class MutationSingal:
-    # TODO
-    def __init__(self):
-        pass
-
-
-class PatternCluster:
-    reads_id = []
-    pattern = {}  # pos:annotation  1. SNV (pos:A)  2. DEL (pos,-length) 3. INS (pos,length)
-    pattern_num = 0
-    read_num = 0
-    no_mutation = False
-    pattern_id = 0
-    forward = []
-    reversed = []
-    hap0 = []
-    hap1 = []
-    hap2 = []
-
-    def __init__(self, pattern_id):
-        self.pattern_id = pattern_id
-
-    def contain(self, pattern={}):
-        match_num = 0
-        # print(pattern,self.pattern)
-        for pos, ann in pattern.items():
-            if pos in self.pattern:
-                if self.pattern[pos] == ann:
-                    match_num += 1
-                # tag = True
-                # for i, j in zip(self.pattern[pos], ann):
-                #     if i != j: tag = False
-                #     break
-                # if tag: match_num += 1
-
-        match_ratio = (match_num / self.pattern_num + match_num / len(pattern)) * 0.5
-        # if match_ratio==0:
-        #     return True
-        return True if match_ratio == 1 else False
-
-    def init_patttern(self, pattern, read_id):
-        self.pattern = pattern
-        self.reads_id = [read_id]
-        self.pattern_num = len(pattern)
-        self.read_num = 1
-        if self.pattern_num == 0:
-            self.no_mutation = True
-
-        pass
-
-    def add_reads(self, read_id):
-        self.reads_id.append(read_id)
-        self.read_num += 1
-
-
-class Mutation:
-    def __init__(self):
-        self.var_pre = {}
-        self.var_suf = {}
-        self.var_ms = {}
-        self.type_pre = []
-        self.type_suf = []
-        self.type_ms = []
-        self.mut_start = 0
-        self.mut_end = 0
-        self.alt = []
-        self.ms = 0
-        self.pre = 0
-        self.suf = 0
-        self.var_detail = []
-        self.var_type = "None"
-        self.var_type_detail = ""
-        self.var_detail_str = ""
-
-    def compute(self, ):
-        for pos in sorted(list(self.var_pre.keys())):
-            var_type = self.var_pre[pos][0]
-            var_content = self.var_pre[pos][1][0]
-            self.type_pre.append(self.var_pre[pos][0])
-            self.alt.append([pos, self.var_pre[pos][1][0]])
-            self.var_detail.append([str(pos), var_type, str(var_content)])
-
-        for pos in sorted(list(self.var_ms.keys())):
-            var_type = self.var_ms[pos][0]
-            var_content = self.var_ms[pos][1][0]
-            self.type_ms.append(var_type)
-            # print(self.var_ms)
-            self.alt.append([pos, var_content])
-            self.var_detail.append([str(pos), var_type, str(var_content)])
-
-        for pos in sorted(list(self.var_suf.keys())):
-            var_type = self.var_suf[pos][0]
-            var_content = self.var_suf[pos][1][0]
-            self.type_suf.append(self.var_suf[pos][0])
-            self.alt.append([pos, self.var_suf[pos][1]])
-            self.var_detail.append([str(pos), var_type, str(var_content)])
-
-        self.ms = len(self.type_ms)
-        self.pre = len(self.type_pre)
-        self.suf = len(self.type_suf)
-        var_list = self.type_pre + self.type_ms + self.type_suf
-        var_num = len(var_list)
-        if var_num > 1:
-            self.var_type = "Complex"
-        elif var_num == 0:
-            self.var_type = "None"
-        else:
-            self.var_type = var_list[0]
-        self.var_type_detail = "|".join(
-            [":".join(var_type) for var_type in [self.type_pre, self.type_ms, self.type_suf]])
-        self.var_detail_str = "|".join([":".join(var) for var in self.var_detail])
-
-    def show(self):
-        if len(self.var_ms) > 0:
-            print(self.var_ms)
-        if len(self.var_pre) > 0:
-            print(self.var_pre)
-        if len(self.var_suf) > 0:
-            print(self.var_suf)
-
-
 class Microsatellite:
+    """
+    Description: For microsatellite
+    """
 
     def __init__(self, ms_info,
                  # prefix_len=get_value("paras")["prefix_len"],
@@ -155,6 +37,7 @@ class Microsatellite:
         self.end_suf = self.end + ms_info["suffix_len"]
         # self.ref_list = []
         self.reads_info = {}
+        self.muts = {}
         self.length_dis_reads = {}
         self.depth = 0
         self.check = True
@@ -176,6 +59,8 @@ class Microsatellite:
         self.deletions = {}
         self.insertions = {}
         self.mismatches = {}
+        self.reads_phased = True  # True if reads in this regions is phased
+        self.model_stat = True  # True if model is built in estimate process
 
         # print(ms_info)
 
@@ -183,10 +68,16 @@ class Microsatellite:
         self.reads_info = reads_info
         self.depth = len(self.reads_info)
 
+    def set_muts_info(self, muts):
+        self.muts = muts
+        self.depth = len(self.muts)
+
     def set_read_dis_info(self, reads_info):
+        # self.reads_info = reads_info
         dis = {}
         dis_stand = {True: {}, False: {}}
         dis_hap = {0: {}, 1: {}, 2: {}}
+        # print(reads_info)
 
         for read_id, ms_info in reads_info.items():
             repeat_length, stand, hap = ms_info
@@ -208,6 +99,15 @@ class Microsatellite:
         self.ms_dis_forward = dis_stand[True]
         self.ms_dis_reversed = dis_stand[False]
         self.query_repeat_length = get_max_support_index(dis)
+        dis_hap0_num = len(dis_hap[0])
+        dis_hap1_num = len(dis_hap[1])
+        dis_hap2_num = len(dis_hap[2])
+        if abs(dis_hap1_num - dis_hap2_num) > self.depth * 0.4:  # TODO add in input arguments
+            self.reads_phased = False
+        elif dis_hap0_num < self.depth * 0.5:  # TODO add in input arguments
+            self.reads_phased = False
+        else:
+            self.reads_phased = True
 
     def get_dis(self):
         samfile = pysam.Samfile(get_value("paras")["input"])
@@ -335,88 +235,101 @@ class Microsatellite:
             self.check_status.append("No_read_covered")
             self.dis_stat = False
             self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
-            return
-        self.deletion_merge()
-        ms_dis = {}
-        mut_dict_by_pos = {}
+            return False
+        model_all = get_value("model")
+        if self.repeat_unit not in model_all:
+            self.check = False
+            self.check_status.append("No_error_model")
+            self.model_stat = False
+            return False
 
+        model = model_all[self.repeat_unit]
+        del model_all
+        # self.model_stat = True
+        repeat_length_info = {}
         for read_id, read_info in self.reads_info.items():
-            hap = read_info.hap
-            strand = read_info.strand
-            for mut in read_info.mismatches:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+            print(self.ms_id, read_info.repeat_lengths)
+            if self.ms_id not in read_info.repeat_lengths: continue
+            print("hhhhh")
+            repeat_length_info[read_id] = [read_info.repeat_lengths[self.ms_id], read_info.stand, read_info.hap]
+        self.set_read_dis_info(repeat_length_info)
 
-            for mut in read_info.insertions:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
+    # def call_init(self):
+    #     if self.depth == 0:
+    #         self.check = False
+    #         self.check_status.append("No_read_covered")
+    #         self.dis_stat = False
+    #         self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
+    #         return
+    #     self.deletion_merge()
+    #     ms_dis = {}
+    #     mut_dict_by_pos = {}
+    #     for read_id, read_info in self.reads_info.items():
+    #         hap = read_info.hap
+    #         strand = read_info.strand
+    #         for mut in read_info.mismatches:
+    #             if mut[0] not in mut_dict_by_pos:
+    #                 mut_dict_by_pos[mut[0]] = []
+    #             mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+    #
+    #         for mut in read_info.insertions:
+    #             if mut[0] not in mut_dict_by_pos:
+    #                 mut_dict_by_pos[mut[0]] = []
+    #             mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
+    #
+    #         for mut in read_info.deletions:
+    #             if mut[0] not in mut_dict_by_pos:
+    #                 mut_dict_by_pos[mut[0]] = []
+    #             mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
+    #
+    #         if read_info.repeat_length not in ms_dis:
+    #             ms_dis[read_info.repeat_length] = 1
+    #             if
+    #         else:
+    #             ms_dis[read_info.repeat_length] += 1
+    #     self.ms_dis = ms_dis
+    #     self.query_repeat_length = get_max_support_index(ms_dis)
+    #
+    #
+    #
+    #
+    #     reads_info = {}
+    #     for pos, infos in mut_dict_by_pos.items():
+    #         support = len(infos)
+    #         support_forward = 0
+    #         support_reversed = 0
+    #         for info in infos:
+    #             if info[4]:
+    #                 support_forward += 1
+    #             else:
+    #                 support_reversed += 1
+    #         if support < self.depth * 0.2: continue  # remove low frequency mutation
+    #         if abs(support_forward - support_reversed) > support * 0.4: continue  # remove strand bias
+    #         for info in infos:
+    #             if info[2] not in reads_info:
+    #                 reads_info[info[2]] = []
+    #             reads_info[info[2]].append(info)
+    #     pattern_id = 0
+    #     patterns = {}
+    #     for read_id, read_info in reads_info.items():
+    #         pattern = {}
+    #         hap = read_info[0][3]
+    #         strand = read_info[0][4]
+    #         for item in read_info:
+    #             pattern[item[0]] = "_".join([str(item[0]), item[1], str(item[5][1])])
+    #         new = True
+    #         for i_pattern in patterns:
+    #             if patterns[i_pattern].contain(pattern):
+    #                 patterns[i_pattern].add_reads(read_id, hap, strand)
+    #                 new = False
+    #                 break
+    #         if new:
+    #             pattern_id += 1
+    #             patterns[pattern_id] = PatternCluster(pattern)
+    #             patterns[pattern_id].init_patttern(pattern, read_id, hap, strand)
 
-            for mut in read_info.deletions:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
-
-            if read_info.repeat_length not in ms_dis:
-                ms_dis[read_info.repeat_length] = 1
-            else:
-                ms_dis[read_info.repeat_length] += 1
-
-        self.ms_dis = ms_dis
-        self.query_repeat_length = get_max_support_index(ms_dis)
-        reads_info = {}
-        for pos, infos in mut_dict_by_pos.items():
-            support = len(infos)
-            support_forward = 0
-            support_reversed = 0
-            for info in infos:
-                if info[4]:
-                    support_forward += 1
-                else:
-                    support_reversed += 1
-            if support < self.depth * 0.2: continue  # remove low frequency mutation
-            if abs(support_forward - support_reversed) > support * 0.4: continue  # remove strand bias
-            for info in infos:
-                if info[2] not in reads_info:
-                    reads_info[info[2]] = []
-                reads_info[info[2]].append(info)
-        pattern_id = 0
-        patterns = {}
-        for read_id, read_info in reads_info.items():
-            pattern = {}
-            for item in read_info:
-                pattern[item[0]] = "_".join([str(item[0]), item[1], str(item[5][1])])
-            new = True
-            for i_pattern in patterns:
-                if patterns[i_pattern].contain(pattern):
-                    patterns[i_pattern].add_reads(read_id)
-                    new = False
-                    break
-            if new:
-                pattern_id += 1
-                patterns[pattern_id] = PatternCluster(pattern)
-                patterns[pattern_id].init_patttern(pattern, read_id)
-
-            # print([pa.pattern for pa in patterns.values()], pattern)
-
-            # if len(patterns) == 0:
-            #     patterns[pattern_id] = PatternCluster(pattern_id)
-            #     patterns[pattern_id].init_patttern(pattern, read_id)
-        #     new = True
-        #     for i_id in patterns:
-        #         if patterns[i_id].contain(pattern):
-        #             patterns[i_id].add_reads(read_id)
-        #             new = False
-        #             break
-        #     if new:
-        #         pattern_id += 1
-        #         patterns[pattern_id] = PatternCluster(pattern_id)
-        #         patterns[pattern_id].init_patttern(pattern, read_id)
-        # print(patterns)
-
-        print("===================================================")
-        # print(read_id, reads_info)
+    # print("===================================================")
+    # print(read_id, reads_info)
 
     # TODO remove noise in reads and processing according reads
     # if len(patterns) == 0:

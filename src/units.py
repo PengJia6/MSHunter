@@ -14,6 +14,159 @@ import pandas as pd
 from src.global_dict import *
 
 
+class Read_Mutation:
+    """
+    Description: class for read mutation
+    """
+
+    def __init__(self, repeat_length, strand, mismatches, deletions, insertions, hap):
+        self.repeat_length = repeat_length
+        self.strand = strand
+        self.mismatches = mismatches
+        self.deletions = deletions
+        self.insertions = insertions
+        self.hap = hap
+
+
+class MutationSingal:
+    # TODO
+    def __init__(self):
+        pass
+
+
+class PatternCluster:
+    reads_id = []
+    pattern = {}  # pos:annotation  1. SNV (pos:A)  2. DEL (pos,-length) 3. INS (pos,length)
+    pattern_num = 0
+    read_num = 0
+    no_mutation = False
+    pattern_id = 0
+    forward = []
+    reversed = []
+    hap0 = []
+    hap1 = []
+    hap2 = []
+
+    def __init__(self, pattern_id):
+        self.pattern_id = pattern_id
+
+    def contain(self, pattern={}):
+        match_num = 0
+        # print(pattern,self.pattern)
+        for pos, ann in pattern.items():
+            if pos in self.pattern:
+                if self.pattern[pos] == ann:
+                    match_num += 1
+                # tag = True
+                # for i, j in zip(self.pattern[pos], ann):
+                #     if i != j: tag = False
+                #     break
+                # if tag: match_num += 1
+
+        match_ratio = (match_num / self.pattern_num + match_num / len(pattern)) * 0.5
+        # if match_ratio==0:
+        #     return True
+        return True if match_ratio == 1 else False
+
+    def init_patttern(self, pattern, read_id, hap, strand):
+        self.pattern = pattern
+        self.reads_id = [read_id]
+        self.pattern_num = len(pattern)
+        self.read_num = 1
+        if self.pattern_num == 0:
+            self.no_mutation = True
+        if hap == 0: self.hap0.append(read_id)
+        if hap == 1: self.hap1.append(read_id)
+        if hap == 2: self.hap2.append(read_id)
+        if strand:
+            self.forward.append(read_id)
+        else:
+            self.reversed.append(read_id)
+
+        pass
+
+    def add_reads(self, read_id, hap, strand):
+        self.reads_id.append(read_id)
+        self.read_num += 1
+        if hap == 0: self.hap0.append(read_id)
+        if hap == 1: self.hap1.append(read_id)
+        if hap == 2: self.hap2.append(read_id)
+        if strand:
+            self.forward.append(read_id)
+        else:
+            self.reversed.append(read_id)
+
+
+class Mutation:
+    """
+    Description: class for mutation
+    """
+
+    def __init__(self):
+        self.var_pre = {}
+        self.var_suf = {}
+        self.var_ms = {}
+        self.type_pre = []
+        self.type_suf = []
+        self.type_ms = []
+        self.mut_start = 0
+        self.mut_end = 0
+        self.alt = []
+        self.ms = 0
+        self.pre = 0
+        self.suf = 0
+        self.var_detail = []
+        self.var_type = "None"
+        self.var_type_detail = ""
+        self.var_detail_str = ""
+
+    def compute(self, ):
+        for pos in sorted(list(self.var_pre.keys())):
+            var_type = self.var_pre[pos][0]
+            var_content = self.var_pre[pos][1][0]
+            self.type_pre.append(self.var_pre[pos][0])
+            self.alt.append([pos, self.var_pre[pos][1][0]])
+            self.var_detail.append([str(pos), var_type, str(var_content)])
+
+        for pos in sorted(list(self.var_ms.keys())):
+            var_type = self.var_ms[pos][0]
+            var_content = self.var_ms[pos][1][0]
+            self.type_ms.append(var_type)
+            # print(self.var_ms)
+            self.alt.append([pos, var_content])
+            self.var_detail.append([str(pos), var_type, str(var_content)])
+
+        for pos in sorted(list(self.var_suf.keys())):
+            var_type = self.var_suf[pos][0]
+            var_content = self.var_suf[pos][1][0]
+            self.type_suf.append(self.var_suf[pos][0])
+            self.alt.append([pos, self.var_suf[pos][1]])
+            self.var_detail.append([str(pos), var_type, str(var_content)])
+
+        self.ms = len(self.type_ms)
+        self.pre = len(self.type_pre)
+        self.suf = len(self.type_suf)
+        var_list = self.type_pre + self.type_ms + self.type_suf
+        var_num = len(var_list)
+        if var_num > 1:
+            self.var_type = "Complex"
+        elif var_num == 0:
+            self.var_type = "None"
+        else:
+            self.var_type = var_list[0]
+        self.var_type_detail = "|".join(
+            [":".join(var_type) for var_type in [self.type_pre, self.type_ms, self.type_suf]])
+        self.var_detail_str = "|".join([":".join(var) for var in self.var_detail])
+
+    def show(self):
+        if len(self.var_ms) > 0:
+            print(self.var_ms)
+        if len(self.var_pre) > 0:
+            print(self.var_pre)
+        if len(self.var_suf) > 0:
+            print(self.var_suf)
+
+
 # TODO check and normalize
 def remove_zero_dict(dict):
     newdict = {}

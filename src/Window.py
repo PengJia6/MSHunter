@@ -16,14 +16,30 @@ import pysam
 
 
 class Window:
+    """
+    Description: class Window
+    Member variables:
+        contig: the contig of this window
+        paras: parameters of this program, containing command input and some default values
+        ms_list: information of microsatellite in this window
+        bam_path: bam file path
+        win_start: start position of this window
+        win_end: end position of this window
+        reads: Read Object of this window; dict: read_id:Read
+        reads_num: reads numbers
+        microsatellites: Microsatellite Object of this window; dict: ms_id:Microsatellite
+        microsatellites_id: list of ms_id
+        vcf_recs: list of vcf records infomation in this window
+    Member methods:
+
+    """
 
     def __init__(self, ms_info_list):
         self.contig = ms_info_list[0]["chr"]
-
         self.paras = get_value("paras")
         self.ms_list = ms_info_list
         self.bam_path = self.paras["input"]
-        self.threads = self.paras["threads"]
+        # self.threads = self.paras["threads"]
         self.win_start = ms_info_list[0]["pos"] - self.paras["prefix_len"]
         self.win_end = ms_info_list[-1]["pos"] + ms_info_list[-1]["repeatTimes"] * ms_info_list[-1]["motifLen"] + \
                        self.paras["suffix_len"]
@@ -32,30 +48,23 @@ class Window:
         self.microsatellites = {}
         self.microsatellites_id = [it["chr"] + "_" + str(it["pos"]) for it in ms_info_list]
         self.vcf_recs = []
-        # logger.info("\t--------------------------------------------------------------------------------")
-        # logger.info("\tProcessing " + contig + ":" + str(self.win_start) + "-" + str(self.win_end))
-        # logger.info("\tNo. of Microsatellites: " + str(len(ms_info_list)))
-        # logger.info("Processing " + contig + " " + str(self.win_start) + "-" +
-        #             str(self.win_end) + "\t Microsatellites: " + str(len(ms_info_list)))
-
-        # self.ms_list_pos=[ () for info in ms_info_list]
-
-    def init_one_microsatellite(self, ms_info):
-        # ref_path=get_value("paras")["reference"]
-        ms = Microsatellite(ms_info)
-        return ms
 
     def init_microsatellites(self):
-        # pool = multiprocessing.Pool(processes=self.threads)
-        # microsatellites = pool.map(self.init_one_microsatellite, self.ms_list)
-        # pool.close()
-        # pool.join()
+        """
+        Description: Microsatellite class init for this window
+        Returns:
+        """
         microsatellites = []
         for ms in self.ms_list:
-            microsatellites.append(self.init_one_microsatellite(ms))
+            microsatellites.append(Microsatellite(ms))
         self.microsatellites = {ms_info.ms_id: ms_info for ms_info in microsatellites}
 
     def init_reads(self):
+        """
+        Description: 1. Extract all read covered the microsatellite regions in this window.
+                     2. Read Init
+        Returns:
+        """
         reads = {}
         sam_file = pysam.AlignmentFile(self.paras["input"], mode="rb", reference_filename=self.paras["reference"])
         # pysam.AlignmentFile(self.bam_path, mode="rb", reference_filename=self.reference_path)
@@ -79,38 +88,34 @@ class Window:
         self.reads = reads
         self.reads_num = len(self.reads)
 
-    def get_one_read_info(self, read):
-        read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
-        read.get_read_str()
-        read.get_ms_info_one_read()
-        # read.get_mut_info()
-        return read
-
-    def get_one_read_dis(self, read):
-        read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
-        read.get_read_str()
-        read.get_repeat_length_all_ms()
-        return read
-
     def get_reads_dis(self):
+        """
+        Description: get repeat length distribution
+        Returns:
+
+        """
         result_list = []
-        for item in self.reads.values():
-            result_list.append(self.get_one_read_dis(item))
+        for read in self.reads.values():
+            read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
+            read.get_read_str()
+            read.get_repeat_length_all_ms()
+            result_list.append(read)
         self.reads = {read.read_id: read for read in result_list}
 
     def get_reads_info(self):
-        # logger.info("\tScan reads covered microsatellites ... ")
-        # pool = multiprocessing.Pool(processes=self.threads)
-        # # print(self.reads)
-        # result_list = pool.map(self.get_one_read_info, self.reads.values())
-        # pool.close()
-        # pool.join()
+        """
+        Description: get mutation of each read and repeat length destribution
+        Returns:
+        """
         result_list = []
-        for item in self.reads.values():
-            result_list.append(self.get_one_read_info(item))
+        for read in self.reads.values():
+            read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
+            read.get_read_str()
+            read.get_ms_info_one_read()
+            result_list.append(read)
         self.reads = {read.read_id: read for read in result_list}
 
-    def merge_reads_repeat_length(self):
+    def merge_reads_repeat_length_distribution(self):
         microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
         for read_id, read in self.reads.items():
             stand = read.strand
@@ -122,14 +127,25 @@ class Window:
             self.microsatellites[ms_id].set_read_dis_info(ms_read_repeat_length_info)
 
     def merge_reads_info(self):
+        microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
+        for read_id, read in self.reads.items():
+            # print("read_id",read_id)
+            for ms_id in read.microsatellites:
+                # print("ms_id", ms_id)
+                microsatellites_dict[ms_id][read_id] = read
+        self.reads = {}
+        for ms_id, reads_info in microsatellites_dict.items():
+            self.microsatellites[ms_id].set_reads_info(reads_info)
+
+    def merge_muts_info(self):
         # logger.info("\tMerge microsatellites infomation from different reads... ")
         microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
         for read_id, read in self.reads.items():
             for ms_id, ms_read_mut in read.mut_info.items():
                 microsatellites_dict[ms_id][read_id] = ms_read_mut
-        self.reads = {}
+        self.reads = {}  # release memory
         for ms_id, reads_info in microsatellites_dict.items():
-            self.microsatellites[ms_id].set_reads_info(reads_info)
+            self.microsatellites[ms_id].set_muts_info(reads_info)
 
     def genotype_one_microsatellite_ccs_contig(self, microsatellite):
         # microsatellite.get_dis()
@@ -138,18 +154,10 @@ class Window:
 
     def genotype_one_microsatellite_ccs(self, microsatellite):
         # microsatellite.get_dis()
-        microsatellite.call_init()
-        microsatellite.remove_noise()
-        microsatellite.ccs_genotype()
+
         return microsatellite
 
     def genotype_microsatellite_ccs_contig(self):
-        # logger.info("\tMicrosatellites genotyping ... ")
-        #
-        # pool = multiprocessing.Pool(processes=self.threads)
-        # microsatellites = pool.map(self.genotype_one_microsatellite, self.microsatellites.values())
-        # pool.close()
-        # pool.join()
         microsatellites = []
         for microsatellite in self.microsatellites.values():
             microsatellites.append(self.genotype_one_microsatellite_ccs_contig(microsatellite))
@@ -158,7 +166,10 @@ class Window:
     def call_variants(self):
         microsatellites = []
         for microsatellite in self.microsatellites.values():
-            microsatellites.append(self.genotype_one_microsatellite_ccs(microsatellite))
+            microsatellite.call_init()
+            microsatellite.remove_noise()
+            microsatellite.ccs_genotype()
+            microsatellites.append(microsatellite)
         self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
 
     def write_to_vcf_ccs_contig(self, file_output):
@@ -264,26 +275,36 @@ class Window:
         return recs
 
     def run_window_benchmark(self):
+        """
+        For CCS contig benchmark
+        Returns:
+        """
         self.init_microsatellites()  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_info()  # 处理read 并行
-        self.merge_reads_info()  # 合并read信息为MS信息
-        if self.paras["command"] == "benchmark":
-            self.genotype_microsatellite_ccs_contig()  # 变异检测 并行
+        self.merge_muts_info()  # 合并read信息为MS信息
+        self.genotype_microsatellite_ccs_contig()  # 变异检测 并行
 
-            # self.write_to_vcf_ccs_contig(file_output)  # 一条一条写入
+        # self.write_to_vcf_ccs_contig(file_output)  # 一条一条写入
 
     def run_window_pre_stat(self):
+        """
+        For ngs/ccs pre_stat
+        Returns:
+        """
         self.init_microsatellites()  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_dis()  # 处理read 并行
-        self.merge_reads_repeat_length()  # 合并read信息为MS信息
+        self.merge_reads_repeat_length_distribution()  # 合并read信息为MS信息
 
     def run_window_call_variant(self):
+        """
+        For ngs/ccs variant calling
+        Returns:
+
+        """
         self.init_microsatellites()  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_info()
         self.merge_reads_info()
         self.call_variants()
-
-        pass

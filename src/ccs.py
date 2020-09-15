@@ -13,14 +13,22 @@ from src.pre_stat import pre_stat
 from src.estimate_error import estimate_error
 from src.call_variants import call_variants
 
+import yaml
 
 
+def load_model(paras):
+    model_path = paras["output_model"]
+    stream = open(model_path, "r")
+    model = yaml.load(stream.read(), Loader=yaml.FullLoader)
+    set_value("model", model)
 
 
 def genotype_ccs(paras):
     df_microsatellites = load_microsatellites(paras)
-    # pre_stat(df_microsatellites)
-    # estimate_error()
+    # pre_stat(df_microsatellites) # TODO run this step in release version
+    # estimate_error() # TODO run this step in release version
+    load_model(paras)  # TODO ignore run pre_stat and estimate process when debug
+    # print(get_value("model"))
     call_variants(df_microsatellites)
 
     # pre_stat(paras, df_microsatellites)
