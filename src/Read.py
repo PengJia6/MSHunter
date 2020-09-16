@@ -8,6 +8,7 @@
 # Email  : pengjia@stu.xjtu.edu.cn
 # Description: TODO
 =============================================================================="""
+from src.units import *
 import pysam
 import numpy as np
 
@@ -17,13 +18,18 @@ class Read:
     Description: Read
     """
 
-    def __init__(self, read_id, alignment, reference, chrom):
+    def __init__(self, read_id, alignment, reference, chrom, tech=""):
         self.chrom = chrom
         self.read_name = alignment.query_name
         self.align_start = alignment.reference_start
         self.align_end = alignment.reference_end
         self.this_read_str = alignment.query_sequence.upper()
-        self.this_read_quals = "".join([chr(i + 33) for i in alignment.query_qualities])
+        self.tech = tech
+        # print(alignment)
+        if tech == "contig":
+            self.this_read_quals = []
+        else:
+            self.this_read_quals = "".join([chr(i + 33) for i in alignment.query_qualities])
         self.strand = False if alignment.is_reverse else True  # True: forward False: reverse
         self.this_read_list = []
         self.this_quals_list = []
@@ -70,12 +76,14 @@ class Read:
                         continue
                     else:
                         sub_read_str[-1] += self.this_read_str[read_pos:read_pos + cigartuple[1]]
+                        if self.tech == "contig": continue
                         sub_read_quals[-1] += self.this_read_quals[read_pos:read_pos + cigartuple[1]]
                 elif cigartuple[0] == 5:
                     continue
                 read_pos += cigartuple[1]
             elif cigartuple[0] in [2, 3]:  # 2:D; 3:N: skip region of reference
                 sub_read_str.extend([""] * cigartuple[1])
+                if self.tech == "contig": continue
                 sub_read_quals.extend([""] * cigartuple[1])
             else:
                 return -1

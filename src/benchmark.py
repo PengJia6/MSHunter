@@ -37,7 +37,8 @@ def benchmark_init(args):
         "threads": args.threads[0],
         "batch": args.batch[0],
         "only_microsatellites": args.only_microsatellites[0],
-        "ranges_of_repeat_times": {}
+        "ranges_of_repeat_times": {},
+        "tech": args.technology[0].lower()
     }
 
     for i in args.minimum_repeat_times[0].split(";"):
@@ -177,7 +178,7 @@ def bm_write_vcf_close(outputfile):
 
 
 def run_one_window(win_info):
-    window = Window(win_info)
+    window = Window(win_info, tech=get_value("paras")["tech"])
     window.run_window_benchmark()
     return window
 

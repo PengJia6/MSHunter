@@ -34,7 +34,8 @@ class Window:
 
     """
 
-    def __init__(self, ms_info_list):
+    def __init__(self, ms_info_list, tech=""):
+        self.tech = tech
         self.contig = ms_info_list[0]["chr"]
         self.paras = get_value("paras")
         self.ms_list = ms_info_list
@@ -82,7 +83,8 @@ class Window:
                     reads[read_id] = Read(read_id=read_id,
                                           chrom=self.contig,
                                           alignment=alignment,
-                                          reference=self.paras["reference"])
+                                          reference=self.paras["reference"],
+                                          tech=self.tech)
                 if ms_info.ms_id not in reads[read_id].support_microsatellites:
                     reads[read_id].support_microsatellites.append(ms_info.ms_id)
         self.reads = reads

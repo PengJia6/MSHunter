@@ -175,7 +175,8 @@ def args_process():
                                      help="The path of output file prefix [required]")
     qc_input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
                                      help="The path of reference file [required]")
-    qc_input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
+    qc_input_and_output.add_argument('-tech', '--technology', type=str, nargs=1,
+                                     choices=["ccs", "clr", "ont", "ilm", "contig"],
                                      required=True,
                                      help='Sequencing technology [required]')
     # input_and_output.add_argument('-tech', '--technology', type=str, nargs=1, choices=["ccs", "clr", "ont", "ilm"],
@@ -289,6 +290,10 @@ def args_process():
                                      default=[defaultPara_bm["separator"]],
                                      help='Separator for microsatellites file [default:'
                                           + str(defaultPara_bm["separator"]) + ']')
+    bm_input_and_output.add_argument('-tech', '--technology', type=str, nargs=1,
+                                     choices=["ccs", "clr", "ont", "ilm", "contig"],
+                                     required=True,
+                                     help='Sequencing technology [required]')
     ##################################################################################
     # group read realignment
     # bm_general_realign = parser_bm.add_argument_group(title="Read realignment")

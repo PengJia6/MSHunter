@@ -183,7 +183,7 @@ class Microsatellite:
         return reads, quals
 
     def deletion_merge(self):
-        for read_id, read_info in self.reads_info.items():
+        for read_id, read_info in self.muts.items():
             deletions_len = len(read_info.deletions)
             deletions = []
             if deletions_len == 0:
@@ -203,7 +203,7 @@ class Microsatellite:
                         deletion_index[current_id] = 1
                 for pos in sorted(deletion_index.keys()):
                     deletions.append([pos, deletion_index[pos]])
-            self.reads_info[read_id].deletions = deletions
+            self.muts[read_id].deletions = deletions
 
         # def get_dis(self):
         #     # print(self.depth)
@@ -361,7 +361,7 @@ class Microsatellite:
         ms_dis = {}
         mut_start = self.start
         mut_end = self.end - 1
-        for read_id, read_info in self.reads_info.items():
+        for read_id, read_info in self.muts.items():
             for mut in read_info.mismatches:
                 mut_start = min(mut_start, mut[0])
                 mut_end = max(mut_end, mut[0])
@@ -387,6 +387,7 @@ class Microsatellite:
                     deletions[mut[0]][mut[1]] = 1
                 else:
                     deletions[mut[0]][mut[1]] += 1
+                # print(mut)
                 mut_start = min(mut_start, mut[0])
                 mut_end = max(mut_end, mut[0] + mut[1])
 
