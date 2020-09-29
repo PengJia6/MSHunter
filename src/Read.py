@@ -42,6 +42,7 @@ class Read:
         self.microsatellites = {}
         self.direction = False if alignment.is_reverse else True
         self.hap = int(alignment.get_tag("HP")) if alignment.has_tag("HP") else 0
+        # print(self.hap)
         self.cigartuples = alignment.cigartuples
         self.mut_info = {}
         self.repeat_lengths = {}
@@ -116,6 +117,7 @@ class Read:
         self.microsatellites_num = len(self.microsatellites)
         # print(self.read_id, self.microsatellites_num,len(self.support_microsatellites))
         read_muts = {}
+        repeat_lengths = {}
         for ms_id, ms in self.microsatellites.items():
             ms_start = ms.start
             ms_end = ms.end
@@ -153,5 +155,7 @@ class Read:
                             insertions.append([ref_pos, this_read_base])
             read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length, strand=self.strand, hap=self.hap,
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,
-                                             )  # TODO
+                                             )
+            repeat_lengths[ms_id] = query_repeat_length
+        self.repeat_lengths = repeat_lengths
         self.mut_info = read_muts

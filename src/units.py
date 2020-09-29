@@ -189,7 +189,18 @@ def getDisdistance(dict1, dict2):
         err = dict1[key] - dict2[key]
         sum += (err * err)
     return round(np.sqrt(sum), 6)
-
+def get_disdistance(dict1, dict2):
+    dictkey = list(dict1.keys()) + list(dict2.keys())
+    for key in dictkey:
+        if key not in dict1:
+            dict1[key] = 0
+        if key not in dict2:
+            dict2[key] = 0
+    sum = 0
+    for key in dictkey:
+        err = dict1[key] - dict2[key]
+        sum += (err * err)
+    return round(np.sqrt(sum), 6)
 
 # TODO check and normalize
 def getDisdistance2(dict1, dict2):

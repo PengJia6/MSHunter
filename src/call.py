@@ -148,7 +148,7 @@ class MSCall:
 
         distance_dict = {}
         for model_id in self.model:
-            distance_dict[model_id] = getDisdistance(self.dis_hap1_normal, self.model[model_id])
+            distance_dict[model_id] = get_disdistance(self.dis_hap1_normal, self.model[model_id])
         distance_tuple = sorted(distance_dict.items(), key=lambda kv: (kv[1], kv[0]))
         first_1 = distance_tuple[0][0] // 1000
         first_two_distance_ratio_hap1 = (distance_tuple[1][1] - distance_tuple[0][1]) / (
@@ -212,7 +212,7 @@ class MSCall:
     def get_alleles_from_diploid(self):
         distance_dict = {}
         for model_id in self.model:
-            distance_dict[model_id] = getDisdistance(self.dis_norm, self.model[model_id])
+            distance_dict[model_id] = get_disdistance(self.dis_norm, self.model[model_id])
         self.model = {}
         distance_tuple = sorted(distance_dict.items(), key=lambda kv: (kv[1], kv[0]))
         first_1 = distance_tuple[0][0] // 1000

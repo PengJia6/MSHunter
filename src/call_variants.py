@@ -95,13 +95,18 @@ def run_window_mul(windows, args, file_output):
     logger.info("--------------------------------------------------------------------------------")
     logger.info("Processing " + contig + ":" + str(start) + "-" + str(end))
     logger.info("No. of Microsatellites in window: " + str(num))
+
     pool = multiprocessing.Pool(processes=args["threads"])
     windows = pool.map(run_one_window, windows)
     pool.close()
     pool.join()
+    # windows_res=[]
+    # for win in windows:
+    #     windows_res.append(run_one_window(win))
+    # windows=windows_res
     # win_recs=[]
     for win in windows:
-        for rec in win.write_to_vcf_call_variants(file_output):
+        for rec in win.write_to_vcf_call_variants():
             file_output.write(rec)
     logger.info("Total Microsatellites: " + str(args["ms_num"]))
     logger.info("Finished Microsatellites: " + str(args["current_num"]) +

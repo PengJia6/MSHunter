@@ -94,7 +94,6 @@ class Window:
         """
         Description: get repeat length distribution
         Returns:
-
         """
         result_list = []
         for read in self.reads.values():
@@ -224,7 +223,6 @@ class Window:
             # print(self.microsatellites)
             ms = self.microsatellites[ms_id]
             vcfrec = file_output.new_record()
-
             recs.append(vcfrec)
         return recs
 
@@ -308,5 +306,6 @@ class Window:
         self.init_microsatellites()  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
         self.get_reads_info()
-        self.merge_reads_info()
+        self.merge_muts_info()  # 合并read信息为MS信息
+        # self.merge_reads_info()
         self.call_variants()
