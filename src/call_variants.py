@@ -35,6 +35,7 @@ def call_variant_write_vcf_init(outputpath):
         outputfile.header.add_line(
             "##contig=<ID={chrom},length={length}>".format(chrom=contig, length=contigs_len_dict[contig]))
     set_value("contigs_info", contigs_len_dict)
+    outputfile.header.add_sample(get_value("case"))
     outputfile.header.add_line('##INFO=<ID=chrom,Number=1,Type=String,Description="Chromosome">')
     outputfile.header.add_line('##INFO=<ID=pos,Number=1,Type=Integer,Description="Position">')
     outputfile.header.add_line('##INFO=<ID=ms_start,Number=1,Type=Integer,Description='
@@ -56,6 +57,7 @@ def call_variant_write_vcf_init(outputpath):
     outputfile.header.add_line('##INFO=<ID=dis_stat,Number=1,Type=String,Description='
                                '"True,the distribution is available">')
     outputfile.header.add_line('##INFO=<ID=allele,Number=1,Type=Integer,Description="Allele number in this site">')
+    outputfile.header.add_line('##INFO=<ID=Quality,Number=1,Type=String,Description="Variant Quality">')
     outputfile.header.add_line('##INFO=<ID=dis,Number=1,Type=String,Description='
                                'Distribution of repeat length>')
     outputfile.header.add_line('##INFO=<ID=depth,Number=1,Type=Integer,Description='
@@ -70,6 +72,10 @@ def call_variant_write_vcf_init(outputpath):
                                'Distribution of repeat length forward reads>')
     outputfile.header.add_line('##INFO=<ID=dis_reversed,Number=1,Type=String,Description='
                                'Distribution of repeat length  reversed read>')
+    outputfile.header.add_line('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">')
+    outputfile.header.add_line('##FORMAT=<ID=DP,Number=1,Type=String,Description="Allele Depth">')
+    outputfile.header.add_line('##FORMAT=<ID=AL,Number=1,Type=String,Description="Allele">')
+    outputfile.header.add_line('##FORMAT=<ID=QL,Number=1,Type=String,Description="Allele Quality">')
 
     return outputfile
 
@@ -106,7 +112,7 @@ def run_window_mul(windows, args, file_output):
     # windows=windows_res
     # win_recs=[]
     for win in windows:
-        for rec in win.write_to_vcf_call_variants():
+        for rec in win.write_to_vcf_call_variants(file_output):
             file_output.write(rec)
     logger.info("Total Microsatellites: " + str(args["ms_num"]))
     logger.info("Finished Microsatellites: " + str(args["current_num"]) +

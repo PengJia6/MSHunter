@@ -163,7 +163,7 @@ def pre_stat(df_microsatellites):
             run_window_mul(window_ms_tmp, args, file_output=output_file)
             del window_ms_tmp
     pre_stat_write_vcf_close(output_file)
-    
+
 
 if __name__ == "__main__":
     pass

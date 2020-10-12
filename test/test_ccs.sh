@@ -1,5 +1,4 @@
 ﻿#!/bin/sh
-
 output_dir="/mnt/project/ProjectMSI/MSCalling/note/py/test_mshunter/"
 /home/pengjia/miniconda3/envs/default/bin/python /mnt/project/ProjectMSI/MSCalling/note/py/MSHunter/src/main.py genotype \
   -i /media/pengjia/ZS6Y_Feng_1/NA12878/GIAB/PacBio/HG001_GRCh38.haplotag.RTG.trio.bam \
