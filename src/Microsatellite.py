@@ -45,6 +45,7 @@ class Microsatellite:
         self.mut = Mutation()
         self.ref_str = ""
         self.alt_str = ""
+        self.alt = (".",)
         self.dis_stat = True
         self.mut_start = self.start
         self.mut_end = self.end
@@ -73,7 +74,7 @@ class Microsatellite:
         self.qual_ms = 0
         self.qual_ms_hap1 = 0
         self.qual_ms_hap2 = 0
-        # self.phased = False
+        self.phased = False
 
         ## TODO cannot run with multi threads
 
@@ -254,14 +255,17 @@ class Microsatellite:
             self.check_status.append("No_read_covered")
             self.dis_stat = False
             self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
+            self.alt = "N"
             return False
+        self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
         model_all = get_value("model")
         if self.repeat_unit not in model_all:
             self.check = False
             self.check_status.append("No_error_model")
             self.model_stat = False
+            self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
+            self.alt = "N"
             return False
-
         model = model_all[self.repeat_unit]["mixture"]
         max_repeat = model_all[self.repeat_unit]["max_repeat"]
         del model_all
@@ -277,17 +281,14 @@ class Microsatellite:
                 if mut[0] not in mut_dict_by_pos:
                     mut_dict_by_pos[mut[0]] = []
                 mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
-
             for mut in read_info.insertions:
                 if mut[0] not in mut_dict_by_pos:
                     mut_dict_by_pos[mut[0]] = []
                 mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
-
             for mut in read_info.deletions:
                 if mut[0] not in mut_dict_by_pos:
                     mut_dict_by_pos[mut[0]] = []
                 mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
-
             if read_info.repeat_length not in ms_dis:
                 ms_dis[read_info.repeat_length] = 1
             else:
@@ -334,7 +335,7 @@ class Microsatellite:
                 # distance_hap1 = distance_tuple[0][1]
                 qual_hap1 = first_two_distance_ratio_hap1 * self.support_hap1
             else:
-                qual_hap1=0
+                qual_hap1 = 0
 
             distance_tuple = sorted(distance_dict_hap2.items(), key=lambda kv: (kv[1], kv[0]))
             hap2_repeat_length = distance_tuple[0][0] // 1000
@@ -365,7 +366,7 @@ class Microsatellite:
             hap2_repeat_length = distance_tuple[0][0] % 1000
             if len(distance_dict) > 1:
                 firsttwoDistanceRatio = (distance_tuple[1][1] - distance_tuple[0][1]) / (
-                            distance_tuple[0][1] + 0.000001)
+                        distance_tuple[0][1] + 0.000001)
                 # first_two_distance = distance_tuple[1][1] - distance_tuple[0][1]
                 # distance = distance_tuple[0][1]
                 self.qual_ms = firsttwoDistanceRatio * self.support_reads
@@ -399,6 +400,7 @@ class Microsatellite:
         self.format_DP = "/".join(
             list(map(str, [self.support_hap0, self.support_hap1, self.support_hap2])))
         self.format_QL = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap1, self.qual_ms_hap2])))
+
         #
         # print(self.reads_phased)
         # print(self.support_hap0, self.support_hap1, self.support_hap2, self.depth)

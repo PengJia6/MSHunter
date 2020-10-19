@@ -21,7 +21,10 @@
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Microsatellite.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Microsatellite.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Window.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -300,7 +303,7 @@
       <workItem from="1602244757301" duration="1134000" />
       <workItem from="1602293857931" duration="4942000" />
       <workItem from="1602554849575" duration="2222000" />
-      <workItem from="1602579601602" duration="2536000" />
+      <workItem from="1602579601602" duration="13226000" />
     </task>
     <servers />
   </component>
@@ -338,25 +341,25 @@
     </state>
     <state x="487" y="27" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1601457377013" />
     <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594350855551" />
-    <state width="1845" height="338" key="GridCell.Tab.0.bottom" timestamp="1602812162644">
+    <state width="1845" height="5" key="GridCell.Tab.0.bottom" timestamp="1603072134004">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="338" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1602812162644" />
+    <state width="1845" height="5" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603072134004" />
     <state width="1005" height="659" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1600218182627" />
-    <state width="1845" height="338" key="GridCell.Tab.0.center" timestamp="1602812162643">
+    <state width="1845" height="5" key="GridCell.Tab.0.center" timestamp="1603072134003">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="338" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1602812162643" />
+    <state width="1845" height="5" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603072134003" />
     <state width="1005" height="659" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1600218182627" />
-    <state width="1845" height="338" key="GridCell.Tab.0.left" timestamp="1602812162643">
+    <state width="1845" height="5" key="GridCell.Tab.0.left" timestamp="1603072134003">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="338" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1602812162643" />
+    <state width="1845" height="5" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603072134003" />
     <state width="1005" height="659" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1600218182627" />
-    <state width="1845" height="338" key="GridCell.Tab.0.right" timestamp="1602812162644">
+    <state width="1845" height="5" key="GridCell.Tab.0.right" timestamp="1603072134004">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="338" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1602812162644" />
+    <state width="1845" height="5" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603072134004" />
     <state width="1005" height="659" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1600218182627" />
     <state width="1874" height="317" key="GridCell.Tab.1.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1595255605494" />
     <state width="1874" height="317" key="GridCell.Tab.1.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1595255605494" />
@@ -395,7 +398,7 @@
     <SUITE FILE_PATH="coverage/MSHunter$genotype.coverage" NAME="genotype Coverage Results" MODIFIED="1595850026665" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$bam2dis.coverage" NAME="bam2dis Coverage Results" MODIFIED="1593609358421" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$units.coverage" NAME="units Coverage Results" MODIFIED="1598621727619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
-    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1602812144987" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1603072133321" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$Microsatellite.coverage" NAME="Microsatellite Coverage Results" MODIFIED="1600066649454" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$benchmark.coverage" NAME="benchmark Coverage Results" MODIFIED="1594881971585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$call.coverage" NAME="call Coverage Results" MODIFIED="1593743003373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />

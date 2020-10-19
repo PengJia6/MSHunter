@@ -168,8 +168,8 @@ class Window:
         microsatellites = []
         for microsatellite in self.microsatellites.values():
             microsatellite.call_init()
-            microsatellite.remove_noise()
-            microsatellite.ccs_genotype()
+            # microsatellite.remove_noise()
+            # microsatellite.ccs_genotype()
             microsatellites.append(microsatellite)
         self.microsatellites = {ms.ms_id: ms for ms in microsatellites}
 
@@ -222,12 +222,18 @@ class Window:
             # print(ms_id)
             # print(self.microsatellites)
             ms = self.microsatellites[ms_id]
+            print(get_value("case"))
+            print(ms.format_GT)
+            print("ALT", ms.alt_str, ms.alt)
+            print(ms.ref_str)
+
             vcfrec = file_output.new_record()
             vcfrec.contig = ms.chrom
-            # vcfrec.stop = pos + ms.repeat_times * len(ms.motif)
+            vcfrec.stop = ms.start + ms.repeat_times * ms.repeat_unit_len
             vcfrec.pos = ms.start
-            # vcfrec.ref = ms.ref_str
-            # vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else (".",)
+            vcfrec.ref = ms.ref_str
+            # vcfrec.alts = (ms.alt,) if ms.alt != "" else ("N",)
+            vcfrec.alts = ms.alt
             vcfrec.id = ms.ms_id
             vcfrec.stop = ms.end
             vcfrec.info["ms_start"] = ms.start
@@ -257,18 +263,17 @@ class Window:
             vcfrec.info["dis_reversed"] = "|".join(
                 [str(key) + ":" + str(value) for key, value in ms.ms_dis_reversed.items()]
             )
-            vcfrec.info["Quality"]="|".join(map(str,[ms.qual_ms,ms.qual_ms_hap1,ms.qual_ms_hap2]))
+            vcfrec.info["Quality"] = "|".join(map(str, [ms.qual_ms, ms.qual_ms_hap1, ms.qual_ms_hap2]))
             # vcfrec.info["Distance"] = mscall.distance
             # vcfrec.qual = round(mscall.qual, 6)
             # vcfrec.info["Alleles"] = ms.alleles
             # print(mscall.format_DP)
+
             vcfrec.samples[get_value("case")]["GT"] = ms.format_GT
             vcfrec.samples[get_value("case")]["DP"] = ms.format_DP
             vcfrec.samples[get_value("case")]["QL"] = ms.format_QL
             vcfrec.samples[get_value("case")]["AL"] = ms.format_AL
-            vcfrec.samples[get_value("case")].phased = ms.phased
-
-
+            vcfrec.samples[get_value("case")].phased = ms.reads_phased
 
             # recs.append(vcfrec)
             recs.append(vcfrec)
@@ -288,8 +293,8 @@ class Window:
             vcfrec.contig = ms.chrom
             # vcfrec.stop = pos + ms.repeat_times * len(ms.motif)
             vcfrec.pos = ms.start
-            # vcfrec.ref = ms.ref_str
-            # vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else (".",)
+            vcfrec.ref = ms.ref_str
+            vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else (".",)
             vcfrec.id = ms.ms_id
             vcfrec.stop = ms.end
             vcfrec.info["ms_start"] = ms.start
@@ -333,6 +338,7 @@ class Window:
         self.merge_muts_info()  # 合并read信息为MS信息
         self.genotype_microsatellite_ccs_contig()  # 变异检测 并行
         # self.write_to_vcf_ccs_contig(file_output)  # 一条一条写入
+
     def run_window_pre_stat(self):
         """
         For ngs/ccs pre_stat
