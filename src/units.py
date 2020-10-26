@@ -189,6 +189,8 @@ def getDisdistance(dict1, dict2):
         err = dict1[key] - dict2[key]
         sum += (err * err)
     return round(np.sqrt(sum), 6)
+
+
 def get_disdistance(dict1, dict2):
     dictkey = list(dict1.keys()) + list(dict2.keys())
     for key in dictkey:
@@ -201,6 +203,7 @@ def get_disdistance(dict1, dict2):
         err = dict1[key] - dict2[key]
         sum += (err * err)
     return round(np.sqrt(sum), 6)
+
 
 # TODO check and normalize
 def getDisdistance2(dict1, dict2):
@@ -245,14 +248,15 @@ def load_microsatellites(args):
     Description: load Microsatellite information
     Stat: PASS
     """
+    # TODO chage all fuction of load_microsatellites
     logger.info("Loading microsatellite file...")
     ms = args["microsatellite"]
-    separator = args["separator"]
+    separator = args["microsatellite_region_format"]
     # ID,chr,pos,motif,motifLen,repeatTimes,prefix,suffix
     if separator == "comma":
         df_microSatellites = pd.read_csv(ms, index_col=0)
         # print(df_microSatellites.columns)
-    elif separator == "tab":
+    elif separator == "msisensor_scan":
         df_microSatellites = pd.read_table(ms, header=0)
         columns = df_microSatellites.columns
         if "chromosome" in columns:

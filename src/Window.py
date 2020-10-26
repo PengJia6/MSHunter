@@ -50,14 +50,14 @@ class Window:
         self.microsatellites_id = [it["chr"] + "_" + str(it["pos"]) for it in ms_info_list]
         self.vcf_recs = []
 
-    def init_microsatellites(self):
+    def init_microsatellites(self, only_simple=True):
         """
         Description: Microsatellite class init for this window
         Returns:
         """
         microsatellites = []
         for ms in self.ms_list:
-            microsatellites.append(Microsatellite(ms))
+            microsatellites.append(Microsatellite(ms, only_simple=only_simple))
         self.microsatellites = {ms_info.ms_id: ms_info for ms_info in microsatellites}
 
     def init_reads(self):
@@ -103,7 +103,7 @@ class Window:
             result_list.append(read)
         self.reads = {read.read_id: read for read in result_list}
 
-    def get_reads_info(self):
+    def get_reads_info(self, only_simple=True):
         """
         Description: get mutation of each read and repeat length destribution
         Returns:
@@ -112,7 +112,10 @@ class Window:
         for read in self.reads.values():
             read.microsatellites = {ms_id: self.microsatellites[ms_id] for ms_id in read.support_microsatellites}
             read.get_read_str()
-            read.get_ms_info_one_read()
+            if only_simple:
+                read.get_repeat_length_all_ms()
+            else:
+                read.get_ms_info_one_read()
             result_list.append(read)
         self.reads = {read.read_id: read for read in result_list}
 
@@ -138,15 +141,30 @@ class Window:
         for ms_id, reads_info in microsatellites_dict.items():
             self.microsatellites[ms_id].set_reads_info(reads_info)
 
-    def merge_muts_info(self):
+    def merge_muts_info(self, only_simple=True):
         # logger.info("\tMerge microsatellites infomation from different reads... ")
-        microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
+        microsatellites_dict_dis = {ms_id: {} for ms_id in self.microsatellites}
+        microsatellites_dict_mut = {ms_id: {} for ms_id in self.microsatellites}
         for read_id, read in self.reads.items():
-            for ms_id, ms_read_mut in read.mut_info.items():
-                microsatellites_dict[ms_id][read_id] = ms_read_mut
-        self.reads = {}  # release memory
-        for ms_id, reads_info in microsatellites_dict.items():
-            self.microsatellites[ms_id].set_muts_info(reads_info)
+            stand = read.strand
+            hap = read.hap
+            for ms_id, ms_read_repeat_length in read.repeat_lengths.items():
+                microsatellites_dict_dis[ms_id][read_id] = [ms_read_repeat_length, stand, hap]
+            if not only_simple:
+                for ms_id, ms_read_mut in read.mut_info.items():
+                    microsatellites_dict_mut[ms_id][read_id] = ms_read_mut
+        self.reads = {}
+        for ms_id, ms_read_repeat_length_info in microsatellites_dict_dis.items():
+            self.microsatellites[ms_id].set_read_dis_info(ms_read_repeat_length_info)
+            if not only_simple:
+                self.microsatellites[ms_id].set_muts_info(microsatellites_dict_mut[ms_id])
+        # microsatellites_dict = {ms_id: {} for ms_id in self.microsatellites}
+        # for read_id, read in self.reads.items():
+        #     for ms_id, ms_read_mut in read.mut_info.items():
+        #         microsatellites_dict[ms_id][read_id] = ms_read_mut
+        # self.reads = {}  # release memory
+        # for ms_id, reads_info in microsatellites_dict.items():
+        #     self.microsatellites[ms_id].set_muts_info(reads_info)
 
     def genotype_one_microsatellite_ccs_contig(self, microsatellite):
         # microsatellite.get_dis()
@@ -167,7 +185,7 @@ class Window:
     def call_variants(self):
         microsatellites = []
         for microsatellite in self.microsatellites.values():
-            microsatellite.call_init()
+            microsatellite.call_micro()
             # microsatellite.remove_noise()
             # microsatellite.ccs_genotype()
             microsatellites.append(microsatellite)
@@ -216,7 +234,7 @@ class Window:
             recs.append(vcfrec)
         return recs
 
-    def write_to_vcf_call_variants(self, file_output):
+    def write_to_vcf_call_variants_complex(self, file_output):
         recs = []
         for ms_id in self.microsatellites_id:
             # print(ms_id)
@@ -279,7 +297,255 @@ class Window:
             recs.append(vcfrec)
         return recs
 
-        pass
+    def write_to_vcf_call_variants_micro(self, file_output):
+        recs = []
+        for ms_id in self.microsatellites_id:
+            # print(ms_id)
+            # print(self.microsatellites)
+            ms = self.microsatellites[ms_id]
+            print(get_value("case"))
+            print(ms.format_GT)
+            print("ALT", ms.alt_str, ms.alt)
+            print(ms.ref_str)
+
+            vcfrec = file_output.new_record()
+            vcfrec.contig = ms.chrom
+            vcfrec.stop = ms.start + ms.repeat_times * ms.repeat_unit_len
+            vcfrec.pos = ms.start
+            vcfrec.ref = ms.ref_str
+            # vcfrec.alts = (ms.alt,) if ms.alt != "" else ("N",)
+            vcfrec.alts = ms.alt
+            vcfrec.id = ms.ms_id
+            vcfrec.stop = ms.end
+            vcfrec.info["ms_start"] = ms.start
+            vcfrec.info["ms_end"] = ms.end
+            vcfrec.info["motif"] = ms.repeat_unit
+            vcfrec.info["repeat_times"] = ms.repeat_times
+            vcfrec.info["motif_len"] = ms.repeat_unit_len
+            vcfrec.info["ref_repeat_length"] = ms.repeat_len
+            vcfrec.info["query_repeat_length"] = ms.query_repeat_length
+            vcfrec.info["depth"] = ms.depth
+            vcfrec.info["dis_stat"] = str(ms.dis_stat)
+            vcfrec.info["dis"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis.items()]
+            )
+            vcfrec.info["dis_hap0"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap0.items()]
+            )
+            vcfrec.info["dis_hap1"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap1.items()]
+            )
+            vcfrec.info["dis_hap2"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap2.items()]
+            )
+            vcfrec.info["dis_forward"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_forward.items()]
+            )
+            vcfrec.info["dis_reversed"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_reversed.items()]
+            )
+            vcfrec.info["Quality"] = "|".join(map(str, [ms.qual_ms, ms.qual_ms_hap1, ms.qual_ms_hap2]))
+            # vcfrec.info["Distance"] = mscall.distance
+            # vcfrec.qual = round(mscall.qual, 6)
+            # vcfrec.info["Alleles"] = ms.alleles
+            # print(mscall.format_DP)
+
+            vcfrec.samples[get_value("case")]["GT"] = ms.format_GT
+            vcfrec.samples[get_value("case")]["DP"] = ms.format_DP
+            vcfrec.samples[get_value("case")]["QL"] = ms.format_QL
+            vcfrec.samples[get_value("case")]["AL"] = ms.format_AL
+            vcfrec.samples[get_value("case")].phased = ms.reads_phased
+
+            # recs.append(vcfrec)
+            recs.append(vcfrec)
+        return recs
+
+    def write_to_vcf_call_variants_indel(self, file_output):
+        recs = []
+        for ms_id in self.microsatellites_id:
+            # print(ms_id)
+            # print(self.microsatellites)
+            ms = self.microsatellites[ms_id]
+            print(get_value("case"))
+            print(ms.format_GT)
+            print("ALT", ms.alt_str, ms.alt)
+            print(ms.ref_str)
+            vcfrec = file_output.new_record()
+            vcfrec.contig = ms.chrom
+            vcfrec.stop = ms.start + ms.repeat_times * ms.repeat_unit_len
+            vcfrec.pos = ms.start
+            vcfrec.ref = ms.ref_str
+            # vcfrec.alts = (ms.alt,) if ms.alt != "" else ("N",)
+            vcfrec.alts = ms.alt
+            vcfrec.id = ms.ms_id
+            vcfrec.stop = ms.end
+            vcfrec.info["ms_start"] = ms.start
+            vcfrec.info["ms_end"] = ms.end
+            vcfrec.info["motif"] = ms.repeat_unit
+            vcfrec.info["repeat_times"] = ms.repeat_times
+            vcfrec.info["motif_len"] = ms.repeat_unit_len
+            vcfrec.info["ref_repeat_length"] = ms.repeat_len
+            vcfrec.info["query_repeat_length"] = ms.query_repeat_length
+            vcfrec.info["depth"] = ms.depth
+            vcfrec.info["dis_stat"] = str(ms.dis_stat)
+            vcfrec.info["dis"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis.items()]
+            )
+            vcfrec.info["dis_hap0"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap0.items()]
+            )
+            vcfrec.info["dis_hap1"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap1.items()]
+            )
+            vcfrec.info["dis_hap2"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap2.items()]
+            )
+            vcfrec.info["dis_forward"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_forward.items()]
+            )
+            vcfrec.info["dis_reversed"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_reversed.items()]
+            )
+            vcfrec.info["Quality"] = "|".join(map(str, [ms.qual_ms, ms.qual_ms_hap1, ms.qual_ms_hap2]))
+            # vcfrec.info["Distance"] = mscall.distance
+            # vcfrec.qual = round(mscall.qual, 6)
+            # vcfrec.info["Alleles"] = ms.alleles
+            # print(mscall.format_DP)
+
+            vcfrec.samples[get_value("case")]["GT"] = ms.format_GT
+            vcfrec.samples[get_value("case")]["DP"] = ms.format_DP
+            vcfrec.samples[get_value("case")]["QL"] = ms.format_QL
+            vcfrec.samples[get_value("case")]["AL"] = ms.format_AL
+            vcfrec.samples[get_value("case")].phased = ms.reads_phased
+
+            # recs.append(vcfrec)
+            recs.append(vcfrec)
+        return recs
+
+    def write_to_vcf_call_variants_snv(self, file_output):
+        recs = []
+        for ms_id in self.microsatellites_id:
+            # print(ms_id)
+            # print(self.microsatellites)
+            ms = self.microsatellites[ms_id]
+            print(get_value("case"))
+            print(ms.format_GT)
+            print("ALT", ms.alt_str, ms.alt)
+            print(ms.ref_str)
+
+            vcfrec = file_output.new_record()
+            vcfrec.contig = ms.chrom
+            vcfrec.stop = ms.start + ms.repeat_times * ms.repeat_unit_len
+            vcfrec.pos = ms.start
+            vcfrec.ref = ms.ref_str
+            # vcfrec.alts = (ms.alt,) if ms.alt != "" else ("N",)
+            vcfrec.alts = ms.alt
+            vcfrec.id = ms.ms_id
+            vcfrec.stop = ms.end
+            vcfrec.info["ms_start"] = ms.start
+            vcfrec.info["ms_end"] = ms.end
+            vcfrec.info["motif"] = ms.repeat_unit
+            vcfrec.info["repeat_times"] = ms.repeat_times
+            vcfrec.info["motif_len"] = ms.repeat_unit_len
+            vcfrec.info["ref_repeat_length"] = ms.repeat_len
+            vcfrec.info["query_repeat_length"] = ms.query_repeat_length
+            vcfrec.info["depth"] = ms.depth
+            vcfrec.info["dis_stat"] = str(ms.dis_stat)
+            vcfrec.info["dis"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis.items()]
+            )
+            vcfrec.info["dis_hap0"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap0.items()]
+            )
+            vcfrec.info["dis_hap1"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap1.items()]
+            )
+            vcfrec.info["dis_hap2"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap2.items()]
+            )
+            vcfrec.info["dis_forward"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_forward.items()]
+            )
+            vcfrec.info["dis_reversed"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_reversed.items()]
+            )
+            vcfrec.info["Quality"] = "|".join(map(str, [ms.qual_ms, ms.qual_ms_hap1, ms.qual_ms_hap2]))
+            # vcfrec.info["Distance"] = mscall.distance
+            # vcfrec.qual = round(mscall.qual, 6)
+            # vcfrec.info["Alleles"] = ms.alleles
+            # print(mscall.format_DP)
+
+            vcfrec.samples[get_value("case")]["GT"] = ms.format_GT
+            vcfrec.samples[get_value("case")]["DP"] = ms.format_DP
+            vcfrec.samples[get_value("case")]["QL"] = ms.format_QL
+            vcfrec.samples[get_value("case")]["AL"] = ms.format_AL
+            vcfrec.samples[get_value("case")].phased = ms.reads_phased
+
+            # recs.append(vcfrec)
+            recs.append(vcfrec)
+        return recs
+
+    def write_to_vcf_call_variants(self, file_output):
+        recs = []
+        for ms_id in self.microsatellites_id:
+            # print(ms_id)
+            # print(self.microsatellites)
+            ms = self.microsatellites[ms_id]
+            print(get_value("case"))
+            print(ms.format_GT)
+            print("ALT", ms.alt_str, ms.alt)
+            print(ms.ref_str)
+
+            vcfrec = file_output.new_record()
+            vcfrec.contig = ms.chrom
+            vcfrec.stop = ms.start + ms.repeat_times * ms.repeat_unit_len
+            vcfrec.pos = ms.start
+            vcfrec.ref = ms.ref_str
+            # vcfrec.alts = (ms.alt,) if ms.alt != "" else ("N",)
+            vcfrec.alts = ms.alt
+            vcfrec.id = ms.ms_id
+            vcfrec.stop = ms.end
+            vcfrec.info["ms_start"] = ms.start
+            vcfrec.info["ms_end"] = ms.end
+            vcfrec.info["motif"] = ms.repeat_unit
+            vcfrec.info["repeat_times"] = ms.repeat_times
+            vcfrec.info["motif_len"] = ms.repeat_unit_len
+            vcfrec.info["ref_repeat_length"] = ms.repeat_len
+            vcfrec.info["query_repeat_length"] = ms.query_repeat_length
+            vcfrec.info["depth"] = ms.depth
+            vcfrec.info["dis_stat"] = str(ms.dis_stat)
+            vcfrec.info["dis"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis.items()]
+            )
+            vcfrec.info["dis_hap0"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap0.items()]
+            )
+            vcfrec.info["dis_hap1"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap1.items()]
+            )
+            vcfrec.info["dis_hap2"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_hap2.items()]
+            )
+            vcfrec.info["dis_forward"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_forward.items()]
+            )
+            vcfrec.info["dis_reversed"] = "|".join(
+                [str(key) + ":" + str(value) for key, value in ms.ms_dis_reversed.items()]
+            )
+            vcfrec.info["Quality"] = "|".join(map(str, [ms.qual_ms, ms.qual_ms_hap1, ms.qual_ms_hap2]))
+            # vcfrec.info["Distance"] = mscall.distance
+            # vcfrec.qual = round(mscall.qual, 6)
+            # vcfrec.info["Alleles"] = ms.alleles
+            # print(mscall.format_DP)
+
+            vcfrec.samples[get_value("case")]["GT"] = ms.format_GT
+            vcfrec.samples[get_value("case")]["DP"] = ms.format_DP
+            vcfrec.samples[get_value("case")]["QL"] = ms.format_QL
+            vcfrec.samples[get_value("case")]["AL"] = ms.format_AL
+            vcfrec.samples[get_value("case")].phased = ms.reads_phased
+            # recs.append(vcfrec)
+            recs.append(vcfrec)
+        return recs
 
     def write_to_vcf_pre_stat(self, file_output):
         # logger.info("\tWrite to vcf ... ")
@@ -293,7 +559,8 @@ class Window:
             vcfrec.contig = ms.chrom
             # vcfrec.stop = pos + ms.repeat_times * len(ms.motif)
             vcfrec.pos = ms.start
-            vcfrec.ref = ms.ref_str
+            # vcfrec.ref = ms.ref_str
+            vcfrec.ref = "."
             vcfrec.alts = (ms.alt_str,) if ms.alt_str != "" else (".",)
             vcfrec.id = ms.ms_id
             vcfrec.stop = ms.end
@@ -355,9 +622,18 @@ class Window:
         Returns:
 
         """
-        self.init_microsatellites()  # 并行
+        self.init_microsatellites(only_simple=self.paras["only_simple"])  # 并行
         self.init_reads()  # 扫描read 确实其对应的 MS
-        self.get_reads_info()
-        self.merge_muts_info()  # 合并read信息为MS信息
-        # self.merge_reads_info()
+        self.get_reads_info(only_simple=self.paras["only_simple"])
+        self.merge_muts_info(only_simple=self.paras["only_simple"])  # 合并read信息为MS信息
         self.call_variants()
+
+        #
+        # if self.paras["only_simple"]:
+        #     self.get_reads_dis()
+        #     self.merge_reads_repeat_length_distribution()
+        # else:
+        #     self.get_reads_info()
+        #     self.merge_muts_info()  # 合并read信息为MS信息
+        # # self.merge_reads_info()
+        # self.call_variants()

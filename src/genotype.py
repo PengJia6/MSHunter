@@ -8,10 +8,6 @@
 # Email  : pengjia@stu.xjtu.edu.cn
 # Description: TODO
 =============================================================================="""
-import os
-from src.bam2dis import *
-from src.call import *
-from src.errEval import *
 from src.ngs import *
 from src.ccs import *
 
@@ -25,9 +21,9 @@ def genotype_init(args):
     paras["output"] = args.output[0]
     paras["microsatellite"] = args.microsatellite[0]
     paras["reference"] = args.reference[0]
-    paras["separator"] = args.separator[0]
+    paras["microsatellite_region_format"] = args.microsatellite_region_format[0]
     paras["tech"] = args.technology[0]
-    paras["hap"] = args.haplotype_bam[0]
+    # paras["hap"] = args.haplotype_bam[0]
     paras["prefix_len"] = args.prefix_len[0]
     paras["suffix_len"] = args.suffix_len[0]
     paras["debug"] = args.debug[0]
@@ -41,6 +37,7 @@ def genotype_init(args):
     paras["batch"] = args.batch[0]
     paras["minimum_phasing_reads"] = args.minimum_phasing_reads[0]
     paras["min_allele_fraction"] = args.min_allele_fraction[0]
+    paras["sample"] = args.sample[0]
     paras["ranges_of_repeat_times"] = {}
 
     for i in args.minimum_repeat_times[0].split(";"):
@@ -123,14 +120,20 @@ def genotype_init(args):
     paras["output"] = output_path
     input_path = paras["input"]
     input_path = input_path[:-1] if input_path[-1] == "/" else input_path
-    case = input_path.split("/")[-1].strip(".bam")
-    case = case.strip(".cram")
+    if paras["sample"] == "default":
+        case = input_path.split("/")[-1].strip(".bam")
+        case = case.strip(".cram")
+    else:
+        case = paras["sample"]
     paras["output_pre"] = paras["output"] + case + ".pre.vcf.gz"
     paras["output_tmp"] = paras["output"] + case + "_tmp"
     if not os.path.exists(paras["output_tmp"]):
         os.makedirs(paras["output_tmp"])
     paras["output_model"] = paras["output"] + case + ".model"
-    paras["output_call"] = paras["output"] + case + ".vcf.gz"
+    paras["output_micro"] = paras["output"] + case + "_micro.vcf.gz"
+    paras["output_indel"] = paras["output"] + case + "_indel.vcf.gz"
+    paras["output_snv"] = paras["output"] + case + "_snv.vcf.gz"
+    paras["output_complex"] = paras["output"] + case + "_complex.vcf.gz"
     set_value("case", case)
     set_value("paras", paras)
     return True
@@ -141,6 +144,7 @@ def genotype(parase):
         logger.error("Genotype init ERROR!")
         return -1
     paras = get_value("paras")
+    # print(paras)
     if get_value("paras")["tech"] == "ilm":
         genotype_ngs(paras)
     elif get_value("paras")["tech"] == "ccs":

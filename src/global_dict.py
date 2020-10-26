@@ -16,17 +16,12 @@ import logging
 
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
-
 consoleHandler = logging.StreamHandler()
 consoleHandler.setLevel(logging.DEBUG)
-
 formatter = logging.Formatter('[%(levelname)s]\t %(message)s')
 consoleHandler.setFormatter(formatter)
-
 logger.addHandler(consoleHandler)
-
 # logger.info("command: " + " ".join(sys.argv))
-
 version_id = "0.1.4"
 
 
@@ -47,7 +42,7 @@ def global_init():
             "minimum_support_reads": 2,
             "batch": 2000,
             "debug": False,
-            "separator": "tab",  # comma,tab,space
+            "microsatellite_region_format": "msisensor_scan",
             "only_homopolymers": False,
             "only_simple": False,
             "using_phasing_info": True,
@@ -62,6 +57,7 @@ def global_init():
             "hap": False,
             "min_allele_fraction": 0.2,
         },
+
         "qc": {
             "reference": ".",
             "threads": 4,
@@ -69,7 +65,7 @@ def global_init():
             "minimum_support_reads": 2,
             "batch": 2000,
             "debug": False,
-            "separator": "tab",  # comma,tab,space
+            "microsatellite_region_format": "msisensor_scan",
             "only_homopolymers": False,
             "allow_mismatch": True,
             "minimum_repeat_times": "1:8;2-5:5",
@@ -87,9 +83,9 @@ def global_init():
             "threads": 4,
             "minimum_mapping_quality": 1,
             "minimum_support_reads": 2,
+            "microsatellite_region_format": "msisensor_scan",
             "batch": 2000,
             "debug": False,
-            "separator": "tab",  # comma,tab,space
             "only_homopolymers": False,
             "allow_mismatch": True,
             "minimum_repeat_times": "1:8;2-5:5",
@@ -100,7 +96,7 @@ def global_init():
             "minimum_phasing_reads": 3,
             "tech": "ccs",
             "hap": True,
-            "only_microsatellites": True
+            "only_microsatellites": True,
         },
         "benchmark_merge": {
             "sample": "sample",

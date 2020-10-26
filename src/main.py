@@ -63,16 +63,17 @@ def args_process():
     #                               default=[defaultPara_gt["tech"]],
     #                               help='Sequencing technology [default:'
     #                                    + str(defaultPara_gt["tech"]) + ']')
-    input_and_output.add_argument('-hap', '--haplotype_bam', type=bool, nargs=1, choices=[True, False],
-                                  default=[defaultPara_gt["hap"]],
-                                  help=" Input bam file with haplotype tags [default:"
-                                       + str(defaultPara_gt["hap"]) + "]")
-    input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
-                                  default=[defaultPara_gt["separator"]],
-                                  help='Separator for microsatellites file [default:'
-                                       + str(defaultPara_gt["separator"]) + ']')
+    input_and_output.add_argument('-s', '--sample', type=str, nargs=1,
+                                  # default=[defaultPara_gt["hap"]],
+                                  default=["default"],
+                                  help=" sample name in output vcf file [default: extract from bam file]")
+    input_and_output.add_argument("-mf", '--microsatellite_region_format', type=str, nargs=1,
+                                  choices=["bed", "json", "msisensor_scan"],
+                                  default=[defaultPara_gt["microsatellite_region_format"]],
+                                  help='Input format of microsatellites region file [default:'
+                                       + str(defaultPara_gt["microsatellite_region_format"]) + ']')
     ##################################################################################
-    # group Analysis regions
+    # group analysis regions
     # general_realign = parser_gt.add_argument_group(title="Analysis regions")
 
     # general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
@@ -86,21 +87,21 @@ def args_process():
     general_option = parser_gt.add_argument_group(title="General option")
     general_option.add_argument('-pl', '--prefix_len', type=int, nargs=1,
                                 default=[defaultPara_gt["prefix_len"]],
-                                help="[prefix_len] bp upstream for complex event analysis [default:" +
+                                help="[prefix_len] bp upstream for mutation analysis [default:" +
                                      str(defaultPara_gt["prefix_len"]) + "]")
     general_option.add_argument('-sl', '--suffix_len', type=int, nargs=1,
                                 default=[defaultPara_gt["suffix_len"]],
-                                help="[suffix_len] bp downstream for complex event analysis  [default:" +
+                                help="[suffix_len] bp downstream for mutation analysis  [default:" +
                                      str(defaultPara_gt["suffix_len"]) + "]")
     general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_gt["debug"]],
                                 help="Debug mode for developers [default:" +
                                      str(defaultPara_gt["debug"]) + "]")
-    general_option.add_argument('-oh', '--only_homopolymers', type=int, nargs=1, choices=[True, False],
+    general_option.add_argument('-oh', '--only_homopolymers', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_gt["only_homopolymers"]],
                                 help="Only analyze homopolymer regions [default:"
                                      + str(defaultPara_gt["only_homopolymers"]) + "]")
-    general_option.add_argument('-os', '--only_simple', type=int, nargs=1, choices=[True, False],
+    general_option.add_argument('-os', '--only_simple', type=bool, nargs=1, choices=[True, False],
                                 default=[defaultPara_gt["only_simple"]],
                                 help="Only analyze simple microsatellite copy number variants [default:"
                                      + str(defaultPara_gt["only_simple"]) + "]")
@@ -125,11 +126,11 @@ def args_process():
                                      + str(defaultPara_gt["minimum_phasing_reads"]) + "]")
     general_option.add_argument('-q', '--minimum_mapping_quality', type=int, nargs=1,
                                 default=[defaultPara_gt["minimum_mapping_quality"]],
-                                help="minimum mapping quality of read [default:" +
+                                help="minimum mapping quality of read for mutation analysis [default:" +
                                      str(defaultPara_gt["minimum_mapping_quality"]) + "]")
-    general_option.add_argument('-s', '--minimum_support_reads', type=int, nargs=1,
+    general_option.add_argument('-ms', '--minimum_support_reads', type=int, nargs=1,
                                 default=[defaultPara_gt["minimum_support_reads"]],
-                                help="minimum support reads of an available microsatellite [default:" +
+                                help="minimum support reads of an available microsatellite call[default:" +
                                      str(defaultPara_gt["minimum_support_reads"]) + "]")
     general_option.add_argument('-a', '--min_allele_fraction', type=int, nargs=1,
                                 default=[defaultPara_gt["min_allele_fraction"]],
@@ -187,10 +188,12 @@ def args_process():
                                      default=[defaultPara_qc["hap"]],
                                      help=" Input bam file with haplotype tags [default:"
                                           + str(defaultPara_qc["hap"]) + "]")
-    qc_input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
-                                     default=[defaultPara_qc["separator"]],
-                                     help='Separator for microsatellites file [default:'
-                                          + str(defaultPara_qc["separator"]) + ']')
+    qc_input_and_output.add_argument("-mf", '--microsatellite_region_format', type=str, nargs=1,
+                                     choices=["bed", "json", "msisensor_scan"],
+                                     default=[defaultPara_qc["microsatellite_region_format"]],
+                                     help='Input format of microsatellites region file [default:'
+                                          + str(defaultPara_qc["microsatellite_region_format"]) + ']')
+
     ##################################################################################
     # group Analysis regions
     # general_realign = parser_gt.add_argument_group(title="Analysis regions")
@@ -286,23 +289,15 @@ def args_process():
                                      help="The path of output file prefix [required]")
     bm_input_and_output.add_argument('-r', '--reference', required=True, type=str, nargs=1,
                                      help="The path of reference file fa/fasta[required]")
-    bm_input_and_output.add_argument("-sep", '--separator', type=str, nargs=1, choices=["comma", "space", "tab"],
-                                     default=[defaultPara_bm["separator"]],
-                                     help='Separator for microsatellites file [default:'
-                                          + str(defaultPara_bm["separator"]) + ']')
+    bm_input_and_output.add_argument("-mf", '--microsatellite_region_format', type=str, nargs=1,
+                                     choices=["bed", "json", "msisensor_scan"],
+                                     default=[defaultPara_bm["microsatellite_region_format"]],
+                                     help='Input format of microsatellites region file [default:'
+                                          + str(defaultPara_bm["microsatellite_region_format"]) + ']')
     bm_input_and_output.add_argument('-tech', '--technology', type=str, nargs=1,
                                      choices=["ccs", "clr", "ont", "ilm", "contig"],
                                      required=True,
                                      help='Sequencing technology [required]')
-    ##################################################################################
-    # group read realignment
-    # bm_general_realign = parser_bm.add_argument_group(title="Read realignment")
-    #
-    # bm_general_realign.add_argument('-ks', '--kmer_size', type=int, nargs=1,
-    #                                 default=[defaultPara_bm["kmer_size"]],
-    #                                 help="Debug mode for developers [default:" +
-    #                                      str(defaultPara_bm["kmer_size"]) + "]")
-
     ##################################################################################
     # group general option
     bm_general_option = parser_bm.add_argument_group(title="General option")

@@ -49,6 +49,10 @@ def get_homo_normal_dis(motif_dis_tmp, max_repeat, motif_len):
         for pot in range(0, max_repeat + 1):
             tmp_dis[pot] = 0
         read_num = len(motif_dis_tmp[homo])
+        read_num=0
+        for site in motif_dis_tmp[homo]:
+            read_num+=sum(site.values())
+        # print(motif_dis_tmp[homo])
         for oner in motif_dis_tmp[homo]:
             for pot in oner:
                 tmp_dis[pot] += oner[pot]
@@ -64,6 +68,7 @@ def get_homo_normal_dis(motif_dis_tmp, max_repeat, motif_len):
         for i in homo_list[homo]:
             x.append(i)
             y.append(homo_list[homo][i])
+        # print(sum(y))
     return homo_list
 
 
@@ -122,7 +127,7 @@ def estimate_error():
     motif_list = get_value("motif_list")
     model = {}
     for motif in motif_list:
-        logger.error("Build error model for motif: " + motif)
+        logger.info("Build error model for motif: " + motif)
         model[motif] = get_one_motif_prosess(args, motif)
     with open(args["output_model"], "w") as f:
         yaml.dump(model, f)

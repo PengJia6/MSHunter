@@ -24,7 +24,7 @@ def genotype_init(args):
     paras["output"] = args.output[0]
     paras["microsatellite"] = args.microsatellite[0]
     paras["reference"] = args.reference[0]
-    paras["separator"] = args.separator[0]
+    paras["microsatellite_region_format"] = args.microsatellite_region_format[0]
     paras["tech"] = args.technology[0]
     paras["hap"] = args.haplotype_bam[0]
     paras["prefix_len"] = args.prefix_len[0]

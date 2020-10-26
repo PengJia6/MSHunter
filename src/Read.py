@@ -129,14 +129,6 @@ class Read:
             deletions = []
             insertions = []
             ref_pos = ms_start_pre - 2
-            # if len(self.this_ref_list) == 13746:
-            #     print("13746", ms_id)
-            # if len(self.this_ref_list) <= ms_end_suf - self.align_start:
-            #     print('index out', ms_id, self.read_id, )
-            #     print('align', self.align_start, self.align_end)
-            #     print('ms_pos', ms_start_pre, ms_end_suf)
-            # print(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start)
-            # print(len(self.this_ref_list))
             for pot in range(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start):
                 ref_pos += 1
                 this_read_base = self.this_read_list[pot]

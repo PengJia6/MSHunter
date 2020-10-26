@@ -20,10 +20,7 @@ class Microsatellite:
     Description: For microsatellite
     """
 
-    def __init__(self, ms_info,
-                 # prefix_len=get_value("paras")["prefix_len"],
-                 # suffix_len=get_value("paras")["suffix_len"]
-                 ):
+    def __init__(self, ms_info, only_simple=True):
         self.chrom = ms_info["chr"]
         self.start = ms_info["pos"]
         self.ms_id = self.chrom + "_" + str(self.start)
@@ -44,7 +41,10 @@ class Microsatellite:
         self.check_status = []
         self.mut = Mutation()
         self.ref_str = ""
+        self.ref_str_ms = ""
+        self.ref_str_mut = ""
         self.alt_str = ""
+        self.alt_ms = (".",)
         self.alt = (".",)
         self.dis_stat = True
         self.mut_start = self.start
@@ -56,6 +56,7 @@ class Microsatellite:
         self.ms_dis_hap1 = {}
         self.ms_dis_hap2 = {}
         self.ms_dis_hap0 = {}
+        self.support_reads = 0
         self.support_hap0 = 0
         self.support_hap1 = 0
         self.support_hap2 = 0
@@ -75,8 +76,16 @@ class Microsatellite:
         self.qual_ms_hap1 = 0
         self.qual_ms_hap2 = 0
         self.phased = False
-
-        ## TODO cannot run with multi threads
+        self.report_micro = True
+        self.only_simple = only_simple
+        if only_simple:
+            self.report_indel = False
+            self.report_snv = False
+            self.report_complex = False
+        else:
+            self.report_indel = True
+            self.report_snv = True
+            self.report_complex = True
 
     def set_reads_info(self, reads_info):
         self.reads_info = reads_info
@@ -116,6 +125,10 @@ class Microsatellite:
         dis_hap0_num = len(dis_hap[0])
         dis_hap1_num = len(dis_hap[1])
         dis_hap2_num = len(dis_hap[2])
+        self.support_hap0 = dis_hap0_num
+        self.support_hap1 = dis_hap1_num
+        self.support_hap2 = dis_hap2_num
+        self.support_reads = dis_hap0_num + dis_hap1_num + dis_hap2_num
         if abs(dis_hap1_num - dis_hap2_num) > self.depth * 0.4:  # TODO add in input arguments
             self.reads_phased = False
         elif dis_hap0_num < self.depth * 0.5:  # TODO add in input arguments
@@ -243,78 +256,97 @@ class Microsatellite:
             alt_list[pos - offset] = info
         return "".join(alt_list)
 
-    def phased_call(self):
-        return
-
-    def unphased_call(self):
-        return
+    # def phased_call(self):
+    #     return
+    #
+    # def unphased_call(self):
+    #     return
 
     def call_init(self):
         if self.depth == 0:
             self.check = False
             self.check_status.append("No_read_covered")
             self.dis_stat = False
-            self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
-            self.alt = "N"
+            self.ref_str_ms = pysam.FastaFile(self.reference).fetch(self.chrom, self.start, self.end + 1)
+            self.alt_ms = "."
+            self.report_micro = True
+            self.report_indel = False
+            self.report_snv = False
+            self.report_complex = False
             return False
-        self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
+        else:
+            self.report_micro = True
+
+            self.report_indel = False
+            self.report_snv = False
+            self.report_complex = False
+            return True
+
+    def call_micro(self):
+        if not self.call_init():
+            return
+            # self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
         model_all = get_value("model")
         if self.repeat_unit not in model_all:
             self.check = False
             self.check_status.append("No_error_model")
             self.model_stat = False
-            self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
-            self.alt = "N"
+            self.ref_str_ms = pysam.FastaFile(self.reference).fetch(self.chrom, self.start, self.end + 1)
+            self.alt = "."
             return False
         model = model_all[self.repeat_unit]["mixture"]
         max_repeat = model_all[self.repeat_unit]["max_repeat"]
         del model_all
         self.model_stat = True
-        ms_dis = {}
-        ms_dis_strand = {True: {}, False: {}}
-        ms_dis_hap = {0: {}, 1: {}, 2: {}}
-        for read_id, read_info in self.muts.items():
-            strand = read_info.strand
-            hap = read_info.hap
-            mut_dict_by_pos = {}
-            for mut in read_info.mismatches:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
-            for mut in read_info.insertions:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
-            for mut in read_info.deletions:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
-            if read_info.repeat_length not in ms_dis:
-                ms_dis[read_info.repeat_length] = 1
-            else:
-                ms_dis[read_info.repeat_length] += 1
-            if read_info.repeat_length not in ms_dis_hap[hap]:
-                ms_dis_hap[hap][read_info.repeat_length] = 0
-            ms_dis_hap[hap][read_info.repeat_length] += 1
-            if read_info.repeat_length not in ms_dis_strand[strand]:
-                ms_dis_strand[strand][read_info.repeat_length] = 0
-            ms_dis_strand[strand][read_info.repeat_length] += 1
-        self.ms_dis = ms_dis
-        self.ms_dis_hap0 = ms_dis_hap[0]
-        self.ms_dis_hap1 = ms_dis_hap[1]
-        self.ms_dis_hap2 = ms_dis_hap[2]
-        self.support_hap0 = len(ms_dis_hap[0])
-        self.support_hap1 = len(ms_dis_hap[1])
-        self.support_hap2 = len(ms_dis_hap[2])
-        self.ms_dis_forward = ms_dis_strand[True]
-        self.ms_dis_reversed = ms_dis_strand[False]
-        # if self.depth-self.support_hap0>self.depth*0.5: # TODO add in command parameters
-        if abs(self.support_hap1 - self.support_hap2) > self.depth * 0.4:  # TODO add in input arguments
-            self.reads_phased = False
-        elif self.support_hap0 > self.depth * 0.5:  # TODO add in input arguments
-            self.reads_phased = False
-        else:
-            self.reads_phased = True
+        # ms_dis = {}
+        # ms_dis_strand = {True: {}, False: {}}
+        # ms_dis_hap = {0: {}, 1: {}, 2: {}}
+
+        # for read_id, read_info in self.muts.items():
+        #     strand = read_info.strand
+        #     hap = read_info.hap
+        #     # mut_dict_by_pos = {}
+        #     # for mut in read_info.mismatches:
+        #     #     if mut[0] not in mut_dict_by_pos:
+        #     #         mut_dict_by_pos[mut[0]] = []
+        #     #     mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+        #     # for mut in read_info.insertions:
+        #     #     if mut[0] not in mut_dict_by_pos:
+        #     #         mut_dict_by_pos[mut[0]] = []
+        #     #     mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
+        #     # for mut in read_info.deletions:
+        #     #     if mut[0] not in mut_dict_by_pos:
+        #     #         mut_dict_by_pos[mut[0]] = []
+        #     #     mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
+        #     if read_info.repeat_length not in ms_dis:
+        #         ms_dis[read_info.repeat_length] = 1
+        #     else:
+        #         ms_dis[read_info.repeat_length] += 1
+        #
+        #     if read_info.repeat_length not in ms_dis_hap[hap]:
+        #         ms_dis_hap[hap][read_info.repeat_length] = 0
+        #     ms_dis_hap[hap][read_info.repeat_length] += 1
+        #     if read_info.repeat_length not in ms_dis_strand[strand]:
+        #         ms_dis_strand[strand][read_info.repeat_length] = 0
+        #     ms_dis_strand[strand][read_info.repeat_length] += 1
+        #
+        # self.ms_dis = ms_dis
+        # self.ms_dis_hap0 = ms_dis_hap[0]
+        # self.ms_dis_hap1 = ms_dis_hap[1]
+        # self.ms_dis_hap2 = ms_dis_hap[2]
+        # self.support_hap0 = len(ms_dis_hap[0])
+        # self.support_hap1 = len(ms_dis_hap[1])
+        # self.support_hap2 = len(ms_dis_hap[2])
+        # self.ms_dis_forward = ms_dis_strand[True]
+        # self.ms_dis_reversed = ms_dis_strand[False]
+        # if self.depth - self.support_hap0 < self.depth * 0.5:  # TODO add in command parameters
+        #     self.reads_phased = False
+        # if abs(self.support_hap1 - self.support_hap2) > self.depth * 0.4:  # TODO add in input arguments
+        #     self.reads_phased = False
+        # elif self.support_hap0 > self.depth * 0.5:  # TODO add in input arguments
+        #     self.reads_phased = False
+        # else:
+        #     self.reads_phased = True
         min_repeat = max([min(self.ms_dis.keys()) - 1, 1])
         max_repeat = min([max(self.ms_dis.keys()) + 1, max_repeat])
         if self.reads_phased:
