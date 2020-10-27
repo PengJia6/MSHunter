@@ -303,18 +303,20 @@ class Window:
             # print(ms_id)
             # print(self.microsatellites)
             ms = self.microsatellites[ms_id]
-            print(get_value("case"))
-            print(ms.format_GT)
-            print("ALT", ms.alt_str, ms.alt)
-            print(ms.ref_str)
+            # print(get_value("case"))
+            # print(ms.format_GT)
+            # print("ALT", ms.alt_str, ms.alt)
+            # print(ms.ref_str)
 
             vcfrec = file_output.new_record()
             vcfrec.contig = ms.chrom
             vcfrec.stop = ms.start + ms.repeat_times * ms.repeat_unit_len
             vcfrec.pos = ms.start
-            vcfrec.ref = ms.ref_str
+            # vcfrec.ref = ms.ref_str_ms
+            vcfrec.ref=str(ms.repeat_times)+"["+ms.repeat_unit+"]"
             # vcfrec.alts = (ms.alt,) if ms.alt != "" else ("N",)
-            vcfrec.alts = ms.alt
+            if ms.report_micro:
+                vcfrec.alts = ms.alt_ms
             vcfrec.id = ms.ms_id
             vcfrec.stop = ms.end
             vcfrec.info["ms_start"] = ms.start
@@ -349,14 +351,12 @@ class Window:
             # vcfrec.qual = round(mscall.qual, 6)
             # vcfrec.info["Alleles"] = ms.alleles
             # print(mscall.format_DP)
-
-            vcfrec.samples[get_value("case")]["GT"] = ms.format_GT
-            vcfrec.samples[get_value("case")]["DP"] = ms.format_DP
-            vcfrec.samples[get_value("case")]["QL"] = ms.format_QL
-            vcfrec.samples[get_value("case")]["AL"] = ms.format_AL
-            vcfrec.samples[get_value("case")].phased = ms.reads_phased
-
-            # recs.append(vcfrec)
+            if ms.report_micro:
+                vcfrec.samples[get_value("case")]["GT"] = ms.format_GT_ms
+                vcfrec.samples[get_value("case")]["DP"] = ms.format_DP_ms
+                vcfrec.samples[get_value("case")]["QL"] = ms.format_QL_ms
+                vcfrec.samples[get_value("case")]["AL"] = ms.format_AL_ms
+                vcfrec.samples[get_value("case")].phased = ms.reads_phased
             recs.append(vcfrec)
         return recs
 

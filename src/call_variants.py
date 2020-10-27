@@ -309,13 +309,13 @@ def run_window_mul(windows, args, file_output):
     # win_recs=[]
     if args["only_simple"]:
         for win in windows:
-            for rec in win.write_to_vcf_call_variants_indel(file_output["micro"]):
+            for rec in win.write_to_vcf_call_variants_micro(file_output["micro"]):
                 file_output["micro"].write(rec)
             # for rec in win.write_to_vcf_call_variants_indel(file_output["indel"]):
             #     file_output["indel"].write(rec)
     else:
         for win in windows:
-            for rec in win.write_to_vcf_call_variants_indel(file_output["micro"]):
+            for rec in win.write_to_vcf_call_variants_micro(file_output["micro"]):
                 file_output["micro"].write(rec)
             # for rec in win.write_to_vcf_call_variants_indel(file_output["indel"]):
             #     file_output["indel"].write(rec)

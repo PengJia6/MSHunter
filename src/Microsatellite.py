@@ -10,9 +10,12 @@
 =============================================================================="""
 from src.global_dict import *
 import numpy as np
+from sklearn import mixture
+from sklearn import mixture
 import pysam
 from src.units import *
 from src.Read import Read
+from src.gmm import get_repeat_gmm
 
 
 class Microsatellite:
@@ -68,10 +71,11 @@ class Microsatellite:
         self.mismatches = {}
         self.reads_phased = True  # True if reads in this regions is phased
         self.model_stat = True  # True if model is built in estimate process
-        self.format_GT = (0, 0)  # genotype
-        self.format_AL = "/".join(["0", "0"])
-        self.format_DP = "/".join(["0", "0", "0"])
-        self.format_QL = "/".join(["0", "0", "0"])
+        self.format_GT_ms = (0, 0)  # genotype
+        self.format_AL_ms = "/".join(["0", "0"])
+        self.format_DP_ms = "/".join(["0", "0", "0"])
+        self.format_QL_ms = "/".join(["0", "0", "0"])
+
         self.qual_ms = 0
         self.qual_ms_hap1 = 0
         self.qual_ms_hap2 = 0
@@ -86,6 +90,10 @@ class Microsatellite:
             self.report_indel = True
             self.report_snv = True
             self.report_complex = True
+            self.format_GT = (0, 0)  # genotype
+            self.format_AL = "/".join(["0", "0"])
+            self.format_DP = "/".join(["0", "0", "0"])
+            self.format_QL = "/".join(["0", "0", "0"])
 
     def set_reads_info(self, reads_info):
         self.reads_info = reads_info
@@ -113,7 +121,6 @@ class Microsatellite:
             if repeat_length not in dis_strand[strand]:
                 dis_strand[strand][repeat_length] = 0
             dis_strand[strand][repeat_length] += 1
-        self.depth = len(dis)
         self.dis_stat = True if self.depth > 0 else False
         self.ms_dis = dis
         self.ms_dis_hap0 = dis_hap[0]
@@ -122,16 +129,19 @@ class Microsatellite:
         self.ms_dis_forward = dis_strand[True]
         self.ms_dis_reversed = dis_strand[False]
         self.query_repeat_length = get_max_support_index(dis)
-        dis_hap0_num = len(dis_hap[0])
-        dis_hap1_num = len(dis_hap[1])
-        dis_hap2_num = len(dis_hap[2])
+        dis_hap0_num = sum(dis_hap[0].values())
+        dis_hap1_num = sum(dis_hap[1].values())
+        dis_hap2_num = sum(dis_hap[2].values())
         self.support_hap0 = dis_hap0_num
         self.support_hap1 = dis_hap1_num
         self.support_hap2 = dis_hap2_num
+        self.depth = dis_hap0_num + dis_hap1_num + dis_hap2_num
         self.support_reads = dis_hap0_num + dis_hap1_num + dis_hap2_num
         if abs(dis_hap1_num - dis_hap2_num) > self.depth * 0.4:  # TODO add in input arguments
             self.reads_phased = False
-        elif dis_hap0_num < self.depth * 0.5:  # TODO add in input arguments
+        elif dis_hap0_num > self.depth * 0.5:  # TODO add in input arguments
+            self.reads_phased = False
+        elif dis_hap1_num < 2 or dis_hap2_num < 2:
             self.reads_phased = False
         else:
             self.reads_phased = True
@@ -269,169 +279,103 @@ class Microsatellite:
             self.dis_stat = False
             self.ref_str_ms = pysam.FastaFile(self.reference).fetch(self.chrom, self.start, self.end + 1)
             self.alt_ms = "."
-            self.report_micro = True
+            self.report_micro = False
             self.report_indel = False
             self.report_snv = False
             self.report_complex = False
             return False
         else:
             self.report_micro = True
+            if not self.only_simple:
+                self.report_indel = False
+                self.report_snv = False
+                self.report_complex = False
+            else:
+                self.report_indel = True
+                self.report_snv = True
+                self.report_complex = True
 
-            self.report_indel = False
-            self.report_snv = False
-            self.report_complex = False
             return True
 
     def call_micro(self):
+        self.ref_str_ms = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
         if not self.call_init():
             return
-            # self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
-        model_all = get_value("model")
-        if self.repeat_unit not in model_all:
-            self.check = False
-            self.check_status.append("No_error_model")
-            self.model_stat = False
-            self.ref_str_ms = pysam.FastaFile(self.reference).fetch(self.chrom, self.start, self.end + 1)
-            self.alt = "."
-            return False
-        model = model_all[self.repeat_unit]["mixture"]
-        max_repeat = model_all[self.repeat_unit]["max_repeat"]
-        del model_all
-        self.model_stat = True
-        # ms_dis = {}
-        # ms_dis_strand = {True: {}, False: {}}
-        # ms_dis_hap = {0: {}, 1: {}, 2: {}}
-
-        # for read_id, read_info in self.muts.items():
-        #     strand = read_info.strand
-        #     hap = read_info.hap
-        #     # mut_dict_by_pos = {}
-        #     # for mut in read_info.mismatches:
-        #     #     if mut[0] not in mut_dict_by_pos:
-        #     #         mut_dict_by_pos[mut[0]] = []
-        #     #     mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
-        #     # for mut in read_info.insertions:
-        #     #     if mut[0] not in mut_dict_by_pos:
-        #     #         mut_dict_by_pos[mut[0]] = []
-        #     #     mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
-        #     # for mut in read_info.deletions:
-        #     #     if mut[0] not in mut_dict_by_pos:
-        #     #         mut_dict_by_pos[mut[0]] = []
-        #     #     mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
-        #     if read_info.repeat_length not in ms_dis:
-        #         ms_dis[read_info.repeat_length] = 1
-        #     else:
-        #         ms_dis[read_info.repeat_length] += 1
-        #
-        #     if read_info.repeat_length not in ms_dis_hap[hap]:
-        #         ms_dis_hap[hap][read_info.repeat_length] = 0
-        #     ms_dis_hap[hap][read_info.repeat_length] += 1
-        #     if read_info.repeat_length not in ms_dis_strand[strand]:
-        #         ms_dis_strand[strand][read_info.repeat_length] = 0
-        #     ms_dis_strand[strand][read_info.repeat_length] += 1
-        #
-        # self.ms_dis = ms_dis
-        # self.ms_dis_hap0 = ms_dis_hap[0]
-        # self.ms_dis_hap1 = ms_dis_hap[1]
-        # self.ms_dis_hap2 = ms_dis_hap[2]
-        # self.support_hap0 = len(ms_dis_hap[0])
-        # self.support_hap1 = len(ms_dis_hap[1])
-        # self.support_hap2 = len(ms_dis_hap[2])
-        # self.ms_dis_forward = ms_dis_strand[True]
-        # self.ms_dis_reversed = ms_dis_strand[False]
-        # if self.depth - self.support_hap0 < self.depth * 0.5:  # TODO add in command parameters
-        #     self.reads_phased = False
-        # if abs(self.support_hap1 - self.support_hap2) > self.depth * 0.4:  # TODO add in input arguments
-        #     self.reads_phased = False
-        # elif self.support_hap0 > self.depth * 0.5:  # TODO add in input arguments
-        #     self.reads_phased = False
-        # else:
-        #     self.reads_phased = True
-        min_repeat = max([min(self.ms_dis.keys()) - 1, 1])
-        max_repeat = min([max(self.ms_dis.keys()) + 1, max_repeat])
+        # print(self.reads_phased)
+        # print(self.ms_dis_hap1)
+        # print(self.ms_dis_hap2)
+        # print(".......................................")
         if self.reads_phased:
-            model_id_list = [first * 1000 + first for first in range(min_repeat, max_repeat + 1)]
-            ms_dis_hap1_normal = {k: v / self.support_hap1 for k, v in self.ms_dis_hap1.items()}
-            ms_dis_hap2_normal = {k: v / self.support_hap2 for k, v in self.ms_dis_hap2.items()}
-            distance_dict_hap1 = {}
-            distance_dict_hap2 = {}
-            for model_id in model_id_list:
-                distance_dict_hap1[model_id] = get_disdistance(ms_dis_hap1_normal, model[model_id])
-                distance_dict_hap2[model_id] = get_disdistance(ms_dis_hap2_normal, model[model_id])
-            distance_tuple = sorted(distance_dict_hap1.items(), key=lambda kv: (kv[1], kv[0]))
-            hap1_repeat_length = distance_tuple[0][0] // 1000
-            if len(distance_dict_hap1) > 1:
-                first_two_distance_ratio_hap1 = (distance_tuple[1][1] - distance_tuple[0][1]) / (
-                        distance_tuple[0][1] + 0.000001)
-                # first_two_distance_hap1 = distance_tuple[1][1] - distance_tuple[0][1]
-                # distance_hap1 = distance_tuple[0][1]
-                qual_hap1 = first_two_distance_ratio_hap1 * self.support_hap1
-            else:
-                qual_hap1 = 0
-
-            distance_tuple = sorted(distance_dict_hap2.items(), key=lambda kv: (kv[1], kv[0]))
-            hap2_repeat_length = distance_tuple[0][0] // 1000
-            if len(distance_dict_hap2) > 1:
-                first_two_distance_ratio_hap2 = (distance_tuple[1][1] - distance_tuple[0][1]) / (
-                        distance_tuple[0][1] + 0.000001)
-                # first_two_distance_hap2 = distance_tuple[1][1] - distance_tuple[0][1]
-                # distance_hap2 = distance_tuple[0][1]
-                qual_hap2 = first_two_distance_ratio_hap2 * self.support_hap2
-            else:
-                qual_hap2 = 0
-            self.qual_ms = 0.5 * (qual_hap1 + qual_hap2)
-            self.qual_ms_hap1 = qual_hap1
-            self.qual_ms_hap2 = qual_hap2
-
+            res1 = get_repeat_gmm(self.ms_dis_hap1, target=1)
+            res2 = get_repeat_gmm(self.ms_dis_hap2, target=1)
+            hap1_repeat_length = res1["genotype"][0]
+            hap2_repeat_length = res2["genotype"][0]
+            self.qual_ms_hap1 = np.round(res1["qual"],)
+            self.qual_ms_hap2 = np.round(res2["qual"],2)
+            self.qual_ms = np.round(np.mean([res1["qual"], res2["qual"]]), 2)
         else:
-            model_id_list = []
-            for first in range(min_repeat, max_repeat + 1):
-                for second in range(min_repeat, max_repeat + 1):
-                    if first <= second:
-                        model_id_list.append(first * 1000 + second)
-            ms_dis_normal = {k: v / self.depth for k, v in self.ms_dis.items()}
-            distance_dict = {}
-            for model_id in model_id_list:
-                distance_dict[model_id] = get_disdistance(ms_dis_normal, model[model_id])
-            distance_tuple = sorted(distance_dict.items(), key=lambda kv: (kv[1], kv[0]))
-            hap1_repeat_length = distance_tuple[0][0] // 1000
-            hap2_repeat_length = distance_tuple[0][0] % 1000
-            if len(distance_dict) > 1:
-                firsttwoDistanceRatio = (distance_tuple[1][1] - distance_tuple[0][1]) / (
-                        distance_tuple[0][1] + 0.000001)
-                # first_two_distance = distance_tuple[1][1] - distance_tuple[0][1]
-                # distance = distance_tuple[0][1]
-                self.qual_ms = firsttwoDistanceRatio * self.support_reads
+            res = get_repeat_gmm(self.ms_dis, target=2)
+            hap1_repeat_length, hap2_repeat_length = res["genotype"]
+            self.qual_ms = np.round(res["qual"], 2)
+
         if hap1_repeat_length == hap2_repeat_length:
             if hap1_repeat_length == self.repeat_len:
-                self.format_GT = (0, 0)
+                self.format_GT_ms = (0, 0)
                 # self.alt = (".")
             else:
-                self.format_GT = (1, 1)
+                self.format_GT_ms = (1, 1)
                 self.alt = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",)
         else:
             if self.repeat_len in [hap1_repeat_length, hap2_repeat_length]:
-                self.format_GT = (0, 1)
-                if hap1_repeat_length == self.repeat_len:
-                    self.alt = (str(hap2_repeat_length) + "[" + self.repeat_unit + "]",)
+                if self.reads_phased:
+                    # self.format_GT_ms = (0, 1)
+                    if hap1_repeat_length == self.repeat_len:
+                        self.format_GT_ms == (0, 1)
+                        self.alt_ms = (str(hap2_repeat_length) + "[" + self.repeat_unit + "]",)
+                    else:
+                        self.alt_ms = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",)
+                        self.format_GT_ms = (1, 0)
                 else:
-                    self.alt = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",)
+                    self.format_GT_ms = (0, 1)
+                    if hap1_repeat_length == self.repeat_len:
+                        self.alt_ms = (str(hap2_repeat_length) + "[" + self.repeat_unit + "]",)
+                    else:
+                        self.alt_ms = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",)
             else:
-                self.format_GT = (1, 2)
-                if hap1_repeat_length < hap2_repeat_length:
-                    self.alt = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",
-                                str(hap2_repeat_length) + "[" + self.repeat_unit + "]")
+                if self.reads_phased:
+                    if hap1_repeat_length < hap2_repeat_length:
+                        self.alt_ms = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",
+                                       str(hap2_repeat_length) + "[" + self.repeat_unit + "]")
+                        self.format_GT_ms = (1, 2)
+                    else:
+                        self.alt_ms = (str(hap2_repeat_length) + "[" + self.repeat_unit + "]",
+                                       str(hap1_repeat_length) + "[" + self.repeat_unit + "]")
+                        self.format_GT_ms = (2, 1)
                 else:
-                    self.alt = (str(hap2_repeat_length) + "[" + self.repeat_unit + "]",
-                                str(hap1_repeat_length) + "[" + self.repeat_unit + "]")
-        if hap1_repeat_length <= hap2_repeat_length:
-            self.format_AL = "/".join(list(map(str, [hap1_repeat_length, hap2_repeat_length])))
+                    self.format_GT_ms = (1, 2)
+                    if hap1_repeat_length < hap2_repeat_length:
+                        self.alt_ms = (str(hap1_repeat_length) + "[" + self.repeat_unit + "]",
+                                       str(hap2_repeat_length) + "[" + self.repeat_unit + "]")
+                    else:
+                        self.alt_ms = (str(hap2_repeat_length) + "[" + self.repeat_unit + "]",
+                                       str(hap1_repeat_length) + "[" + self.repeat_unit + "]")
+
+        if self.reads_phased:
+            self.format_AL_ms = "/".join(list(map(str, [hap1_repeat_length, hap2_repeat_length])))
+            self.format_DP_ms = "/".join(list(map(str, [self.support_hap0, self.support_hap1, self.support_hap2])))
+            self.format_QL_ms = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap1, self.qual_ms_hap2])))
         else:
-            self.format_AL = "/".join(list(map(str, [hap2_repeat_length, hap1_repeat_length])))
-        # self.format_AL = ":".join(list(map(str, [first_1, first_2])))
-        self.format_DP = "/".join(
-            list(map(str, [self.support_hap0, self.support_hap1, self.support_hap2])))
-        self.format_QL = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap1, self.qual_ms_hap2])))
+            if hap1_repeat_length <= hap2_repeat_length:
+                self.format_AL_ms = "/".join(list(map(str, [hap1_repeat_length, hap2_repeat_length])))
+                self.format_DP_ms = "/".join(
+                    list(map(str, [self.support_hap0, self.support_hap1, self.support_hap2])))
+                self.format_QL_ms = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap1, self.qual_ms_hap2])))
+            else:
+                self.format_AL_ms = "/".join(list(map(str, [hap2_repeat_length, hap1_repeat_length])))
+                # self.format_AL = ":".join(list(map(str, [first_1, first_2])))
+                self.format_DP_ms = "/".join(
+                    list(map(str, [self.support_hap0, self.support_hap2, self.support_hap1])))
+                self.format_QL_ms = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap2, self.qual_ms_hap1])))
 
         #
         # print(self.reads_phased)
