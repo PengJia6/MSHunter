@@ -20,16 +20,20 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/gmm.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/tmp.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Microsatellite.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Microsatellite.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Window.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Window.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/call_variants.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/call_variants.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/call_variants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/call_variants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gmm_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gmm_test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/genotype.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/genotype.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/gmm.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/gmm.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/genotype.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/genotype.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/gmm.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gmm.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/test/test_ccs.sh" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_ccs.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,14 +89,11 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Python.gmm">
+  <component name="RunManager" selected="Python.Microsatellite">
     <configuration name="Microsatellite" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -197,6 +198,9 @@
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -267,10 +271,10 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.Microsatellite" />
         <item itemvalue="Python.gmm" />
         <item itemvalue="Python.gmm_test" />
         <item itemvalue="Python.Window" />
-        <item itemvalue="Python.Microsatellite" />
         <item itemvalue="Python.units" />
       </list>
     </recent_temporary>
@@ -314,7 +318,8 @@
       <workItem from="1602244757301" duration="1134000" />
       <workItem from="1602293857931" duration="4942000" />
       <workItem from="1602554849575" duration="2222000" />
-      <workItem from="1602579601602" duration="97205000" />
+      <workItem from="1602579601602" duration="105420000" />
+      <workItem from="1604064326590" duration="15526000" />
     </task>
     <servers />
   </component>

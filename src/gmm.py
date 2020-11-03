@@ -17,7 +17,14 @@ from collections import Counter
 # from scipy import stats
 # dis = {8: 13}
 
+
 def get_more_times(repeat_list):
+    """
+    Args:
+        repeat_list (list): repeat length of microsatellite site, such as [10,10,9,9,9,9,8,5,5,5,5,5]
+    Returns: central value of the input list
+
+    """
     counts = Counter(repeat_list)
     f = sorted(zip(counts.values(), counts.keys()))
     # print(f)
@@ -33,6 +40,14 @@ def get_more_times(repeat_list):
 
 
 def get_repeat_gmm(dis, target=1):
+    """
+    Args:
+        dis (dict):distribution of microsatellite repeat length
+        target (int): the haplotype num 1/2
+    Returns:
+        the eliminated repeat length of microsatellite
+
+    """
     support = sum(dis.values())
     cluster = len(dis)
     if cluster == 1:
@@ -90,5 +105,4 @@ if __name__ == "__main__":
     dis = {23: 1, 21: 3, 22: 3}
     dis = {27: 7, 26: 2, 30: 1, 28: 6, 29: 4}
     dis = {19: 8, 21: 5, 20: 5}
-
     print(get_repeat_gmm(dis, target=1))

@@ -26,9 +26,9 @@ def genotype_init(args):
     # paras["hap"] = args.haplotype_bam[0]
     paras["prefix_len"] = args.prefix_len[0]
     paras["suffix_len"] = args.suffix_len[0]
-    paras["debug"] = args.debug[0]
-    paras["only_homopolymer"] = args.only_homopolymers[0]
-    paras["only_simple"] = args.only_simple[0]
+    paras["debug"] = True if args.debug[0].lower() == "true" else False
+    paras["only_homopolymer"] = True if str(args.only_homopolymers[0]).lower() == "true" else False
+    paras["only_simple"] = True if args.only_simple[0].lower() == "true" else False
     paras["using_phasing_info"] = args.using_phasing_info[0]
     paras["minimum_support_reads"] = args.minimum_support_reads[0]
     paras["minimum_mapping_quality"] = args.minimum_mapping_quality[0]
@@ -136,6 +136,7 @@ def genotype_init(args):
     paras["output_complex"] = paras["output"] + case + "_complex.vcf.gz"
     set_value("case", case)
     set_value("paras", paras)
+    # print(paras)
     return True
 
 

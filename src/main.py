@@ -93,15 +93,15 @@ def args_process():
                                 default=[defaultPara_gt["suffix_len"]],
                                 help="[suffix_len] bp downstream for mutation analysis  [default:" +
                                      str(defaultPara_gt["suffix_len"]) + "]")
-    general_option.add_argument('-d', '--debug', type=bool, nargs=1, choices=[True, False],
+    general_option.add_argument('-d', '--debug', type=str, nargs=1, choices=["True", "False"],
                                 default=[defaultPara_gt["debug"]],
                                 help="Debug mode for developers [default:" +
                                      str(defaultPara_gt["debug"]) + "]")
-    general_option.add_argument('-oh', '--only_homopolymers', type=bool, nargs=1, choices=[True, False],
+    general_option.add_argument('-oh', '--only_homopolymers', type=str, nargs=1, choices=["True", "False"],
                                 default=[defaultPara_gt["only_homopolymers"]],
                                 help="Only analyze homopolymer regions [default:"
                                      + str(defaultPara_gt["only_homopolymers"]) + "]")
-    general_option.add_argument('-os', '--only_simple', type=bool, nargs=1, choices=[True, False],
+    general_option.add_argument('-os', '--only_simple', type=str, nargs=1, choices=["True", "False"],
                                 default=[defaultPara_gt["only_simple"]],
                                 help="Only analyze simple microsatellite copy number variants [default:"
                                      + str(defaultPara_gt["only_simple"]) + "]")
@@ -136,6 +136,10 @@ def args_process():
                                 default=[defaultPara_gt["min_allele_fraction"]],
                                 help="minimum allele fraction report [default:" +
                                      str(defaultPara_gt["min_allele_fraction"]) + "]")
+    general_option.add_argument('--sequencing_error', type=int, nargs=1,
+                                default=[defaultPara_gt["sequencing_error"]],
+                                help="Sequencing error, allele frequency less than SEQUENCING ERROR with be remove "
+                                     "[default:" + str(defaultPara_gt["sequencing_error"]) + "]")
 
     ##################################################################################
     # group for bam2dis

@@ -42,7 +42,7 @@ class Microsatellite:
         self.depth = 0
         self.check = True
         self.check_status = []
-        self.mut = Mutation()
+        # self.mut = Mutation()
         self.ref_str = ""
         self.ref_str_ms = ""
         self.ref_str_mut = ""
@@ -310,8 +310,8 @@ class Microsatellite:
             res2 = get_repeat_gmm(self.ms_dis_hap2, target=1)
             hap1_repeat_length = res1["genotype"][0]
             hap2_repeat_length = res2["genotype"][0]
-            self.qual_ms_hap1 = np.round(res1["qual"],)
-            self.qual_ms_hap2 = np.round(res2["qual"],2)
+            self.qual_ms_hap1 = np.round(res1["qual"], )
+            self.qual_ms_hap2 = np.round(res2["qual"], 2)
             self.qual_ms = np.round(np.mean([res1["qual"], res2["qual"]]), 2)
         else:
             res = get_repeat_gmm(self.ms_dis, target=2)
@@ -377,6 +377,16 @@ class Microsatellite:
                     list(map(str, [self.support_hap0, self.support_hap2, self.support_hap1])))
                 self.format_QL_ms = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap2, self.qual_ms_hap1])))
 
+    def call_micro_and_other(self):
+        self.call_micro()
+        if sum(self.format_GT_ms) > 0:  # Microsatellite mutation
+            self.report_indel = True
+            # print(self.muts)
+        # else:
+    # NO microsatellite mutaiton
+            # print()
+        # pass
+
         #
         # print(self.reads_phased)
         # print(self.support_hap0, self.support_hap1, self.support_hap2, self.depth)
@@ -409,38 +419,28 @@ class Microsatellite:
     #         self.dis_stat = False
     #         self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
     #         return
-    #     self.deletion_merge()
-    #     ms_dis = {}
-    #     mut_dict_by_pos = {}
-    #     for read_id, read_info in self.reads_info.items():
-    #         hap = read_info.hap
-    #         strand = read_info.strand
-    #         for mut in read_info.mismatches:
-    #             if mut[0] not in mut_dict_by_pos:
-    #                 mut_dict_by_pos[mut[0]] = []
-    #             mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+        self.deletion_merge()
+        mut_dict_by_pos = {}
+        for read_id, read_info in self.muts.items():
+            hap = read_info.hap
+            strand = read_info.strand
+            for mut in read_info.mismatches:
+                if mut[0] not in mut_dict_by_pos:
+                    mut_dict_by_pos[mut[0]] = []
+                mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
     #
-    #         for mut in read_info.insertions:
-    #             if mut[0] not in mut_dict_by_pos:
-    #                 mut_dict_by_pos[mut[0]] = []
-    #             mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
-    #
-    #         for mut in read_info.deletions:
-    #             if mut[0] not in mut_dict_by_pos:
-    #                 mut_dict_by_pos[mut[0]] = []
-    #             mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
-    #
-    #         if read_info.repeat_length not in ms_dis:
-    #             ms_dis[read_info.repeat_length] = 1
-    #             if
-    #         else:
-    #             ms_dis[read_info.repeat_length] += 1
-    #     self.ms_dis = ms_dis
-    #     self.query_repeat_length = get_max_support_index(ms_dis)
-    #
-    #
-    #
-    #
+            for mut in read_info.insertions:
+                if mut[0] not in mut_dict_by_pos:
+                    mut_dict_by_pos[mut[0]] = []
+                mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
+
+            for mut in read_info.deletions:
+                if mut[0] not in mut_dict_by_pos:
+                    mut_dict_by_pos[mut[0]] = []
+                mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
+        print(mut_dict_by_pos)
+
+
     #     reads_info = {}
     #     for pos, infos in mut_dict_by_pos.items():
     #         support = len(infos)

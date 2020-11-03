@@ -185,7 +185,10 @@ class Window:
     def call_variants(self):
         microsatellites = []
         for microsatellite in self.microsatellites.values():
-            microsatellite.call_micro()
+            if self.paras["only_simple"]:
+                microsatellite.call_micro()
+            else:
+                microsatellite.call_micro_and_other()
             # microsatellite.remove_noise()
             # microsatellite.ccs_genotype()
             microsatellites.append(microsatellite)
