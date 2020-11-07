@@ -26,6 +26,8 @@ class Microsatellite:
     def __init__(self, ms_info, only_simple=True):
         self.chrom = ms_info["chr"]
         self.start = ms_info["pos"]
+        self.prefix = ms_info["prefix"]
+        self.suffix = ms_info["suffix"]
         self.ms_id = self.chrom + "_" + str(self.start)
         self.repeat_times = ms_info["repeatTimes"]
         self.repeat_unit = ms_info["motif"]
@@ -35,6 +37,10 @@ class Microsatellite:
         self.end = self.start + self.repeat_len
         self.start_pre = self.start - ms_info["prefix_len"]
         self.end_suf = self.end + ms_info["suffix_len"]
+        self.suffix_len = ms_info["suffix_len"]
+        self.prefix_len = ms_info["prefix_len"]
+        # print(ms_info["prefix_len"])
+        self.sequencing_error = get_value("paras")["sequencing_error"]
         # self.ref_list = []
         self.reads_info = {}
         self.muts = {}
@@ -42,6 +48,7 @@ class Microsatellite:
         self.depth = 0
         self.check = True
         self.check_status = []
+        self.ms_error = []  # noise alleles
         # self.mut = Mutation()
         self.ref_str = ""
         self.ref_str_ms = ""
@@ -67,6 +74,7 @@ class Microsatellite:
         self.support_reversed = 0
         self.query_repeat_length = 0
         self.deletions = {}
+        self.ms_mutation = False
         self.insertions = {}
         self.mismatches = {}
         self.reads_phased = True  # True if reads in this regions is phased
@@ -121,6 +129,21 @@ class Microsatellite:
             if repeat_length not in dis_strand[strand]:
                 dis_strand[strand][repeat_length] = 0
             dis_strand[strand][repeat_length] += 1
+        new_dis = {}
+        depth = sum(dis.values())
+        errors = []
+        for rp, times in dis.items():
+            if times > self.sequencing_error * depth:
+                new_dis[rp] = times
+            else:
+                errors.append(rp)
+        for rp in errors:
+            dis_hap[0].pop(rp)
+            dis_hap[1].pop(rp)
+            dis_hap[2].pop(rp)
+            dis_strand[True].pop(rp)
+            dis_strand[True].pop(rp)
+        self.ms_error = errors
         self.dis_stat = True if self.depth > 0 else False
         self.ms_dis = dis
         self.ms_dis_hap0 = dis_hap[0]
@@ -219,18 +242,42 @@ class Microsatellite:
         quals["ms_reversed"] = np.array(ms_reversed)
         return reads, quals
 
+    def build_patterns(self):
+        patterns = {}
+        if not self.ms_mutation:  # nomutation
+            if self.reads_phased:
+                hap1 = {}
+                hap2 = {}
+                for read_id, read_info in self.muts.items():
+                    if read_info.hap == 1 and read_info.other_mutation:
+                        hap1[read_info] = read_info
+                    elif read_info.hap == 2 and read_info.other_mutation:
+                        hap2[read_info] = read_info
+                print("hap1", hap1)
+                print("hap2", hap2)
+
+                # print(read_info)
+
+        else:  # has mutation in ms
+            pass
+
+        pass
+
     def deletion_merge(self):
         for read_id, read_info in self.muts.items():
             deletions_len = len(read_info.deletions)
+            # print(read_info.deletions)
             deletions = []
             if deletions_len == 0:
                 pass
             elif deletions_len == 1:
-                deletions = [[read_info.deletions[0][0], 1]]
+                deletions = [[read_info.deletions[0][0], 1, read_info.deletions[0][-1]]]
             else:
+                band = []
                 current_id = read_info.deletions[0][0]
                 deletion_index = {current_id: 1}
                 for pos_id in range(1, deletions_len):
+                    band.extend(read_info.deletions[pos_id][2])
                     # print(read_info.deletions[pos_id][0], read_info.deletions[pos_id - 1][0])
                     if read_info.deletions[pos_id][0] == read_info.deletions[pos_id - 1][0] + 1:
                         deletion_index[current_id] += 1
@@ -239,7 +286,7 @@ class Microsatellite:
                         current_id = read_info.deletions[pos_id][0]
                         deletion_index[current_id] = 1
                 for pos in sorted(deletion_index.keys()):
-                    deletions.append([pos, deletion_index[pos]])
+                    deletions.append([pos, deletion_index[pos], list(set(band))])
             self.muts[read_id].deletions = deletions
 
         # def get_dis(self):
@@ -376,30 +423,125 @@ class Microsatellite:
                 self.format_DP_ms = "/".join(
                     list(map(str, [self.support_hap0, self.support_hap2, self.support_hap1])))
                 self.format_QL_ms = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap2, self.qual_ms_hap1])))
+        if sum(self.format_GT_ms) > 0:  # Microsatellite mutation
+            self.ms_mutation = True
+        else:
+            self.ms_mutation = False
 
     def call_micro_and_other(self):
         self.call_micro()
-        if sum(self.format_GT_ms) > 0:  # Microsatellite mutation
-            self.report_indel = True
-            # print(self.muts)
-        # else:
-    # NO microsatellite mutaiton
-            # print()
-        # pass
+        self.deletion_merge()
+        self.build_patterns()
+        # mut_dict_by_pos = {}
+        # for read_id, read_info in self.muts.items():
+        #     hap = read_info.hap
+        #     strand = read_info.strand
+        #     for mut in read_info.mismatches:
+        #         if mut[0] not in mut_dict_by_pos:
+        #             mut_dict_by_pos[mut[0]] = []
+        #         mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+        #     for mut in read_info.insertions:
+        #         if mut[0] not in mut_dict_by_pos:
+        #             mut_dict_by_pos[mut[0]] = []
+        #         mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
+        #     for mut in read_info.deletions:
+        #         if mut[0] not in mut_dict_by_pos:
+        #             mut_dict_by_pos[mut[0]] = []
+        #         mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
+        #
+        # reads_info = {}
+        # # print("==============")
+        # normals_reads = []
+        # pos_report = {}
+        # for pos, infos in mut_dict_by_pos.items():
+        #     support = len(infos)
+        #     support_forward = 0
+        #     support_reversed = 0
+        #     for info in infos:
+        #         if info[4]:
+        #             support_forward += 1
+        #         else:
+        #             support_reversed += 1
+        #     if support < self.depth * 0.002: continue  # TODO add on command, remove low frequency mutation
+        #     if abs(
+        #             support_forward - support_reversed) > support * 0.4: continue  # TODO add on command, remove strand bias
+        #     for info in infos:
+        #         normals_reads.append(info[2])
+        #
+        #     print(infos)
+        #     print()
+
+        # if len(infos) < 1:
+        #     self.report_indel = False
+        #     self.report_snv = False
+        #     self.report_complex = False
+        #     return
+        #
+        # for info in infos:
+        #     if info[2] not in reads_info:
+        #         reads_info[info[2]] = []
+        #     reads_info[info[2]].append(info)
 
         #
-        # print(self.reads_phased)
-        # print(self.support_hap0, self.support_hap1, self.support_hap2, self.depth)
-        # if self.reads_phased:
-        #     print(model)
-        #     print(self.ms_dis)
-        #     print(self.ms_dis_hap1)
-        #     print(self.ms_dis_hap2)
+        #
+        #
+        # if sum(self.format_GT_ms) > 0:  # Microsatellite mutation
+        #     self.report_indel = True
         # else:
-        #     print(model)
-        #     print(self.ms_dis)
-        #     print(self.ms_dis_hap1)
-        #     print(self.ms_dis_hap2)
+        #     self.report_indel = False
+        #
+        # graph = {}
+        # for read_id, read_info in self.muts.items():
+        #     prefix = "".join(read_info.prefix)
+        #     suffix = "".join(read_info.suffix)
+        #     ms_content = "".join(read_info.ms_content)
+        #     hap = read_info.hap
+        #     strand = read_info.strand
+        #     pattern_id = "_".join([prefix, suffix])
+        #     if pattern_id not in graph:
+        #         graph[pattern_id] = [(read_id, ms_content, hap, strand)]
+        #     else:
+        #         graph[pattern_id].append((read_id, ms_content, hap, strand))
+        # if len(graph) > 1:
+        #     pass
+        #     # print(graph)
+        #     # print()
+        #     # print()
+        # else:
+        #     germline_id = "_".join([self.prefix, self.suffix])
+        #     # if prefix==self.prefix:
+        #     #
+        #     # prefix, suffix = graph.keys()[0]
+        #     if len(prefix)!=self.prefix:
+        #         print()
+        #     if len(germline_id) != (self.prefix_len + self.suffix_len + 1):  # 前缀和后缀长度是否有变化
+        #         self.report_indel = True
+        #         if germline_id not in graph:  # TODO 保证没有read的为点被过滤掉
+        #             self.report_snv = True
+        #             # TODO add snv record
+        #         else:
+        #             print()
+
+        # print(self.muts)
+
+    # else:
+    # NO microsatellite mutaiton
+    # print()
+    # pass
+
+    #
+    # print(self.reads_phased)
+    # print(self.support_hap0, self.support_hap1, self.support_hap2, self.depth)
+    # if self.reads_phased:
+    #     print(model)
+    #     print(self.ms_dis)
+    #     print(self.ms_dis_hap1)
+    #     print(self.ms_dis_hap2)
+    # else:
+    #     print(model)
+    #     print(self.ms_dis)
+    #     print(self.ms_dis_hap1)
+    #     print(self.ms_dis_hap2)
 
     # print(ms_dis)
     # for read_id, mut in self.muts.items():
@@ -419,29 +561,26 @@ class Microsatellite:
     #         self.dis_stat = False
     #         self.ref_str = pysam.FastaFile(self.reference).fetch(self.chrom, self.mut_start, self.mut_end + 1)
     #         return
-        self.deletion_merge()
-        mut_dict_by_pos = {}
-        for read_id, read_info in self.muts.items():
-            hap = read_info.hap
-            strand = read_info.strand
-            for mut in read_info.mismatches:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+    # self.deletion_merge()
+    # mut_dict_by_pos = {}
+    # for read_id, read_info in self.muts.items():
+
+    #     for mut in read_info.mismatches:
+    #         if mut[0] not in mut_dict_by_pos:
+    #             mut_dict_by_pos[mut[0]] = []
+    #         mut_dict_by_pos[mut[0]].append([mut[0], "SNV", read_id, hap, strand, mut])
+    #     #
+    #     for mut in read_info.insertions:
+    #         if mut[0] not in mut_dict_by_pos:
+    #             mut_dict_by_pos[mut[0]] = []
+    #         mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
     #
-            for mut in read_info.insertions:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "INS", read_id, hap, strand, mut])
-
-            for mut in read_info.deletions:
-                if mut[0] not in mut_dict_by_pos:
-                    mut_dict_by_pos[mut[0]] = []
-                mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
-        print(mut_dict_by_pos)
-
-
+    #     for mut in read_info.deletions:
+    #         if mut[0] not in mut_dict_by_pos:
+    #             mut_dict_by_pos[mut[0]] = []
+    #         mut_dict_by_pos[mut[0]].append([mut[0], "DEL", read_id, hap, strand, mut])
     #     reads_info = {}
+    #     print("==============")
     #     for pos, infos in mut_dict_by_pos.items():
     #         support = len(infos)
     #         support_forward = 0
@@ -453,28 +592,33 @@ class Microsatellite:
     #                 support_reversed += 1
     #         if support < self.depth * 0.2: continue  # remove low frequency mutation
     #         if abs(support_forward - support_reversed) > support * 0.4: continue  # remove strand bias
+    #         if len(infos)>0:
+    #             print(len(infos))
+    #             # print()
     #         for info in infos:
     #             if info[2] not in reads_info:
     #                 reads_info[info[2]] = []
     #             reads_info[info[2]].append(info)
-    #     pattern_id = 0
-    #     patterns = {}
-    #     for read_id, read_info in reads_info.items():
-    #         pattern = {}
-    #         hap = read_info[0][3]
-    #         strand = read_info[0][4]
-    #         for item in read_info:
-    #             pattern[item[0]] = "_".join([str(item[0]), item[1], str(item[5][1])])
-    #         new = True
-    #         for i_pattern in patterns:
-    #             if patterns[i_pattern].contain(pattern):
-    #                 patterns[i_pattern].add_reads(read_id, hap, strand)
-    #                 new = False
-    #                 break
-    #         if new:
-    #             pattern_id += 1
-    #             patterns[pattern_id] = PatternCluster(pattern)
-    #             patterns[pattern_id].init_patttern(pattern, read_id, hap, strand)
+    # # print(reads_info)
+    # pattern_id = 0
+    # patterns = {}
+    # for read_id, read_info in reads_info.items():
+    #     pattern = {}
+    #     hap = read_info[0][3]
+    #     strand = read_info[0][4]
+    #     for item in read_info:
+    #         pattern[item[0]] = "_".join([str(item[0]), item[1], str(item[5][1])])
+    #     new = True
+    #     for i_pattern in patterns:
+    #         if patterns[i_pattern].contain(pattern):
+    #             patterns[i_pattern].add_reads(read_id, hap, strand)
+    #             new = False
+    #             break
+    #     if new:
+    #         pattern_id += 1
+    #         patterns[pattern_id] = PatternCluster(pattern)
+    #         patterns[pattern_id].init_patttern(pattern, read_id, hap, strand)
+    # print(patterns)
 
     # print("===================================================")
     # print(read_id, reads_info)

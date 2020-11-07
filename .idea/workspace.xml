@@ -22,17 +22,15 @@
     <list default="true" id="30b9b241-2c99-4401-8c9c-ae5f21564a70" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Microsatellite.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Microsatellite.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Window.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Window.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/Read.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Read.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Window.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/call_variants.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/call_variants.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/Read.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Read.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/genotype.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/genotype.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__pycache__/gmm.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/gmm.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/units.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/units.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/genotype.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/genotype.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/gmm.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/gmm.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/units.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/units.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/test_ccs.sh" beforeDir="false" afterPath="$PROJECT_DIR$/test/test_ccs.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -89,7 +87,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Microsatellite">
+  <component name="RunManager" selected="Python.Read">
     <configuration name="Microsatellite" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -101,6 +99,28 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/Microsatellite.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Read" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="MSHunter" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/Read.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -238,44 +258,22 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="units" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="MSHunter" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/units.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <list>
       <item itemvalue="Python.getDis" />
       <item itemvalue="Python.main" />
       <item itemvalue="Python.Microsatellite" />
       <item itemvalue="Python.Window" />
-      <item itemvalue="Python.units" />
       <item itemvalue="Python.gmm_test" />
       <item itemvalue="Python.gmm" />
+      <item itemvalue="Python.Read" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.Read" />
         <item itemvalue="Python.Microsatellite" />
         <item itemvalue="Python.gmm" />
         <item itemvalue="Python.gmm_test" />
         <item itemvalue="Python.Window" />
-        <item itemvalue="Python.units" />
       </list>
     </recent_temporary>
   </component>
@@ -319,7 +317,7 @@
       <workItem from="1602293857931" duration="4942000" />
       <workItem from="1602554849575" duration="2222000" />
       <workItem from="1602579601602" duration="105420000" />
-      <workItem from="1604064326590" duration="15526000" />
+      <workItem from="1604064326590" duration="44063000" />
     </task>
     <servers />
   </component>
@@ -360,26 +358,25 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="487" y="27" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603611600819" />
-    <state x="2259" y="416" width="424" height="484" key="FileChooserDialogImpl/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594350855551" />
-    <state width="1845" height="149" key="GridCell.Tab.0.bottom" timestamp="1603694916484">
+    <state width="1845" height="149" key="GridCell.Tab.0.bottom" timestamp="1604457305502">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="149" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603694916484" />
+    <state width="1845" height="149" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1604457305502" />
     <state width="1005" height="735" key="GridCell.Tab.0.bottom/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1603628004837" />
-    <state width="1845" height="149" key="GridCell.Tab.0.center" timestamp="1603694916484">
+    <state width="1845" height="149" key="GridCell.Tab.0.center" timestamp="1604457305502">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="149" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603694916484" />
+    <state width="1845" height="149" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1604457305502" />
     <state width="1005" height="735" key="GridCell.Tab.0.center/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1603628004837" />
-    <state width="1845" height="149" key="GridCell.Tab.0.left" timestamp="1603694916484">
+    <state width="1845" height="149" key="GridCell.Tab.0.left" timestamp="1604457305502">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="149" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603694916484" />
+    <state width="1845" height="149" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1604457305502" />
     <state width="1005" height="735" key="GridCell.Tab.0.left/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1603628004837" />
-    <state width="1845" height="149" key="GridCell.Tab.0.right" timestamp="1603694916484">
+    <state width="1845" height="149" key="GridCell.Tab.0.right" timestamp="1604457305502">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
-    <state width="1845" height="149" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603694916484" />
+    <state width="1845" height="149" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1604457305502" />
     <state width="1005" height="735" key="GridCell.Tab.0.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1603628004837" />
     <state width="1005" height="735" key="GridCell.Tab.1.bottom" timestamp="1603625952211">
       <screen x="1920" y="0" width="1080" height="1920" />
@@ -401,10 +398,6 @@
     </state>
     <state width="1845" height="459" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1603611472208" />
     <state width="1005" height="735" key="GridCell.Tab.1.right/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1603625952211" />
-    <state x="0" y="190" width="1865" height="730" key="SettingsEditor" timestamp="1594645671503">
-      <screen x="0" y="27" width="1920" height="988" />
-    </state>
-    <state x="0" y="190" width="1865" height="730" key="SettingsEditor/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1594645671503" />
     <state x="317" y="228" width="1276" height="584" key="com.intellij.execution.console.ConsoleHistoryController$MyBrowseAction$1" timestamp="1597307904834">
       <screen x="0" y="27" width="1920" height="988" />
     </state>
@@ -413,7 +406,6 @@
       <screen x="0" y="27" width="1920" height="988" />
     </state>
     <state x="396" y="103" width="1118" height="833" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988/1920.0.1080.1920@0.27.1920.988" timestamp="1596528982013" />
-    <state x="1948" y="148" width="1042" height="824" key="com.intellij.openapi.editor.actions.MultiplePasteAction$ClipboardContentChooser/0.27.1920.988/1920.0.1080.1920@1920.0.1080.1920" timestamp="1594604694728" />
     <state x="1920" y="613" width="1080" height="487" maximized="true" key="dock-window-1" timestamp="1602247644967">
       <screen x="1920" y="0" width="1080" height="1920" />
     </state>
@@ -436,6 +428,7 @@
     <SUITE FILE_PATH="coverage/MSHunter$bam2dis.coverage" NAME="bam2dis Coverage Results" MODIFIED="1593609358421" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$units.coverage" NAME="units Coverage Results" MODIFIED="1598621727619" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$main.coverage" NAME="main Coverage Results" MODIFIED="1603693527649" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
+    <SUITE FILE_PATH="coverage/MSHunter$Read.coverage" NAME="Read Coverage Results" MODIFIED="1604457305279" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$Microsatellite.coverage" NAME="Microsatellite Coverage Results" MODIFIED="1600066649454" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$benchmark.coverage" NAME="benchmark Coverage Results" MODIFIED="1594881971585" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />
     <SUITE FILE_PATH="coverage/MSHunter$call.coverage" NAME="call Coverage Results" MODIFIED="1593743003373" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src" />

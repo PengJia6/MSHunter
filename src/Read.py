@@ -125,9 +125,14 @@ class Read:
             ms_end_suf = ms.end_suf
             query_repeat_length = len(
                 "".join(self.this_read_list[ms_start - 1 - self.align_start:ms_end - self.align_start - 1]))
+            prefix = self.this_read_list[ms_start_pre - self.align_start:ms_start - self.align_start]
+            suffix = self.this_read_list[ms_end - self.align_start:ms_end_suf - self.align_start]
+            ms_content = self.this_read_list[ms_start - self.align_start:ms_end - self.align_start]
             mismatches = []
             deletions = []
             insertions = []
+            pos_based_info = {}
+            pos_deletion = []
             ref_pos = ms_start_pre - 2
             for pot in range(ms_start_pre - self.align_start - 1, ms_end_suf - self.align_start):
                 ref_pos += 1
@@ -136,17 +141,53 @@ class Read:
                 if this_read_base == this_ref_base:
                     continue
                 else:
+                    if ref_pos < ms_start_pre:
+                        band = [1]
+                    elif ref_pos < ms_start:
+                        band = [2]
+                    elif ref_pos < ms_end:
+                        band = [3]
+                    elif ref_pos < ms_end_suf:
+                        band = [4]
+                    else:
+                        band = [5]
                     this_read_base_len = len(this_read_base)
                     this_ref_base_len = len(this_ref_base)
                     if this_read_base_len == this_ref_base_len:
-                        mismatches.append([ref_pos, this_read_base])
+                        mismatches.append([ref_pos, this_read_base, band])
+                        pos_based_info[ref_pos] = ["SNV", this_ref_base, this_read_base, band]
                     else:
                         if this_read_base_len < this_ref_base_len:
-                            deletions.append([ref_pos, this_read_base])
+                            deletions.append([ref_pos, this_read_base, band])
+                            # pos_based_info[ref_pos] = ["DEL", this_ref_base, ""]
+                            pos_deletion.append([ref_pos, this_ref_base, band])
                         else:
-                            insertions.append([ref_pos, this_read_base])
+                            insertions.append([ref_pos, this_read_base, band])
+                            pos_based_info[ref_pos] = ["INS", "", this_read_base[1:], band]
+
+            if len(pos_deletion) > 0:
+                deletion_start = pos_deletion[0][0]
+                deletion_len = 1
+                del_str = pos_deletion[0][1]
+                band = [pos_deletion[0][2]]
+                for i in range(1, len(pos_deletion)):
+                    if pos_deletion[i - 1][0] + 1 == pos_deletion[i][0]:
+                        deletion_len += 1
+                        del_str += pos_deletion[i][1]
+                        band.append(pos_deletion[i][2])
+                    else:
+                        pos_based_info[deletion_start] = ["DEL", del_str, "", set(band)]
+
+                        deletion_len = 1
+                        deletion_start = pos_deletion[i][0]
+                        del_str = pos_deletion[i][1]
+                        band = [pos_deletion[i][2]]
+                pos_based_info[deletion_start] = ["DEL", del_str, "", set(band)]
+
             read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length, strand=self.strand, hap=self.hap,
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,
+                                             prefix=prefix, suffix=suffix, ms_content=ms_content,
+                                             pos_based_info=pos_based_info
                                              )
             repeat_lengths[ms_id] = query_repeat_length
         self.repeat_lengths = repeat_lengths

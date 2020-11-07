@@ -51,6 +51,8 @@ def global_init():
             "maximum_repeat_times": "1-5:100",
             "prefix_len": 5,
             "suffix_len": 5,
+            "sequencing_error": 0.001,
+
             # "kmer_size": 5,
             "minimum_phasing_reads": 3,
             # "tech": "ccs",

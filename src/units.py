@@ -19,13 +19,37 @@ class Read_Mutation:
     Description: class for read mutation
     """
 
-    def __init__(self, repeat_length, strand, mismatches, deletions, insertions, hap):
+    def __init__(self, repeat_length, strand, mismatches, deletions, insertions, hap, prefix="", suffix="",
+                 ms_content="", pos_based_info={}):
         self.repeat_length = repeat_length
         self.strand = strand
         self.mismatches = mismatches
         self.deletions = deletions
         self.insertions = insertions
         self.hap = hap
+        self.prefix = prefix
+        self.suffix = suffix
+        self.ms_content = ms_content
+        self.pos_based_info = pos_based_info
+        self.del_span = "False"
+        self.before = False
+        self.after = False
+        self.ms = False
+        for pos, info in self.pos_based_info.items():
+            if len(info[3]) > 2:
+                self.del_span = True
+            if 2 in info[3] or 1 in info[3]:
+                self.before = True
+            if 3 in info[3] and info[0] == "SNV":
+                self.ms = True
+            if 4 in info[3] or 5 in info[3]:
+                self.after = True
+        self.other_mutation = (self.before or self.after or self.ms)
+
+        # self.del_span = False
+        # else:
+
+        # print(pos)
 
 
 class MutationSingal:

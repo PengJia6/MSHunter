@@ -37,6 +37,7 @@ def genotype_init(args):
     paras["batch"] = args.batch[0]
     paras["minimum_phasing_reads"] = args.minimum_phasing_reads[0]
     paras["min_allele_fraction"] = args.min_allele_fraction[0]
+    paras["sequencing_error"] = args.sequencing_error[0]
     paras["sample"] = args.sample[0]
     paras["ranges_of_repeat_times"] = {}
 
