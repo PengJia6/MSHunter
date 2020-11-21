@@ -83,6 +83,10 @@ class Microsatellite:
         self.format_AL_ms = "/".join(["0", "0"])
         self.format_DP_ms = "/".join(["0", "0", "0"])
         self.format_QL_ms = "/".join(["0", "0", "0"])
+        self.hap1_ms_mut = False
+        self.hap2_ms_mut = False
+        self.hap1_ms_repeat = 0
+        self.hap2_ms_repeat = 0
 
         self.qual_ms = 0
         self.qual_ms_hap1 = 0
@@ -242,19 +246,30 @@ class Microsatellite:
         quals["ms_reversed"] = np.array(ms_reversed)
         return reads, quals
 
+    def get_mut_one_hap(self, hap_info, hap_ms_mut, hap_ms_len):
+        for mut in hap_info:
+            [a, b] = mut.get_mut_by_read(hap_ms_mut, hap_ms_len)
+            pass
+            # if mut
+        return
+
     def build_patterns(self):
         patterns = {}
         if not self.ms_mutation:  # nomutation
             if self.reads_phased:
-                hap1 = {}
-                hap2 = {}
+                hap1 = []
+                hap2 = []
                 for read_id, read_info in self.muts.items():
                     if read_info.hap == 1 and read_info.other_mutation:
-                        hap1[read_info] = read_info
+                        hap1.append(read_info)
                     elif read_info.hap == 2 and read_info.other_mutation:
-                        hap2[read_info] = read_info
-                print("hap1", hap1)
-                print("hap2", hap2)
+                        hap2.append(read_info)
+                if len(hap1) > 0:
+                    self.get_mut_one_hap(hap1, self.hap1_ms_mut, self.hap1_ms_repeat)
+                if len(hap2) > 0:
+                    self.get_mut_one_hap(hap1, self.hap2_ms_mut, self.hap2_ms_repeat)
+                # print("hap1", hap1)
+                # print("hap2", hap2)
 
                 # print(read_info)
 
@@ -411,6 +426,9 @@ class Microsatellite:
             self.format_AL_ms = "/".join(list(map(str, [hap1_repeat_length, hap2_repeat_length])))
             self.format_DP_ms = "/".join(list(map(str, [self.support_hap0, self.support_hap1, self.support_hap2])))
             self.format_QL_ms = "/".join(list(map(str, [self.qual_ms, self.qual_ms_hap1, self.qual_ms_hap2])))
+            if hap1_repeat_length != self.repeat_len: self.hap1_ms_mut = True
+            if hap2_repeat_length != self.repeat_len: self.hap2_ms_mut = True
+
         else:
             if hap1_repeat_length <= hap2_repeat_length:
                 self.format_AL_ms = "/".join(list(map(str, [hap1_repeat_length, hap2_repeat_length])))

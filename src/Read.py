@@ -160,10 +160,11 @@ class Read:
                         if this_read_base_len < this_ref_base_len:
                             deletions.append([ref_pos, this_read_base, band])
                             # pos_based_info[ref_pos] = ["DEL", this_ref_base, ""]
-                            pos_deletion.append([ref_pos, this_ref_base, band])
+                            pos_deletion.append([ref_pos, this_ref_base, band[0]])
                         else:
                             insertions.append([ref_pos, this_read_base, band])
-                            pos_based_info[ref_pos] = ["INS", "", this_read_base[1:], band]
+                            if band[0] != 3:
+                                pos_based_info[ref_pos] = ["INS", "", this_read_base[1:], band]
 
             if len(pos_deletion) > 0:
                 deletion_start = pos_deletion[0][0]
@@ -182,7 +183,9 @@ class Read:
                         deletion_start = pos_deletion[i][0]
                         del_str = pos_deletion[i][1]
                         band = [pos_deletion[i][2]]
-                pos_based_info[deletion_start] = ["DEL", del_str, "", set(band)]
+                # print(del_str,deletion_start,band)
+                if len(set(band)) > 1 or list(set(band))[0] != 3:
+                    pos_based_info[deletion_start] = ["DEL", del_str, "", set(band)]
 
             read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length, strand=self.strand, hap=self.hap,
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,
