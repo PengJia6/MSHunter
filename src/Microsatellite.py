@@ -203,7 +203,6 @@ class Microsatellite:
         prefix_reversed = []
         suffix_reversed = []
         ms_reversed = []
-
         num_forward = 0
         num_reversed = 0
         for alignment in samfile.fetch(self.chrom, self.start_pre - 1, self.end_suf + 1):
@@ -246,12 +245,29 @@ class Microsatellite:
         quals["ms_reversed"] = np.array(ms_reversed)
         return reads, quals
 
-    def get_mut_one_hap(self, hap_info, hap_ms_mut, hap_ms_len):
+    def get_mut_one_hap(self, hap_info, hap_ms_mut):
+        mut_starts = []
+        mut_ends = []
+        mut_types = []
         for mut in hap_info:
-            [a, b] = mut.get_mut_by_read(hap_ms_mut, hap_ms_len)
-            pass
-            # if mut
-        return
+            mut_start, mut_end, mut_type = mut.get_mut_by_read()
+            print(mut_start, mut_end, mut_type)
+            mut_starts.append(mut_start)
+            mut_ends.append(mut_end)
+            mut_types.extend(mut_type)
+        start_pos = min(mut_starts)
+        end_pos = max(mut_ends)
+        mut_types = set(mut_types)
+        complex = False
+        if hap_ms_mut:
+            complex = True
+        else:
+            if len(mut_types) > 1:
+                complex = True
+
+        for mut in hap_info:
+            print(mut.read_id)
+        return start_pos, end_pos, mut_types, complex
 
     def build_patterns(self):
         patterns = {}
@@ -264,14 +280,10 @@ class Microsatellite:
                         hap1.append(read_info)
                     elif read_info.hap == 2 and read_info.other_mutation:
                         hap2.append(read_info)
-                if len(hap1) > 0:
-                    self.get_mut_one_hap(hap1, self.hap1_ms_mut, self.hap1_ms_repeat)
-                if len(hap2) > 0:
-                    self.get_mut_one_hap(hap1, self.hap2_ms_mut, self.hap2_ms_repeat)
-                # print("hap1", hap1)
-                # print("hap2", hap2)
-
-                # print(read_info)
+                if len(hap1) > 1:
+                    self.get_mut_one_hap(hap1, self.hap1_ms_mut)
+                if len(hap2) > 1:
+                    self.get_mut_one_hap(hap1, self.hap2_ms_mut)
 
         else:  # has mutation in ms
             pass

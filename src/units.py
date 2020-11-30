@@ -19,8 +19,9 @@ class Read_Mutation:
     Description: class for read mutation
     """
 
-    def __init__(self, repeat_length, strand, mismatches, deletions, insertions, hap, prefix="", suffix="",
-                 ms_content="", pos_based_info={}):
+    def __init__(self, read_id, repeat_length, strand, mismatches, deletions, insertions, hap, prefix="", suffix="",
+                 ms_content="", pos_based_info={}, read_str=""):
+        self.read_id = read_id
         self.repeat_length = repeat_length
         self.strand = strand
         self.mismatches = mismatches
@@ -35,52 +36,34 @@ class Read_Mutation:
         self.before = False
         self.after = False
         self.ms = False
-        for pos, info in self.pos_based_info.items():
-            if len(info[3]) > 2:
-                self.del_span = True
-            if 2 in info[3] or 1 in info[3]:
-                self.before = True
-            if 3 in info[3] and info[0] == "SNV":
-                self.ms = True
-            if 4 in info[3] or 5 in info[3]:
-                self.after = True
-        self.other_mutation = (self.before or self.after or self.ms)
+        self.read_str = read_str
+        self.other_mutation = True if len(pos_based_info) > 0 else False
+        # for pos, info in self.pos_based_info.items():
+        #     if len(info[3]) > 2:
+        #         self.del_span = True
+        #     if 2 in info[3] or 1 in info[3]:
+        #         self.before = True
+        #     if 3 in info[3] and info[0] == "SNV":
+        #         self.ms = True
+        #     if 4 in info[3] or 5 in info[3]:
+        #         self.after = True
+        # self.other_mutation = (self.before or self.after or self.ms)
 
-    def get_mut_by_read(self, ms_mut, ms_len):
+    def get_mut_by_read(self):
         # TODO 返回read 变异的start,end type_list
         # TODO  根据start ,end 取序列进行合并 注意微卫星区域的变异 （只针对除MS变异之外的变异）
         # TODO  合并后重新确定起点和终点
         # TODO 合并后重新确定变异类型
 
-        mut_start = []
+        mut_type = set([info[0] for pos, info in self.pos_based_info.items()])
+        mut_start = min([pos for pos, info in self.pos_based_info.items()])
         mut_end = []
-        mut = False
-        complex = False
-        if not self.other_mutation:
-            if not ms_mut:
-                mut = False
+        for pos, info in self.pos_based_info.items():
+            if info[0] == "SNV" or info[0] == "INS":
+                mut_end.append(pos)
             else:
-                mut = True
-        else:
-            mut_type = set([info[0] for pos, info in self.pos_based_info.items()])
-            mut_start = set([info[0] for pos, info in self.pos_based_info.items()])
-            # mut_end=
-            if not ms_mut:
-                if len(mut_type) == 1:
-                    pass
-
-        # if len(self.deletions)>0 and self.other_mutation:
-        #
-        # if len(mismatches)>0 and ( not self.ms):
-        #     self.SNV=True
-        #
-        # if len(mismatches)>0 and
-        #
-
-        # self.del_span = False
-        # else:
-
-        # print(pos)
+                mut_end.append(pos + len(info[1]))
+        return mut_start, min(mut_end), mut_type
 
 
 class MutationSingal:

@@ -186,11 +186,13 @@ class Read:
                 # print(del_str,deletion_start,band)
                 if len(set(band)) > 1 or list(set(band))[0] != 3:
                     pos_based_info[deletion_start] = ["DEL", del_str, "", set(band)]
-
-            read_muts[ms_id] = Read_Mutation(repeat_length=query_repeat_length, strand=self.strand, hap=self.hap,
+            read_str = self.this_read_str[ms_start_pre - 1 - self.align_start:ms_end_suf + 2 - self.align_start]
+            read_muts[ms_id] = Read_Mutation(self.read_id, repeat_length=query_repeat_length, strand=self.strand,
+                                             hap=self.hap,
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,
                                              prefix=prefix, suffix=suffix, ms_content=ms_content,
-                                             pos_based_info=pos_based_info
+                                             pos_based_info=pos_based_info,
+                                             read_str=read_str
                                              )
             repeat_lengths[ms_id] = query_repeat_length
         self.repeat_lengths = repeat_lengths
