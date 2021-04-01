@@ -37,6 +37,7 @@ class Read_Mutation:
         self.after = False
         self.ms = False
         self.read_str = read_str
+        # self.align_start=align_start
         self.other_mutation = True if len(pos_based_info) > 0 else False
         # for pos, info in self.pos_based_info.items():
         #     if len(info[3]) > 2:
@@ -56,20 +57,17 @@ class Read_Mutation:
         # TODO 合并后重新确定变异类型
 
         mut_type = set([info[0] for pos, info in self.pos_based_info.items()])
-        mut_start = min([pos for pos, info in self.pos_based_info.items()])
+        mut_start = [pos for pos, info in self.pos_based_info.items()]
         mut_end = []
         for pos, info in self.pos_based_info.items():
             if info[0] == "SNV" or info[0] == "INS":
                 mut_end.append(pos)
             else:
                 mut_end.append(pos + len(info[1]))
-        return mut_start, min(mut_end), mut_type
-
-
-class MutationSingal:
-    # TODO
-    def __init__(self):
-        pass
+        if len(mut_start) > 0:
+            return min(mut_start), max(mut_end), mut_type
+        else:
+            return -1, -1, mut_type
 
 
 class PatternCluster:

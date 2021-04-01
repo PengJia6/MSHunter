@@ -132,6 +132,10 @@ def args_process():
                                 default=[defaultPara_gt["minimum_support_reads"]],
                                 help="minimum support reads of an available microsatellite call[default:" +
                                      str(defaultPara_gt["minimum_support_reads"]) + "]")
+    general_option.add_argument('-md', '--maximum_distance_of_two_complex_events', type=int, nargs=1,
+                                default=[defaultPara_gt["maximum_distance_of_two_complex_events"]],
+                                help="minimum support reads of an available microsatellite call[default:" +
+                                     str(defaultPara_gt["maximum_distance_of_two_complex_events"]) + "]")
     general_option.add_argument('-a', '--min_allele_fraction', type=int, nargs=1,
                                 default=[defaultPara_gt["min_allele_fraction"]],
                                 help="minimum allele fraction report [default:" +

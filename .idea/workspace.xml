@@ -25,7 +25,12 @@
       <change beforePath="$PROJECT_DIR$/src/Read.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/Read.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Microsatellite.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/Read.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/Read.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/genotype.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/genotype.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/global_dict.cpython-37.pyc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/__pycache__/units.cpython-37.pyc" beforeDir="false" afterPath="$PROJECT_DIR$/src/__pycache__/units.cpython-37.pyc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/genotype.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/genotype.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/global_dict.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/global_dict.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/units.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/units.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -82,7 +87,7 @@
       </set>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Read">
+  <component name="RunManager" selected="Python.genotype">
     <configuration name="Microsatellite" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -127,28 +132,6 @@
       <option name="INPUT_FILE" value="" />
       <method v="2" />
     </configuration>
-    <configuration name="Window" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
-      <module name="MSHunter" />
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/Window.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="true" />
-      <option name="EMULATE_TERMINAL" value="false" />
-      <option name="MODULE_MODE" value="false" />
-      <option name="REDIRECT_INPUT" value="false" />
-      <option name="INPUT_FILE" value="" />
-      <method v="2" />
-    </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
       <module name="MSHunter" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -163,6 +146,28 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="genotype" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="MSHunter" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/src" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/src/genotype.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="true" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -263,18 +268,18 @@
       <item itemvalue="Python.getDis" />
       <item itemvalue="Python.main" />
       <item itemvalue="Python.Microsatellite" />
-      <item itemvalue="Python.Window" />
       <item itemvalue="Python.gmm_test" />
       <item itemvalue="Python.gmm" />
       <item itemvalue="Python.Read" />
+      <item itemvalue="Python.genotype" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Python.genotype" />
         <item itemvalue="Python.Read" />
         <item itemvalue="Python.Microsatellite" />
         <item itemvalue="Python.gmm" />
         <item itemvalue="Python.gmm_test" />
-        <item itemvalue="Python.Window" />
       </list>
     </recent_temporary>
   </component>
@@ -321,6 +326,16 @@
       <workItem from="1604064326590" duration="45428000" />
       <workItem from="1605003914874" duration="24255000" />
       <workItem from="1606272560021" duration="620000" />
+      <workItem from="1606701943530" duration="25766000" />
+      <workItem from="1606801933100" duration="18488000" />
+      <workItem from="1607244105063" duration="2877000" />
+      <workItem from="1609223301581" duration="1528000" />
+      <workItem from="1610981697820" duration="3718000" />
+      <workItem from="1614655956821" duration="19000" />
+      <workItem from="1615465610154" duration="24000" />
+      <workItem from="1616137977609" duration="3122000" />
+      <workItem from="1616826013756" duration="594000" />
+      <workItem from="1617177302938" duration="1855000" />
     </task>
     <servers />
   </component>

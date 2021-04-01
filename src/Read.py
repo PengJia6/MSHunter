@@ -89,7 +89,7 @@ class Read:
             else:
                 return -1
         self.this_read_list = sub_read_str
-        self.this_read_str = ""
+        # self.this_read_str = ""
         self.this_quals_list = sub_read_quals
         self.this_read_quals = ""
 
@@ -162,6 +162,9 @@ class Read:
                             # pos_based_info[ref_pos] = ["DEL", this_ref_base, ""]
                             pos_deletion.append([ref_pos, this_ref_base, band[0]])
                         else:
+                            if ref_pos == ms_start - 1 and this_read_base_len > ms.repeat_unit_len:
+                                # TODO
+                                band = [3]
                             insertions.append([ref_pos, this_read_base, band])
                             if band[0] != 3:
                                 pos_based_info[ref_pos] = ["INS", "", this_read_base[1:], band]
@@ -186,7 +189,7 @@ class Read:
                 # print(del_str,deletion_start,band)
                 if len(set(band)) > 1 or list(set(band))[0] != 3:
                     pos_based_info[deletion_start] = ["DEL", del_str, "", set(band)]
-            read_str = self.this_read_str[ms_start_pre - 1 - self.align_start:ms_end_suf + 2 - self.align_start]
+            read_str = self.this_read_list[ms_start_pre - 1 - self.align_start:ms_end_suf + 2 - self.align_start]
             read_muts[ms_id] = Read_Mutation(self.read_id, repeat_length=query_repeat_length, strand=self.strand,
                                              hap=self.hap,
                                              mismatches=mismatches, deletions=deletions, insertions=insertions,

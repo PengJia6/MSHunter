@@ -12,6 +12,7 @@
 Version:
 202007016: 0.1.4, update the benchmark command, 202007016
 """
+
 import logging
 
 logger = logging.getLogger()
@@ -52,6 +53,7 @@ def global_init():
             "prefix_len": 5,
             "suffix_len": 5,
             "sequencing_error": 0.001,
+            "maximum_distance_of_two_complex_events": 5,
 
             # "kmer_size": 5,
             "minimum_phasing_reads": 3,
